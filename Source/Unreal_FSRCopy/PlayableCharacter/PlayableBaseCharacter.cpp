@@ -4,6 +4,7 @@
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 APlayableBaseCharacter::APlayableBaseCharacter()
@@ -28,6 +29,10 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 #pragma endregion
+
+	SpringArm->bUsePawnControlRotation = true;
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 // Called when the game starts or when spawned

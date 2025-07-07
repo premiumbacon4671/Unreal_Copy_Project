@@ -7,6 +7,7 @@
 
 APlayableGameModeBase::APlayableGameModeBase()
 {
+	//수정 예정
 	static ConstructorHelpers::FClassFinder<ACharacter> PlayerCharacterClass(
 		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/BP_MiyamotoIori.BP_MiyamotoIori_C"));
 	if (PlayerCharacterClass.Succeeded())
