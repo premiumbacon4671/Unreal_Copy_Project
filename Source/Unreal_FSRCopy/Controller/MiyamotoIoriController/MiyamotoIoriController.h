@@ -35,7 +35,7 @@ public:
 	AMiyamotoIoriController();
 	void BeginPlay();
 	void Tick(float DeltaTime);
-	void SetupInputComonent();
+	void SetupInputComonent() override;
 	void MoveInput(const FInputActionValue& value);
 	void MoveEndInput(const FInputActionValue& value);
 	void LookInput(const FInputActionValue& value);

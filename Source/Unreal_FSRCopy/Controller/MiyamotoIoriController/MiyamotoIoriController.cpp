@@ -56,6 +56,7 @@ void AMiyamotoIoriController::SetupInputComonent()
 
 void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("test"));
 	isMoveInput = true;
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FVector Forward = GetTransformComponent()->GetForwardVector();
