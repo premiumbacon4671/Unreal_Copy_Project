@@ -24,21 +24,28 @@ private:
 	TObjectPtr<class UInputAction> MoveAction;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> RotationAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> SprintAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> JumpAction;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputMappingContext> MappingContext;
+#pragma endregion
 
 	bool isMoveInput{ false };
-#pragma endregion
+	bool isCombat{ false };
 
 public:
 	AMiyamotoIoriController();
 	void BeginPlay();
 	void Tick(float DeltaTime);
-	void SetupInputComonent() override;
+	void SetupInputComponent() override;
 	void MoveInput(const FInputActionValue& value);
 	void MoveEndInput(const FInputActionValue& value);
 	void LookInput(const FInputActionValue& value);
+	void SprintInput(const FInputActionValue& value);
+	void JumpInput(const FInputActionValue& value);
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 };

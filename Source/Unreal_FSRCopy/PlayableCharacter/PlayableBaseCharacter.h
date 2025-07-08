@@ -24,13 +24,25 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> FootComponent;
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkinnedMeshComponent> HairComponent;
+	TObjectPtr<USkeletalMeshComponent> HairComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class USpringArmComponent> SpringArm;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UCameraComponent> Camera;
 #pragma endregion
+
+#pragma region MoveOptions
+	bool isSprint{ false };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Options", meta = (AllowPrivateAccess = "true"))
+	float WalkSpeed{ 600.0f };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Options", meta = (AllowPrivateAccess = "true"))
+	float SprintSpeed{ 1200.0f };
+#pragma endregion
+
+#pragma region Montage
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAnimMontage> JumpMontage;
 
 public:
 	// Sets default values for this character's properties
@@ -46,5 +58,9 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	void SetMoveSpeed();
+	void SetSprint();
+	void SetWalk();
+	void PlayJumpMontage();
+	void PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage);
 };

@@ -30,6 +30,13 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	Camera->SetupAttachment(SpringArm);
 #pragma endregion
 
+#pragma region Montage
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> JumpMontageFinder(
+		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_Jump.AM_Jump'"));
+	if (JumpMontageFinder.Succeeded())
+		JumpMontage = JumpMontageFinder.Object;
+#pragma endregion
+
 	SpringArm->bUsePawnControlRotation = true;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -46,7 +53,10 @@ void APlayableBaseCharacter::BeginPlay()
 void APlayableBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	if(isSprint && GetVelocity().Size2D() < WalkSpeed)
+	{
+		SetWalk();
+	}
 }
 
 // Called to bind functionality to input
@@ -56,3 +66,45 @@ void APlayableBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 }
 
+void APlayableBaseCharacter::SetMoveSpeed()
+{
+	if (isSprint)
+		SetWalk();
+	else
+		SetSprint();
+}
+
+void APlayableBaseCharacter::SetSprint()
+{
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	isSprint = true;
+
+}
+
+void APlayableBaseCharacter::SetWalk()
+{
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	isSprint = false;
+}
+
+void APlayableBaseCharacter::PlayJumpMontage()
+{
+	if (GetMovementComponent()->IsFalling() == false &&
+		nullptr != JumpMontage &&
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(JumpMontage) == false)
+	{
+		PlayMontageFullBody(JumpMontage);
+	}
+}
+
+void APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage)
+{
+	if(Montage == nullptr)
+		return;
+	BodyComponent->GetAnimInstance()->Montage_Play(Montage);
+	HeadComponent->GetAnimInstance()->Montage_Play(Montage);
+	HairComponent->GetAnimInstance()->Montage_Play(Montage);
+	ArmComponent->GetAnimInstance()->Montage_Play(Montage);
+	LegComponent->GetAnimInstance()->Montage_Play(Montage);
+	FootComponent->GetAnimInstance()->Montage_Play(Montage);
+}

@@ -2,6 +2,7 @@
 
 
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
