@@ -87,6 +87,11 @@ void APlayableBaseCharacter::SetWalk()
 	isSprint = false;
 }
 
+void APlayableBaseCharacter::SetBrakingDecelerationFalling()
+{
+	GetCharacterMovement()->BrakingDecelerationFalling = GetCharacterMovement()->MaxWalkSpeed * 1.5f;
+}
+
 void APlayableBaseCharacter::PlayJumpMontage()
 {
 	if (GetMovementComponent()->IsFalling() == false &&
