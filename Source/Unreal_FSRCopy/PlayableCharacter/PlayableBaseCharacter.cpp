@@ -89,16 +89,26 @@ void APlayableBaseCharacter::SetWalk()
 
 void APlayableBaseCharacter::SetBrakingDecelerationFalling()
 {
-	GetCharacterMovement()->BrakingDecelerationFalling = GetCharacterMovement()->MaxWalkSpeed * 1.5f;
+	GetCharacterMovement()->BrakingDecelerationFalling = GetCharacterMovement()->MaxWalkSpeed;
 }
 
-void APlayableBaseCharacter::PlayJumpMontage()
+bool APlayableBaseCharacter::PlayJumpMontage()
 {
 	if (GetMovementComponent()->IsFalling() == false &&
 		nullptr != JumpMontage &&
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(JumpMontage) == false)
 	{
 		PlayMontageFullBody(JumpMontage);
+		return true;
+	}
+	return false;
+}
+
+void APlayableBaseCharacter::PlayJump()
+{
+	if(PlayJumpMontage())
+	{
+		SetBrakingDecelerationFalling();
 	}
 }
 

@@ -100,5 +100,5 @@ void AMiyamotoIoriController::SprintInput(const FInputActionValue& value)
 void AMiyamotoIoriController::JumpInput(const FInputActionValue& value)
 {
 	CurPlayableCharacter->Jump();
-	CurPlayableCharacter->PlayJumpMontage();
+	CurPlayableCharacter->PlayJump();
 }

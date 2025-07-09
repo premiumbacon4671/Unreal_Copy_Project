@@ -62,6 +62,7 @@ public:
 	void SetSprint();
 	void SetWalk();
 	void SetBrakingDecelerationFalling();
-	void PlayJumpMontage();
+	bool PlayJumpMontage();
+	void PlayJump();
 	void PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage);
 };
