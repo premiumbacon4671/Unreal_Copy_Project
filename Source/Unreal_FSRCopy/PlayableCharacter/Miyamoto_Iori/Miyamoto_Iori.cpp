@@ -7,6 +7,7 @@
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	CurSwordStance = SwordStance::EARTH;
 }
 
 void AMiyamoto_Iori::BeginPlay()

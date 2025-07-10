@@ -9,11 +9,21 @@
 /**
  * 
  */
+
+enum SwordStance
+{
+	EARTH,
+	WATER,
+};
+
 UCLASS()
 class UNREAL_FSRCOPY_API AMiyamoto_Iori : public APlayableBaseCharacter
 {
 	GENERATED_BODY()
 	
+private:
+	SwordStance CurSwordStance;
+
 public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;

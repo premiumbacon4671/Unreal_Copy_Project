@@ -22,14 +22,16 @@ UCLASS()
 class UNREAL_FSRCOPY_API ACombatZone : public AActor
 {
 	GENERATED_BODY()
-	
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CombatZoneEntrance", meta = (AllowPrivateAccess = "true"))
 	TArray<FCombatZoneEntrance> CombatZoneEntrances;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CombatZoneEntrance", meta = (AllowPrivateAccess = "true"))
 	TArray<class UBoxComponent*> CombatZoneEntranceComponents;
-public:	
+
+
+public:
 	// Sets default values for this actor's properties
 	ACombatZone();
 
@@ -37,8 +39,10 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void CreateCombatZoneEntranceComponents();
+	UFUNCTION()
+	void CombatZoneEntranceOnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

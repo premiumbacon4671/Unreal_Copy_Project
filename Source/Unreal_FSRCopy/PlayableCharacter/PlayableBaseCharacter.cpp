@@ -123,3 +123,10 @@ void APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montag
 	LegComponent->GetAnimInstance()->Montage_Play(Montage);
 	FootComponent->GetAnimInstance()->Montage_Play(Montage);
 }
+
+void APlayableBaseCharacter::SetCombatMode()
+{
+	isCombatMode = true;
+	FString ModeText = isCombatMode ? TEXT("true") : TEXT("false");
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CombatMode : ") + ModeText);
+}

@@ -3,6 +3,7 @@
 
 #include "CombatZone/CombatZone.h"
 #include "Components/BoxComponent.h"
+#include "PlayableCharacter/PlayableBaseCharacter.h"
 
 // Sets default values
 ACombatZone::ACombatZone()
@@ -38,8 +39,20 @@ void ACombatZone::CreateCombatZoneEntranceComponents()
 			EntranceComponent->SetBoxExtent(Entrance.EntranceSize);
 			EntranceComponent->RegisterComponent();
 			EntranceComponent->SetHiddenInGame(false);
+			EntranceComponent->SetCollisionProfileName(TEXT("CombatZoneEntrances"));
+			EntranceComponent->OnComponentEndOverlap.AddDynamic(this, &ACombatZone::CombatZoneEntranceOnEndOverlap);
 			CombatZoneEntranceComponents.Add(EntranceComponent);
 		}
+	}
+}
+
+void ACombatZone::CombatZoneEntranceOnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("EndOverlap : ") + OtherActor->GetName());
+	APlayableBaseCharacter* PC = Cast<APlayableBaseCharacter>(OtherActor);
+	if (nullptr != PC)
+	{
+		PC->SetCombatMode();
 	}
 }
 

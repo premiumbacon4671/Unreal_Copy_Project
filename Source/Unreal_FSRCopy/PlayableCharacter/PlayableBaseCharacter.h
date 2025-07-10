@@ -40,9 +40,14 @@ private:
 	float SprintSpeed{ 1200.0f };
 #pragma endregion
 
+#pragma region CombatMode
+	bool isCombatMode{ false };
+#pragma endregion
+
 #pragma region Montage
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> JumpMontage;
+#pragma endregion
 
 public:
 	// Sets default values for this character's properties
@@ -65,4 +70,5 @@ public:
 	bool PlayJumpMontage();
 	void PlayJump();
 	void PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage);
+	void SetCombatMode();
 };
