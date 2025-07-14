@@ -74,6 +74,12 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 	FVector Forward = GetTransformComponent()->GetForwardVector();
 	Forward.Z = 0.0f;
 	Forward.Normalize();
+	//Gamepad Deadzone
+	if (FMath::Abs(MoveValue.X) <= 0.2f)
+		MoveValue.X = 0.0f;
+	if (FMath::Abs(MoveValue.Y) <= 0.2f)
+		MoveValue.Y = 0.0f;
+
 	CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
 	CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
 }
@@ -85,9 +91,14 @@ void AMiyamotoIoriController::MoveEndInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::LookInput(const FInputActionValue& value)
 {
-	FVector2D MoveValue = value.Get<FVector2D>();
-	AddYawInput(MoveValue.X);
-	AddPitchInput(MoveValue.Y);
+	FVector2D MoveValue = value.Get<FVector2D>(); 
+	//Gamepad Deadzone
+	if (FMath::Abs(MoveValue.X) <= 0.2f)
+		MoveValue.X = 0.0f;
+	if (FMath::Abs(MoveValue.Y) <= 0.2f)
+		MoveValue.Y = 0.0f;
+	AddYawInput(MoveValue.X * CAMERA_SPIN_SPEED * GetWorld()->DeltaTimeSeconds);
+	AddPitchInput(MoveValue.Y * CAMERA_SPIN_SPEED * GetWorld()->DeltaTimeSeconds);
 }
 
 void AMiyamotoIoriController::SprintInput(const FInputActionValue& value)

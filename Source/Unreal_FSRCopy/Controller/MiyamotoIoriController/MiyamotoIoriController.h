@@ -9,6 +9,7 @@
 /**
  * 
  */
+#define CAMERA_SPIN_SPEED 100
 struct FInputActionValue;
 UCLASS()
 class UNREAL_FSRCOPY_API AMiyamotoIoriController : public APlayerController

@@ -28,6 +28,9 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	SpringArm->SetupAttachment(GetRootComponent());
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
+
+	FirstWeaponComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstWeapon"));
+	FirstWeaponComponent->SetupAttachment(BodyComponent, FName(TEXT("FirstWeapon")));
 #pragma endregion
 
 #pragma region Montage
@@ -35,6 +38,11 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_Jump.AM_Jump'"));
 	if (JumpMontageFinder.Succeeded())
 		JumpMontage = JumpMontageFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipMontageFinder(
+		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_Equip.AM_Equip'"));
+	if (EquipMontageFinder.Succeeded())
+		EquipMontage = EquipMontageFinder.Object;
 #pragma endregion
 
 	SpringArm->bUsePawnControlRotation = true;
@@ -112,7 +120,7 @@ void APlayableBaseCharacter::PlayJump()
 	}
 }
 
-void APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage)
+void APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName)
 {
 	if(Montage == nullptr)
 		return;
@@ -122,11 +130,52 @@ void APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montag
 	ArmComponent->GetAnimInstance()->Montage_Play(Montage);
 	LegComponent->GetAnimInstance()->Montage_Play(Montage);
 	FootComponent->GetAnimInstance()->Montage_Play(Montage);
+
+	if(SectionName.IsNone() == false)
+	{
+		BodyComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
+		HeadComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
+		HairComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
+		ArmComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
+		LegComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
+		FootComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
+	}
 }
 
 void APlayableBaseCharacter::SetCombatMode()
 {
-	isCombatMode = true;
+	//Test Code
+	//isCombatMode = true;
+	isCombatMode = !isCombatMode;
+	GetController()->SetIgnoreMoveInput(true);
+	PlayEquipWeaponMontage();
 	FString ModeText = isCombatMode ? TEXT("true") : TEXT("false");
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CombatMode : ") + ModeText);
+}
+
+void APlayableBaseCharacter::PlayEquipWeaponMontage()
+{
+	if (GetMovementComponent()->IsFalling() == true ||
+		nullptr == EquipMontage ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true)
+		return;
+
+	if(isCombatMode == false)
+		PlayMontageFullBody(EquipMontage, TEXT("UnEquip"));
+	else
+		PlayMontageFullBody(EquipMontage, TEXT("equip"));
+}
+
+void APlayableBaseCharacter::WeaponEquip()
+{
+	FirstWeaponComponent->AttachToComponent(BodyComponent,
+		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+		FName(TEXT("FirstWeaponHand")));
+}
+
+void APlayableBaseCharacter::WeaponUnEquip()
+{
+	FirstWeaponComponent->AttachToComponent(BodyComponent,
+		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+		FName(TEXT("FirstWeapon")));
 }

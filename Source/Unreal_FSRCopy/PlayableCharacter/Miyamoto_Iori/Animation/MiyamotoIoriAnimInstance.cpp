@@ -5,6 +5,8 @@
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
+#include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
+#include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
 void UMiyamotoIoriAnimInstance::NativeInitializeAnimation()
 {
@@ -23,8 +25,22 @@ void UMiyamotoIoriAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		MoveVelocity = MovementComponent->Velocity.Size2D();
 		isJump = OwnerCharacter->GetMovementComponent()->IsFalling();
 		AMiyamotoIoriController* OwnerController = Cast<AMiyamotoIoriController>(OwnerCharacter->GetController());
-		//isEquip = OwnerCharacter->GetisEquip();
+		isEquip = OwnerCharacter->GetIsCombatMode();
+		CurSwordStance = Cast<AMiyamoto_Iori>(OwnerCharacter)->GetCurSwordStance();
 		if (nullptr != OwnerController)
 			isMoveInput = OwnerController->GetIsMoveInput();
 	}
+}
+
+UAnimSequence* UMiyamotoIoriAnimInstance::GetCombatIdleSequence() const
+{
+	if (nullptr != OwnerCharacter)
+	{
+		UBaseSwordStanceActorComponent* CurStanceComponent = Cast<AMiyamoto_Iori>(OwnerCharacter)->GetCurSwordStanceComponent();
+		if (nullptr != CurStanceComponent)
+		{
+			return CurStanceComponent->GetIdleSequenece();
+		}
+	}
+	return nullptr;
 }

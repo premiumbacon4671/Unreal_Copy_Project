@@ -14,8 +14,6 @@ class UNREAL_FSRCOPY_API APlayableBaseCharacter : public ACharacter
 private:
 #pragma region Component
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkeletalMeshComponent> BodyComponent;
-	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> HeadComponent;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> ArmComponent;
@@ -40,15 +38,24 @@ private:
 	float SprintSpeed{ 1200.0f };
 #pragma endregion
 
-#pragma region CombatMode
-	bool isCombatMode{ false };
-#pragma endregion
-
-#pragma region Montage
+#pragma region Jump
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> JumpMontage;
 #pragma endregion
 
+protected:
+#pragma region Component
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USkeletalMeshComponent> BodyComponent;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USkeletalMeshComponent> FirstWeaponComponent;
+#pragma endregion
+
+#pragma region CombatMode
+	bool isCombatMode{ false };
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAnimMontage> EquipMontage;
+#pragma endregion
 public:
 	// Sets default values for this character's properties
 	APlayableBaseCharacter();
@@ -69,6 +76,10 @@ public:
 	void SetBrakingDecelerationFalling();
 	bool PlayJumpMontage();
 	void PlayJump();
-	void PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage);
+	void PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "");
 	void SetCombatMode();
+	virtual void PlayEquipWeaponMontage();
+	void WeaponEquip();
+	void WeaponUnEquip();
+	bool GetIsCombatMode() const { return isCombatMode; }
 };
