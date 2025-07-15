@@ -9,6 +9,7 @@
 /**
  * 
  */
+enum class ESWORDSTANCE : uint8;
 UCLASS()
 class UNREAL_FSRCOPY_API UMiyamotoIoriAnimInstance : public UAnimInstance
 {
@@ -34,11 +35,9 @@ private:
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	bool isEquip;
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	int CurSwordStance;
+	ESWORDSTANCE CurSwordStance;
 public:
 	void NativeInitializeAnimation() override;
 	void NativeUpdateAnimation(float DeltaSeconds) override;
 
-	UFUNCTION(BlueprintCallable, Category = "MiyamotoIori")
-	UAnimSequence* GetCombatIdleSequence() const;
 };

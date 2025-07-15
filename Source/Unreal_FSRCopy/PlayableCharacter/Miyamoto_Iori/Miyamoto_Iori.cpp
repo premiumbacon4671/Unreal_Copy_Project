@@ -8,16 +8,16 @@
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	CurSwordStance = SWORDSTANCE::EARTH;
+	CurSwordStance = ESWORDSTANCE::EST_EARTH;
 
 #pragma region CreateComponent
 	FirstWeaponCoverComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstWeaponCover"));
 	FirstWeaponCoverComponent->SetupAttachment(BodyComponent, FName(TEXT("FirstWeapon")));
 
-	SwordStanceComponents.SetNum(static_cast<int32>(SWORDSTANCE::SWORDSTANCE_MAX));
-	SwordStanceComponents[SWORDSTANCE::EARTH] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
+	SwordStanceComponents.SetNum(static_cast<int32>(ESWORDSTANCE::EST_MAX));
+	SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
 #pragma endregion
-	CurSwordStanceComponent = SwordStanceComponents[CurSwordStance];
+	CurSwordStanceComponent = SwordStanceComponents[static_cast<int32>(CurSwordStance)];
 }
 
 void AMiyamoto_Iori::BeginPlay()
@@ -40,10 +40,10 @@ void AMiyamoto_Iori::PlayEquipWeaponMontage()
 
 	switch (CurSwordStance)
 	{
-	case EARTH:
+	case ESWORDSTANCE::EST_EARTH:
 		SectionName = isCombatMode ? FName(TEXT("OneHandSwordEquip")) : FName(TEXT("OneHandSwordUnEquip"));
 		break;
-	case FIRE:
+	case ESWORDSTANCE::EST_FIRE:
 		break;
 	}
 

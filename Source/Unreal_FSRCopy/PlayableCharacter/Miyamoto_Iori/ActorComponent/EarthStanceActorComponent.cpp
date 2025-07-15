@@ -6,10 +6,6 @@
 UEarthStanceActorComponent::UEarthStanceActorComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	static ConstructorHelpers::FObjectFinder<UAnimSequence> IdleSequenceFinder(
-		TEXT("/Script/Engine.AnimSequence'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/OneHandSwordAttack/anim_idle.anim_idle'"));
-	if (IdleSequenceFinder.Succeeded())
-		CombatIdleSequence = IdleSequenceFinder.Object;
 }
 
 void UEarthStanceActorComponent::BeginPlay()

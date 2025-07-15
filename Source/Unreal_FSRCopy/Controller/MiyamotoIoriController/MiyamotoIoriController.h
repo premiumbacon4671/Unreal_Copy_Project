@@ -29,6 +29,10 @@ private:
 	TObjectPtr<class UInputAction> SprintAction;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> JumpAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> NormalAttackAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> HeavyAttackAction;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputMappingContext> MappingContext;
@@ -47,6 +51,8 @@ public:
 	void LookInput(const FInputActionValue& value);
 	void SprintInput(const FInputActionValue& value);
 	void JumpInput(const FInputActionValue& value);
+	void NormalAttackInput(const FInputActionValue& value);
+	void HeavyAttackInput(const FInputActionValue& value);
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 };

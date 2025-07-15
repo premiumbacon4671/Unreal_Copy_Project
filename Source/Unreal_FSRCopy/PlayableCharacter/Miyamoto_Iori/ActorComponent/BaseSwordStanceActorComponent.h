@@ -19,8 +19,6 @@ public:
 protected:
 #pragma region Montage
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UAnimSequence> CombatIdleSequence;
-	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> AttackMontage;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> HikenMontage;
@@ -33,5 +31,4 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	UAnimSequence* GetIdleSequenece() const { return CombatIdleSequence; }
 };

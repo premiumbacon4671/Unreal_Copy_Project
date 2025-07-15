@@ -10,11 +10,12 @@
  * 
  */
 
-enum SWORDSTANCE
+UENUM(BlueprintType)
+enum class ESWORDSTANCE : uint8
 {
-	EARTH,
-	FIRE,
-	SWORDSTANCE_MAX
+	EST_EARTH UMETA(DisplayName = "EarthStance"),
+	EST_FIRE UMETA(DisplayName = "FireStance"),
+	EST_MAX
 };
 
 UCLASS()
@@ -23,7 +24,7 @@ class UNREAL_FSRCOPY_API AMiyamoto_Iori : public APlayableBaseCharacter
 	GENERATED_BODY()
 	
 private:
-	SWORDSTANCE CurSwordStance;
+	ESWORDSTANCE CurSwordStance;
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
 #pragma region Component
@@ -33,7 +34,7 @@ public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-	int GetCurSwordStance() const { return static_cast<int>(CurSwordStance); }
+	ESWORDSTANCE GetCurSwordStance() const { return CurSwordStance; }
 	void PlayEquipWeaponMontage() override;
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 };

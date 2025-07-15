@@ -32,6 +32,16 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (JumpActionFinder.Succeeded())
 		JumpAction = JumpActionFinder.Object;
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> NormalAttackActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_PCNormalAttack.IA_PCNormalAttack'"));
+	if (NormalAttackActionFinder.Succeeded())
+		NormalAttackAction = NormalAttackActionFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> HeavyAttackActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_PCHeavyAttack.IA_PCHeavyAttack'"));
+	if (HeavyAttackActionFinder.Succeeded())
+		HeavyAttackAction = HeavyAttackActionFinder.Object;
+
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextFinder(
 		TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Blueprint/PlayableCharacter/Input/IMC_PlayableCharacter.IMC_PlayableCharacter'"));
 	if (InputMappingContextFinder.Succeeded())
@@ -64,6 +74,8 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(RotationAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::LookInput);
 		input->BindAction(SprintAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SprintInput);
 		input->BindAction(JumpAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::JumpInput);
+		input->BindAction(NormalAttackAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::NormalAttackInput);
+		input->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::HeavyAttackInput);
 	}
 }
 
@@ -112,4 +124,12 @@ void AMiyamotoIoriController::JumpInput(const FInputActionValue& value)
 {
 	CurPlayableCharacter->Jump();
 	CurPlayableCharacter->PlayJump();
+}
+
+void AMiyamotoIoriController::NormalAttackInput(const FInputActionValue& value)
+{
+}
+
+void AMiyamotoIoriController::HeavyAttackInput(const FInputActionValue& value)
+{
 }

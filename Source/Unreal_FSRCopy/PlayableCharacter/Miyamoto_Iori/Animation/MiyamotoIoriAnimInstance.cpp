@@ -31,16 +31,3 @@ void UMiyamotoIoriAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			isMoveInput = OwnerController->GetIsMoveInput();
 	}
 }
-
-UAnimSequence* UMiyamotoIoriAnimInstance::GetCombatIdleSequence() const
-{
-	if (nullptr != OwnerCharacter)
-	{
-		UBaseSwordStanceActorComponent* CurStanceComponent = Cast<AMiyamoto_Iori>(OwnerCharacter)->GetCurSwordStanceComponent();
-		if (nullptr != CurStanceComponent)
-		{
-			return CurStanceComponent->GetIdleSequenece();
-		}
-	}
-	return nullptr;
-}
