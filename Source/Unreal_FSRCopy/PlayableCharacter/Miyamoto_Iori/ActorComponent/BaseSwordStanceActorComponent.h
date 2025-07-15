@@ -19,7 +19,9 @@ public:
 protected:
 #pragma region Montage
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UAnimMontage> AttackMontage;
+	TObjectPtr<UAnimMontage> NormalAttackMontage;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAnimMontage> HeavyAttackMontage;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> HikenMontage;
 #pragma endregion
@@ -31,4 +33,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void PlayNormalAttackMontage();
+	void PlayHeavyAttackMontage();
+	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }
+	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
 };

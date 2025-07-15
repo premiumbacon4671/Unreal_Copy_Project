@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
 AMiyamotoIoriController::AMiyamotoIoriController()
 {
@@ -128,8 +129,12 @@ void AMiyamotoIoriController::JumpInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::NormalAttackInput(const FInputActionValue& value)
 {
+	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Normal Attack Input"));
+	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayNormalAttackMontage();
 }
 
 void AMiyamotoIoriController::HeavyAttackInput(const FInputActionValue& value)
 {
+	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Heavy Attack Input"));
+	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayHeavyAttackMontage();
 }

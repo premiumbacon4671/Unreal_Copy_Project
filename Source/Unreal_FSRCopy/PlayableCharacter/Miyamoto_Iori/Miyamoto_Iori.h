@@ -26,7 +26,6 @@ class UNREAL_FSRCOPY_API AMiyamoto_Iori : public APlayableBaseCharacter
 private:
 	ESWORDSTANCE CurSwordStance;
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
-	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
 #pragma region Component
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> FirstWeaponCoverComponent;
@@ -36,5 +35,4 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	ESWORDSTANCE GetCurSwordStance() const { return CurSwordStance; }
 	void PlayEquipWeaponMontage() override;
-	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 };

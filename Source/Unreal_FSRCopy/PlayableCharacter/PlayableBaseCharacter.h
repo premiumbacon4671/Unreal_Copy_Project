@@ -53,8 +53,15 @@ protected:
 
 #pragma region CombatMode
 	bool isCombatMode{ false };
+	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> EquipMontage;
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	TArray<FName> NormalAttackSectionNames;
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	TArray<FName> HeavyAttackSectionNames;
+	int NormalAttackSectionIndex{ 0 };
 #pragma endregion
 public:
 	// Sets default values for this character's properties
@@ -81,5 +88,9 @@ public:
 	virtual void PlayEquipWeaponMontage();
 	void WeaponEquip();
 	void WeaponUnEquip();
+	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
+	FName GetAddCurNormalAttackSectionName();
+	FName GetCurHeavyAttackSectionName();
 	bool GetIsCombatMode() const { return isCombatMode; }
+	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 };

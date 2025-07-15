@@ -2,6 +2,8 @@
 
 
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
+#include "PlayableCharacter/PlayableBaseCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values for this component's properties
 UBaseSwordStanceActorComponent::UBaseSwordStanceActorComponent()
@@ -30,5 +32,29 @@ void UBaseSwordStanceActorComponent::TickComponent(float DeltaTime, ELevelTick T
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+}
+
+void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
+{
+	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
+	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+	if(OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
+		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
+		return;
+	OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, OwnerCharacter->GetAddCurNormalAttackSectionName());
+}
+
+void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
+{
+	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
+	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
+		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
+		return;
+	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, OwnerCharacter->GetCurHeavyAttackSectionName());
 }
 

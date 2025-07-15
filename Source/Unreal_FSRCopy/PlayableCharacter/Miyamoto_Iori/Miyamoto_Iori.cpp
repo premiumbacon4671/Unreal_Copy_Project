@@ -34,7 +34,8 @@ void AMiyamoto_Iori::PlayEquipWeaponMontage()
 {
 	if (GetMovementComponent()->IsFalling() == true ||
 		nullptr == EquipMontage ||
-		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true)
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true)
 		return;
 	FName SectionName;
 

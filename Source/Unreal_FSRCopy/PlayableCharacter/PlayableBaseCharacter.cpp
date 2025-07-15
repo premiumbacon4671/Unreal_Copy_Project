@@ -5,6 +5,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
 // Sets default values
 APlayableBaseCharacter::APlayableBaseCharacter()
@@ -157,7 +158,9 @@ void APlayableBaseCharacter::PlayEquipWeaponMontage()
 {
 	if (GetMovementComponent()->IsFalling() == true ||
 		nullptr == EquipMontage ||
-		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true)
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetHeavyAttackMontage()) == true)
 		return;
 
 	if(isCombatMode == false)
@@ -178,4 +181,19 @@ void APlayableBaseCharacter::WeaponUnEquip()
 	FirstWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
 		FName(TEXT("FirstWeapon")));
+}
+
+FName APlayableBaseCharacter::GetAddCurNormalAttackSectionName()
+{
+	FName SectionName = NormalAttackSectionNames[NormalAttackSectionIndex];
+	++NormalAttackSectionIndex;
+	NormalAttackSectionIndex %= NormalAttackSectionNames.Num();
+	return SectionName;
+}
+
+FName APlayableBaseCharacter::GetCurHeavyAttackSectionName()
+{
+	FName SectionName = HeavyAttackSectionNames[NormalAttackSectionIndex];
+	NormalAttackSectionIndex = 0;
+	return SectionName;
 }
