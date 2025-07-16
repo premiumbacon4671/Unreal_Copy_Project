@@ -91,6 +91,7 @@ public:
 	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
 	FName GetAddCurNormalAttackSectionName();
 	FName GetCurHeavyAttackSectionName();
+	int GetNormalAttackSectionIndex() const { return NormalAttackSectionIndex; }
 	bool GetIsCombatMode() const { return isCombatMode; }
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 };

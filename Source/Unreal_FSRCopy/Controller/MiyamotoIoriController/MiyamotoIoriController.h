@@ -53,6 +53,7 @@ public:
 	void JumpInput(const FInputActionValue& value);
 	void NormalAttackInput(const FInputActionValue& value);
 	void HeavyAttackInput(const FInputActionValue& value);
+	void HeavyAttackTriggeredInput(const FInputActionValue& value);
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 };

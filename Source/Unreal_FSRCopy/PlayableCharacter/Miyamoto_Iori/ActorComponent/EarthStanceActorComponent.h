@@ -22,4 +22,6 @@ public:
 	// Called every frame
 	UEarthStanceActorComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void PlayHeavyAttackMontage() override;
+	void PlayTriggeredHeavyAttackMontage() override;
 };

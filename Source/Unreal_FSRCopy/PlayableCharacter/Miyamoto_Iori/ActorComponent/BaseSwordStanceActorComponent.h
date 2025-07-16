@@ -34,7 +34,8 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void PlayNormalAttackMontage();
-	void PlayHeavyAttackMontage();
+	virtual void PlayHeavyAttackMontage();
+	virtual void PlayTriggeredHeavyAttackMontage();
 	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }
 	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
 };

@@ -58,3 +58,7 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, OwnerCharacter->GetCurHeavyAttackSectionName());
 }
 
+void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
+{
+}
+
