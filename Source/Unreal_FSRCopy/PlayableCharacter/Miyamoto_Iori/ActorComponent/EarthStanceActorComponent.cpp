@@ -45,15 +45,16 @@ void UEarthStanceActorComponent::PlayHeavyAttackMontage()
 
 void UEarthStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 {
-	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
+	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+
+	if (OwnerCharacter->GetNormalAttackSectionIndex() != 0)
+		return;
+
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
 		return;
 
-	if (OwnerCharacter->GetNormalAttackSectionIndex() == 0)
-	{
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->l
-	}
+	//OwnerCharacter->GetBodyComponent()->GetAnimInstance()->l
 }
