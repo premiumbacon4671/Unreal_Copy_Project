@@ -54,6 +54,7 @@ public:
 	void NormalAttackInput(const FInputActionValue& value);
 	void HeavyAttackInput(const FInputActionValue& value);
 	void HeavyAttackTriggeredInput(const FInputActionValue& value);
+	void HeavyAttackCompletedInput(const FInputActionValue& valuve);
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 };

@@ -53,6 +53,8 @@ protected:
 
 #pragma region CombatMode
 	bool isCombatMode{ false };
+
+	UPROPERTY(EditAnywhere, Category = "Sword Stance")
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
 
 	UPROPERTY(VisibleAnywhere)
@@ -61,6 +63,7 @@ protected:
 	TArray<FName> NormalAttackSectionNames;
 	UPROPERTY(EditAnywhere, Category = "Montage")
 	TArray<FName> HeavyAttackSectionNames;
+	
 	int NormalAttackSectionIndex{ 0 };
 #pragma endregion
 public:
@@ -83,15 +86,18 @@ public:
 	void SetBrakingDecelerationFalling();
 	bool PlayJumpMontage();
 	void PlayJump();
-	void PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "");
+	bool PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "");
 	void SetCombatMode();
 	virtual void PlayEquipWeaponMontage();
 	void WeaponEquip();
 	void WeaponUnEquip();
 	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
+	void StopMontage(TObjectPtr<UAnimMontage> Montage);
+
 	FName GetAddCurNormalAttackSectionName();
 	FName GetCurHeavyAttackSectionName();
 	int GetNormalAttackSectionIndex() const { return NormalAttackSectionIndex; }
+	void ResetNormalAttackSectionIndex() { NormalAttackSectionIndex = 0; }
 	bool GetIsCombatMode() const { return isCombatMode; }
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 };

@@ -7,7 +7,7 @@
 #include "BaseSwordStanceActorComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseSwordStanceActorComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -23,7 +23,22 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> HeavyAttackMontage;
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UAnimMontage> HikenMontage;
+	TObjectPtr<UAnimMontage> HikenMontage; 
+
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	TArray<FName> ExtraHeavyAttackNames;
+
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	TArray<int> HeavyAttackMaxCount;
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	TArray<int> HeavyAttackCount;
+
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	bool isUseableNormalAttack{ true };
+
+	//강공격 가능 여부 확인
+	UPROPERTY(EditAnywhere, Category = "Montage")
+	bool isUseableHeavyAttack{ true };
 #pragma endregion
 
 protected:
@@ -36,6 +51,13 @@ public:
 	void PlayNormalAttackMontage();
 	virtual void PlayHeavyAttackMontage();
 	virtual void PlayTriggeredHeavyAttackMontage();
+	virtual void PlayCompletedHeavyAttackMontage();
 	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }
 	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
+	void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }
+	void ResetNormalAttack();
+	//강공격 연타시 사용
+	void ResetisUseableHeavyAttack() { isUseableHeavyAttack = true; }
+	//강공격 완전 종료시 사용
+	void ResetHeavyAttack();
 };

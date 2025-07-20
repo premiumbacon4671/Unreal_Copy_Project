@@ -30,31 +30,35 @@ void UEarthStanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
-void UEarthStanceActorComponent::PlayHeavyAttackMontage()
+void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 {
-	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
-		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
+		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
+		isUseableHeavyAttack == true)
 		return;
 
-	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, OwnerCharacter->GetCurHeavyAttackSectionName());
+	int HeavyAttackIndex = OwnerCharacter->GetNormalAttackSectionIndex();
+	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[HeavyAttackIndex]));
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
+		HeavyAttackCount[HeavyAttackIndex] > 0 &&
+		HeavyAttackCount[HeavyAttackIndex] >= HeavyAttackMaxCount[HeavyAttackIndex])
+		return;
+
+	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Earth Completed Heavy Attack Montage"));
+	PlayHeavyAttack0ChargeMontage();
+	HeavyAttackCount[HeavyAttackIndex]++;
 }
 
-void UEarthStanceActorComponent::PlayTriggeredHeavyAttackMontage()
+void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 {
-	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 
 	if (OwnerCharacter->GetNormalAttackSectionIndex() != 0)
 		return;
 
-	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
-		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
-		return;
-
-	//OwnerCharacter->GetBodyComponent()->GetAnimInstance()->l
+	GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Magenta, TEXT("Play Earth Charge Heavy Attack0 Montage"));
+	OwnerCharacter->StopMontage(HeavyAttackMontage);
+	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, ExtraHeavyAttackNames[OwnerCharacter->GetNormalAttackSectionIndex()]);
 }

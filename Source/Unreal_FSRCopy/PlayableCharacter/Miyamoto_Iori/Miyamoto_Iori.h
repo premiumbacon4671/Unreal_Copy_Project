@@ -25,6 +25,7 @@ class UNREAL_FSRCOPY_API AMiyamoto_Iori : public APlayableBaseCharacter
 	
 private:
 	ESWORDSTANCE CurSwordStance;
+	UPROPERTY(EditAnywhere, Instanced, Category = "Sword Stance")
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
 #pragma region Component
 	UPROPERTY(VisibleAnywhere)

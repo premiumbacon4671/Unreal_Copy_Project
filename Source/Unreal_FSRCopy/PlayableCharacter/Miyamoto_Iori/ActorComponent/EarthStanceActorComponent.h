@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UEarthStanceActorComponent : public UBaseSwordStanceActorComponent
 {
 	GENERATED_BODY()
@@ -22,6 +22,6 @@ public:
 	// Called every frame
 	UEarthStanceActorComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	void PlayHeavyAttackMontage() override;
-	void PlayTriggeredHeavyAttackMontage() override;
+	void PlayCompletedHeavyAttackMontage() override;
+	void PlayHeavyAttack0ChargeMontage();
 };

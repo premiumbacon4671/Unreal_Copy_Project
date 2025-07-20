@@ -14,8 +14,13 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	FirstWeaponCoverComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstWeaponCover"));
 	FirstWeaponCoverComponent->SetupAttachment(BodyComponent, FName(TEXT("FirstWeapon")));
 
-	SwordStanceComponents.SetNum(static_cast<int32>(ESWORDSTANCE::EST_MAX));
-	SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
+	//SwordStanceComponents.SetNum(static_cast<int32>(ESWORDSTANCE::EST_MAX));
+	//SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
+
+	UEarthStanceActorComponent* EarthStance = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStanceComponent"));
+	//SwordStanceComponents[static_cast<int32>(ESWORDSTANCE::EST_EARTH)] = EarthStance;
+	SwordStanceComponents.Add(EarthStance);
+
 #pragma endregion
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int32>(CurSwordStance)];
 }

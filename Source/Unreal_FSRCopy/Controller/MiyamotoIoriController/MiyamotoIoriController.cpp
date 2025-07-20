@@ -78,6 +78,7 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(NormalAttackAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::NormalAttackInput);
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::HeavyAttackInput);
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::HeavyAttackTriggeredInput);
+		input->BindAction(HeavyAttackAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::HeavyAttackCompletedInput);
 	}
 }
 
@@ -144,4 +145,10 @@ void AMiyamotoIoriController::HeavyAttackTriggeredInput(const FInputActionValue&
 {
 	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Triggered Heavy Attack Input"));
 	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayTriggeredHeavyAttackMontage();
+}
+
+void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue& valuve)
+{
+	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Completed Heavy Attack Input"));
+	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayCompletedHeavyAttackMontage();
 }

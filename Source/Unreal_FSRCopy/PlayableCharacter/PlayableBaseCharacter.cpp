@@ -55,7 +55,6 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 void APlayableBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -121,10 +120,10 @@ void APlayableBaseCharacter::PlayJump()
 	}
 }
 
-void APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName)
+bool APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName)
 {
 	if(Montage == nullptr)
-		return;
+		return false;
 	BodyComponent->GetAnimInstance()->Montage_Play(Montage);
 	HeadComponent->GetAnimInstance()->Montage_Play(Montage);
 	HairComponent->GetAnimInstance()->Montage_Play(Montage);
@@ -140,7 +139,9 @@ void APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montag
 		ArmComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
 		LegComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
 		FootComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
+		
 	}
+	return true;
 }
 
 void APlayableBaseCharacter::SetCombatMode()
@@ -183,6 +184,18 @@ void APlayableBaseCharacter::WeaponUnEquip()
 		FName(TEXT("FirstWeapon")));
 }
 
+void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
+{
+	if(Montage == nullptr)
+		return;
+	BodyComponent->GetAnimInstance()->Montage_Stop(0.2, Montage);
+	HeadComponent->GetAnimInstance()->Montage_Stop(0.2, Montage);
+	HairComponent->GetAnimInstance()->Montage_Stop(0.2, Montage);
+	ArmComponent->GetAnimInstance()->Montage_Stop(0.2, Montage);
+	LegComponent->GetAnimInstance()->Montage_Stop(0.2, Montage);
+	FootComponent->GetAnimInstance()->Montage_Stop(0.2, Montage);
+}
+
 FName APlayableBaseCharacter::GetAddCurNormalAttackSectionName()
 {
 	FName SectionName = NormalAttackSectionNames[NormalAttackSectionIndex];
@@ -194,6 +207,5 @@ FName APlayableBaseCharacter::GetAddCurNormalAttackSectionName()
 FName APlayableBaseCharacter::GetCurHeavyAttackSectionName()
 {
 	FName SectionName = HeavyAttackSectionNames[NormalAttackSectionIndex];
-	NormalAttackSectionIndex = 0;
 	return SectionName;
 }
