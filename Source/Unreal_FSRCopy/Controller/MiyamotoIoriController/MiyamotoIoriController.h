@@ -28,6 +28,8 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> SprintAction;
 	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> EvadeAction;
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> JumpAction;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> NormalAttackAction;
@@ -50,6 +52,7 @@ public:
 	void MoveEndInput(const FInputActionValue& value);
 	void LookInput(const FInputActionValue& value);
 	void SprintInput(const FInputActionValue& value);
+	void EvadeInput(const FInputActionValue& value);
 	void JumpInput(const FInputActionValue& value);
 	void NormalAttackInput(const FInputActionValue& value);
 	void HeavyAttackInput(const FInputActionValue& value);

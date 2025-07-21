@@ -83,6 +83,7 @@ public:
 	void SetMoveSpeed();
 	void SetSprint();
 	void SetWalk();
+	void PlayEvade();
 	void SetBrakingDecelerationFalling();
 	bool PlayJumpMontage();
 	void PlayJump();

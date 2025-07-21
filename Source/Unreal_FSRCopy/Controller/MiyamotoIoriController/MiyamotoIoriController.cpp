@@ -28,6 +28,11 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (SprintActionFinder.Succeeded())
 		SprintAction = SprintActionFinder.Object;
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> EvadeActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_PCEvade.IA_PCEvade'"));
+	if (EvadeActionFinder.Succeeded())
+		EvadeAction = EvadeActionFinder.Object;
+
 	static ConstructorHelpers::FObjectFinder<UInputAction> JumpActionFinder(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_PCJump.IA_PCJump'"));
 	if (JumpActionFinder.Succeeded())
@@ -62,6 +67,7 @@ void AMiyamotoIoriController::BeginPlay()
 void AMiyamotoIoriController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	isCombat = CurPlayableCharacter->GetIsCombatMode();
 }
 
 void AMiyamotoIoriController::SetupInputComponent()
@@ -74,6 +80,7 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(MoveAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::MoveEndInput);
 		input->BindAction(RotationAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::LookInput);
 		input->BindAction(SprintAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SprintInput);
+		input->BindAction(EvadeAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::EvadeInput);
 		input->BindAction(JumpAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::JumpInput);
 		input->BindAction(NormalAttackAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::NormalAttackInput);
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::HeavyAttackInput);
@@ -121,6 +128,13 @@ void AMiyamotoIoriController::SprintInput(const FInputActionValue& value)
 	if(isCombat)
 		return;
 	CurPlayableCharacter->SetMoveSpeed();
+}
+
+void AMiyamotoIoriController::EvadeInput(const FInputActionValue& value)
+{
+	if (isCombat == false)
+		return;
+
 }
 
 void AMiyamotoIoriController::JumpInput(const FInputActionValue& value)

@@ -21,6 +21,10 @@ private:
 	float AttackPower { 100.0f };
 	UPROPERTY(EditAnywhere, Category = "State")
 	float DefencePower { 50.0f };
+	UPROPERTY(EditAnywhere, Category = "State")
+	float Hiken{ 0.0f };
+	UPROPERTY(EditAnywhere, Category = "State")
+	float MaxHiken{ 100.0f };
 
 public:	
 	// Sets default values for this component's properties
@@ -34,5 +38,4 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
 };

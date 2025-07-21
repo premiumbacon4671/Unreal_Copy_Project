@@ -36,7 +36,6 @@ void UBaseSwordStanceActorComponent::TickComponent(float DeltaTime, ELevelTick T
 
 void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 {
-	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if(OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
@@ -44,6 +43,7 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		isUseableNormalAttack == false)
 		return;
 
+	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
 	if (OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, OwnerCharacter->GetAddCurNormalAttackSectionName()) == true)
 	{
 		isUseableNormalAttack = false;

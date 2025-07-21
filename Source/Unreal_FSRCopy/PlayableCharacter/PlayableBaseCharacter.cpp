@@ -95,6 +95,11 @@ void APlayableBaseCharacter::SetWalk()
 	isSprint = false;
 }
 
+void APlayableBaseCharacter::PlayEvade()
+{
+	a
+}
+
 void APlayableBaseCharacter::SetBrakingDecelerationFalling()
 {
 	GetCharacterMovement()->BrakingDecelerationFalling = GetCharacterMovement()->MaxWalkSpeed;

@@ -59,6 +59,6 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 		return;
 
 	GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Magenta, TEXT("Play Earth Charge Heavy Attack0 Montage"));
-	OwnerCharacter->StopMontage(HeavyAttackMontage);
+	//OwnerCharacter->StopMontage(HeavyAttackMontage);
 	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, ExtraHeavyAttackNames[OwnerCharacter->GetNormalAttackSectionIndex()]);
 }
