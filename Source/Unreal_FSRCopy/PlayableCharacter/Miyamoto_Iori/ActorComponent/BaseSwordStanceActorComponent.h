@@ -26,19 +26,27 @@ protected:
 	TObjectPtr<UAnimMontage> HikenMontage; 
 
 	UPROPERTY(EditAnywhere, Category = "Montage")
-	TArray<FName> ExtraHeavyAttackNames;
-
+	TArray<FName> NormalAttackSectionNames;
 	UPROPERTY(EditAnywhere, Category = "Montage")
+	TArray<FName> HeavyAttackSectionNames;
+
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	int NormalAttackSectionIndex{ 0 };
+
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackMaxCount;
-	UPROPERTY(EditAnywhere, Category = "Montage")
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackCount;
-
-	UPROPERTY(EditAnywhere, Category = "Montage")
+	
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	bool isUseableNormalAttack{ true };
 
 	//강공격 가능 여부 확인
-	UPROPERTY(EditAnywhere, Category = "Montage")
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	bool isUseableHeavyAttack{ true };
+	//다음 공격 선입력 여부 확인
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	bool isPossibleNextAttack{ false };
 #pragma endregion
 
 protected:
@@ -52,6 +60,11 @@ public:
 	virtual void PlayHeavyAttackMontage();
 	virtual void PlayTriggeredHeavyAttackMontage();
 	virtual void PlayCompletedHeavyAttackMontage();
+
+	FName GetAddCurNormalAttackSectionName();
+	FName GetCurHeavyAttackSectionName() { return HeavyAttackSectionNames[NormalAttackSectionIndex]; }
+	void ResetNormalAttackSectionIndex() { NormalAttackSectionIndex = 0; }
+	bool IsAttacking();
 	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }
 	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
 	void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }

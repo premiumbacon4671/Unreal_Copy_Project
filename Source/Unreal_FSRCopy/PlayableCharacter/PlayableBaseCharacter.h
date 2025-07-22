@@ -38,9 +38,11 @@ private:
 	float SprintSpeed{ 1200.0f };
 #pragma endregion
 
-#pragma region Jump
+#pragma region Moveing
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> JumpMontage;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAnimMontage> EvadeMontage;
 #pragma endregion
 
 protected:
@@ -59,12 +61,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> EquipMontage;
-	UPROPERTY(EditAnywhere, Category = "Montage")
-	TArray<FName> NormalAttackSectionNames;
-	UPROPERTY(EditAnywhere, Category = "Montage")
-	TArray<FName> HeavyAttackSectionNames;
 	
-	int NormalAttackSectionIndex{ 0 };
 #pragma endregion
 public:
 	// Sets default values for this character's properties
@@ -84,6 +81,7 @@ public:
 	void SetSprint();
 	void SetWalk();
 	void PlayEvade();
+	bool IsEvading() { return BodyComponent->GetAnimInstance()->Montage_IsPlaying(EvadeMontage); }
 	void SetBrakingDecelerationFalling();
 	bool PlayJumpMontage();
 	void PlayJump();
@@ -95,10 +93,10 @@ public:
 	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
 	void StopMontage(TObjectPtr<UAnimMontage> Montage);
 
-	FName GetAddCurNormalAttackSectionName();
-	FName GetCurHeavyAttackSectionName();
-	int GetNormalAttackSectionIndex() const { return NormalAttackSectionIndex; }
-	void ResetNormalAttackSectionIndex() { NormalAttackSectionIndex = 0; }
+	void PostInitializeComponents() override;
+	void MyMontageStarted(UAnimMontage* Montage);
+	void MyMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
 	bool GetIsCombatMode() const { return isCombatMode; }
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 };

@@ -44,6 +44,11 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_Equip.AM_Equip'"));
 	if (EquipMontageFinder.Succeeded())
 		EquipMontage = EquipMontageFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> EvadeMontageFinder(
+		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/Animation/AM_Evade.AM_Evade'"));
+	if (EvadeMontageFinder.Succeeded())
+		EvadeMontage = EvadeMontageFinder.Object;
 #pragma endregion
 
 	SpringArm->bUsePawnControlRotation = true;
@@ -97,7 +102,10 @@ void APlayableBaseCharacter::SetWalk()
 
 void APlayableBaseCharacter::PlayEvade()
 {
-	a
+	if (nullptr != EvadeMontage &&
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EvadeMontage) == false &&
+		CurSwordStanceComponent->IsAttacking() == false)
+		PlayMontageFullBody(EvadeMontage);
 }
 
 void APlayableBaseCharacter::SetBrakingDecelerationFalling()
@@ -201,16 +209,21 @@ void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
 	FootComponent->GetAnimInstance()->Montage_Stop(0.2, Montage);
 }
 
-FName APlayableBaseCharacter::GetAddCurNormalAttackSectionName()
+void APlayableBaseCharacter::PostInitializeComponents()
 {
-	FName SectionName = NormalAttackSectionNames[NormalAttackSectionIndex];
-	++NormalAttackSectionIndex;
-	NormalAttackSectionIndex %= NormalAttackSectionNames.Num();
-	return SectionName;
+	Super::PostInitializeComponents();
+
+	GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::MyMontageStarted);
+	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::MyMontageEnded);
+
 }
 
-FName APlayableBaseCharacter::GetCurHeavyAttackSectionName()
+void APlayableBaseCharacter::MyMontageStarted(UAnimMontage* Montage)
 {
-	FName SectionName = HeavyAttackSectionNames[NormalAttackSectionIndex];
-	return SectionName;
+	//공격 콤보 bool false
+}
+
+void APlayableBaseCharacter::MyMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	//공격 콤보 bool true 확인 후 다음 몽타주 재생
 }

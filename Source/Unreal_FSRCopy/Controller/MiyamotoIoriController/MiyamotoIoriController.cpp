@@ -134,7 +134,7 @@ void AMiyamotoIoriController::EvadeInput(const FInputActionValue& value)
 {
 	if (isCombat == false)
 		return;
-
+	CurPlayableCharacter->PlayEvade();
 }
 
 void AMiyamotoIoriController::JumpInput(const FInputActionValue& value)

@@ -34,31 +34,32 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 {
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
+		OwnerCharacter->IsEvading() == true ||
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
 		isUseableHeavyAttack == true)
 		return;
 
-	int HeavyAttackIndex = OwnerCharacter->GetNormalAttackSectionIndex();
-	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[HeavyAttackIndex]));
+	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		HeavyAttackCount[HeavyAttackIndex] > 0 &&
-		HeavyAttackCount[HeavyAttackIndex] >= HeavyAttackMaxCount[HeavyAttackIndex])
+		HeavyAttackCount[NormalAttackSectionIndex] > 0 &&
+		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
 	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Earth Completed Heavy Attack Montage"));
 	PlayHeavyAttack0ChargeMontage();
-	HeavyAttackCount[HeavyAttackIndex]++;
+	HeavyAttackCount[NormalAttackSectionIndex]++;
 }
 
 void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 {
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 
-	if (OwnerCharacter->GetNormalAttackSectionIndex() != 0)
+	if (NormalAttackSectionIndex != 0)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Magenta, TEXT("Play Earth Charge Heavy Attack0 Montage"));
 	//OwnerCharacter->StopMontage(HeavyAttackMontage);
-	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, ExtraHeavyAttackNames[OwnerCharacter->GetNormalAttackSectionIndex()]);
+	
+	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
 }
