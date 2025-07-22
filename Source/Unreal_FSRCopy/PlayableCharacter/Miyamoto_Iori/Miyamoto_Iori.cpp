@@ -8,7 +8,7 @@
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	CurSwordStance = ESWORDSTANCE::EST_EARTH;
+	CurSwordStance = ESWORDSTANCE::EST_FIRE;
 
 #pragma region CreateComponent
 	FirstWeaponCoverComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstWeaponCover"));
@@ -20,6 +20,8 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	UEarthStanceActorComponent* EarthStance = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStanceComponent"));
 	//SwordStanceComponents[static_cast<int32>(ESWORDSTANCE::EST_EARTH)] = EarthStance;
 	SwordStanceComponents.Add(EarthStance);
+	UBaseSwordStanceActorComponent* FireStance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("FireStanceComponent"));
+	SwordStanceComponents.Add(FireStance);
 
 #pragma endregion
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int32>(CurSwordStance)];
