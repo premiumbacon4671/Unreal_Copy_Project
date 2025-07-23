@@ -11,6 +11,9 @@ void UIsUseableNormalAttackAnimNotify::Notify(USkeletalMeshComponent* MeshComp, 
 	if (nullptr != Owner)
 	{
 		if (Owner->GetCurSwordStanceComponent())
-			Owner->GetCurSwordStanceComponent()->ResetisUseableNormalAttack();
+		{
+
+		}
+			//Owner->GetCurSwordStanceComponent()->ResetisUseableNormalAttack();
 	}
 }

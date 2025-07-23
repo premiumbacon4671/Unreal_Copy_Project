@@ -11,6 +11,9 @@ void UResetHeavyAttackAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnim
 	if (nullptr != Owner)
 	{
 		if (Owner->GetCurSwordStanceComponent())
-			Owner->GetCurSwordStanceComponent()->ResetHeavyAttack();
+		{
+
+		}
+			//Owner->GetCurSwordStanceComponent()->ResetHeavyAttack();
 	}
 }

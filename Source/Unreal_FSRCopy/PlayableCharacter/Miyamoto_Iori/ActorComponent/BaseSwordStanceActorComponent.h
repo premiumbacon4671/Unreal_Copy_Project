@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "BaseSwordStanceActorComponent.generated.h"
 
+UENUM(BlueprintType)
 enum class EATTACKTYPE : uint8
 {
 	AT_NORMALATTACK UMETA(DisplayName = "NormalAttack"),
@@ -51,11 +52,13 @@ protected:
 	//UPROPERTY(VisibleAnywhere, Category = "Attack")
 	//bool isUseableHeavyAttack{ true };
 
+	//선입력 가능 여부 확인 notify state에서 사용
+	bool IsInputPressed{ false };
 	//다음 공격 선입력 여부 확인
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	bool isPossibleNextAttack{ false };
+	bool IsPossibleNextAttack{ false };
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	EATTACKTYPE eNextAttackType{ EATTACKTYPE::AT_MAX };
+	EATTACKTYPE eNextAttackType;
 #pragma endregion
 
 protected:
@@ -76,10 +79,17 @@ public:
 	bool IsAttacking();
 	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }
 	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
+	bool GetIsPossibleNextAttack() const { return IsPossibleNextAttack; }
+	void ResetIsPossibleNextAttack() { IsPossibleNextAttack = false; }
+	void SetIsPossibleNextAttack(EATTACKTYPE NextAttackType) { IsPossibleNextAttack = true; eNextAttackType = NextAttackType; }
+	void PlayNextAttackMontage();
+	void ResetAttackInfo();
+	void CanIsInputPressed() { IsInputPressed = true; }
+	void ResetIsInputPressed() { IsInputPressed = false; }
 	//void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }
-	void ResetNormalAttack();
+	//void ResetNormalAttack();
 	//강공격 연타시 사용
 	//void ResetisUseableHeavyAttack() { isUseableHeavyAttack = true; }
 	//강공격 완전 종료시 사용
-	void ResetHeavyAttack();
+	//void ResetHeavyAttack();
 };

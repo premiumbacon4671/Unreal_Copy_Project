@@ -11,6 +11,9 @@ void UResetNormalAttackAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAni
 	if (nullptr != Owner)
 	{
 		if (Owner->GetCurSwordStanceComponent())
-			Owner->GetCurSwordStanceComponent()->ResetNormalAttack();
+		{
+
+		}
+			//Owner->GetCurSwordStanceComponent()->ResetNormalAttack();
 	}
 }

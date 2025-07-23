@@ -220,17 +220,30 @@ void APlayableBaseCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
-	GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::MyMontageStarted);
-	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::MyMontageEnded);
+	GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::AttackMontageStarted);
+	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
 
 }
 
-void APlayableBaseCharacter::MyMontageStarted(UAnimMontage* Montage)
+void APlayableBaseCharacter::AttackMontageStarted(UAnimMontage* Montage)
 {
-	//공격 콤보 bool false
+	//공격 콤보 bool false 초기화
+	if(nullptr == Montage)
+		return;
+	CurSwordStanceComponent->ResetIsPossibleNextAttack();
 }
 
-void APlayableBaseCharacter::MyMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
 	//공격 콤보 bool true 확인 후 다음 몽타주 재생
+	if (nullptr == Montage)
+		return;
+	if (Montage == CurSwordStanceComponent->GetNormalAttackMontage() ||
+		Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
+	{
+		if(CurSwordStanceComponent->GetIsPossibleNextAttack() == true)
+			CurSwordStanceComponent->PlayNextAttackMontage();
+		else
+			CurSwordStanceComponent->ResetAttackInfo();
+	}
 }
