@@ -51,6 +51,12 @@ protected:
 	TObjectPtr<USkeletalMeshComponent> BodyComponent;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> FirstWeaponComponent;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USkeletalMeshComponent> FirstWeaponCoverComponent;
+	UPROPERTY(VisibleANywhere)
+	TObjectPtr<USkeletalMeshComponent> SecondWeaponComponent;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USkeletalMeshComponent> SecondWeaponCoverComponent;
 #pragma endregion
 
 #pragma region CombatMode
@@ -88,8 +94,8 @@ public:
 	bool PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "");
 	void SetCombatMode();
 	virtual void PlayEquipWeaponMontage();
-	void WeaponEquip();
-	void WeaponUnEquip();
+	virtual void WeaponEquip();
+	virtual void WeaponUnEquip();
 	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
 	void StopMontage(TObjectPtr<UAnimMontage> Montage);
 

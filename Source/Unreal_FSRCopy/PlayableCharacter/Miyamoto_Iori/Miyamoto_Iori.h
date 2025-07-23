@@ -27,13 +27,12 @@ private:
 	ESWORDSTANCE CurSwordStance;
 	UPROPERTY(EditAnywhere, Instanced, Category = "Sword Stance")
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
-#pragma region Component
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<USkeletalMeshComponent> FirstWeaponCoverComponent;
 public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	ESWORDSTANCE GetCurSwordStance() const { return CurSwordStance; }
 	void PlayEquipWeaponMontage() override;
+	void WeaponEquip() override;
+	void WeaponUnEquip() override;
 };

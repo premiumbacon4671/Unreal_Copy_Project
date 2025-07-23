@@ -6,6 +6,12 @@
 #include "Components/ActorComponent.h"
 #include "BaseSwordStanceActorComponent.generated.h"
 
+enum class EATTACKTYPE : uint8
+{
+	AT_NORMALATTACK UMETA(DisplayName = "NormalAttack"),
+	AT_HEAVYATTACK UMETA(DisplayName = "HeavyAttack"),
+	AT_MAX
+};
 
 UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseSwordStanceActorComponent : public UActorComponent
@@ -38,15 +44,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackCount;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	bool isUseableNormalAttack{ true };
+	//UPROPERTY(VisibleAnywhere, Category = "Attack")
+	//bool isUseableNormalAttack{ true };
 
-	//강공격 가능 여부 확인
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	bool isUseableHeavyAttack{ true };
+	////강공격 가능 여부 확인
+	//UPROPERTY(VisibleAnywhere, Category = "Attack")
+	//bool isUseableHeavyAttack{ true };
+
 	//다음 공격 선입력 여부 확인
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	bool isPossibleNextAttack{ false };
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	EATTACKTYPE eNextAttackType{ EATTACKTYPE::AT_MAX };
 #pragma endregion
 
 protected:
@@ -67,10 +76,10 @@ public:
 	bool IsAttacking();
 	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }
 	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
-	void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }
+	//void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }
 	void ResetNormalAttack();
 	//강공격 연타시 사용
-	void ResetisUseableHeavyAttack() { isUseableHeavyAttack = true; }
+	//void ResetisUseableHeavyAttack() { isUseableHeavyAttack = true; }
 	//강공격 완전 종료시 사용
 	void ResetHeavyAttack();
 };

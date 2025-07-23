@@ -37,7 +37,8 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
-		isUseableHeavyAttack == true)
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+		//isUseableHeavyAttack == true)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));

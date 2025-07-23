@@ -11,9 +11,6 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	CurSwordStance = ESWORDSTANCE::EST_FIRE;
 
 #pragma region CreateComponent
-	FirstWeaponCoverComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstWeaponCover"));
-	FirstWeaponCoverComponent->SetupAttachment(BodyComponent, FName(TEXT("FirstWeapon")));
-
 	//SwordStanceComponents.SetNum(static_cast<int32>(ESWORDSTANCE::EST_MAX));
 	//SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
 
@@ -52,9 +49,44 @@ void AMiyamoto_Iori::PlayEquipWeaponMontage()
 		SectionName = isCombatMode ? FName(TEXT("OneHandSwordEquip")) : FName(TEXT("OneHandSwordUnEquip"));
 		break;
 	case ESWORDSTANCE::EST_FIRE:
+		SectionName = isCombatMode ? FName(TEXT("OneHandSwordEquip")) : FName(TEXT("OneHandSwordUnEquip"));
 		break;
 	}
 
 	if (!SectionName.IsNone())
 		PlayMontageFullBody(EquipMontage, SectionName);
+}
+
+void AMiyamoto_Iori::WeaponEquip()
+{
+	Super::WeaponEquip();
+	switch (CurSwordStance)
+	{
+	case ESWORDSTANCE::EST_EARTH:
+		break;
+	case ESWORDSTANCE::EST_FIRE:
+		SecondWeaponComponent->AttachToComponent(BodyComponent,
+		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+		FName(TEXT("SecondWeaponHand")));
+		break;
+	default:
+		break;
+	}
+}
+
+void AMiyamoto_Iori::WeaponUnEquip()
+{
+	Super::WeaponUnEquip();
+	switch (CurSwordStance)
+	{
+	case ESWORDSTANCE::EST_EARTH:
+		break;
+	case ESWORDSTANCE::EST_FIRE:
+		SecondWeaponComponent->AttachToComponent(BodyComponent,
+			FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+			FName(TEXT("SecondWeapon")));
+		break;
+	default:
+		break;
+	}
 }

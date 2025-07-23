@@ -41,13 +41,14 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true ||
-		isUseableNormalAttack == false)
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
+		//isUseableNormalAttack == false)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
 	if (OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, GetAddCurNormalAttackSectionName()) == true)
 	{
-		isUseableNormalAttack = false;
+		//isUseableNormalAttack = false;
 	}
 }
 
@@ -58,20 +59,22 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		isUseableNormalAttack == false ||
-		isUseableHeavyAttack == false)
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true ||
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
+		//isUseableNormalAttack == false ||
+		//isUseableHeavyAttack == false)
 		return;
 
 	//연타 강공격 가능 여부 확인
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
+	//수정 예정
+	if (HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
 	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
 	
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName()) == true)
 	{
-		isUseableHeavyAttack = false;
+		//isUseableHeavyAttack = false;
 	}
 }
 
@@ -82,7 +85,8 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		isUseableNormalAttack == false)
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
+		//isUseableNormalAttack == false)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Green, TEXT("Play Triggered Heavy Attack Montage"));
@@ -96,7 +100,8 @@ void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
-		isUseableHeavyAttack == true)
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+		//isUseableHeavyAttack == true)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
