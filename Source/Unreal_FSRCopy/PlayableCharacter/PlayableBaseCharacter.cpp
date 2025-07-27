@@ -230,7 +230,20 @@ void APlayableBaseCharacter::AttackMontageStarted(UAnimMontage* Montage)
 	//공격 콤보 bool false 초기화
 	if(nullptr == Montage)
 		return;
-	CurSwordStanceComponent->ResetIsPossibleNextAttack();
+	if (Montage == CurSwordStanceComponent->GetNormalAttackMontage() ||
+		Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
+	{
+		CurSwordStanceComponent->ResetIsPossibleNextAttack();
+		if (Montage == CurSwordStanceComponent->GetNormalAttackMontage())
+			CurSwordStanceComponent->SetIsPlayingNormalAttack();
+		else if (Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Started") + Montage->GetName() + CurSwordStanceComponent->GetCurHeavyAttackSectionName().ToString());
+			CurSwordStanceComponent->SetIsPlayingHeavyAttack();
+		}
+		else
+			return;
+	}
 }
 
 void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
@@ -241,6 +254,14 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 	if (Montage == CurSwordStanceComponent->GetNormalAttackMontage() ||
 		Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("Ended") + Montage->GetName() + CurSwordStanceComponent->GetCurHeavyAttackSectionName().ToString());
+		if (Montage == CurSwordStanceComponent->GetNormalAttackMontage())
+			CurSwordStanceComponent->ResetIsPlayingNormalAttack();
+		else if (Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
+			CurSwordStanceComponent->ResetIsPlayingHeavyAttack();
+		else
+			return;
+
 		if(CurSwordStanceComponent->GetIsPossibleNextAttack() == true)
 			CurSwordStanceComponent->PlayNextAttackMontage();
 		else

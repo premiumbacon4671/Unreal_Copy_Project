@@ -36,18 +36,18 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+		IsPlayingNormalAttack == true ||
+		IsPlayingHeavyAttack == false)
 		//isUseableHeavyAttack == true)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
+	if (IsPlayingHeavyAttack == true &&
 		HeavyAttackCount[NormalAttackSectionIndex] > 0 &&
 		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
-	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Earth Completed Heavy Attack Montage"));
+	//GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Earth Completed Heavy Attack Montage"));
 	PlayHeavyAttack0ChargeMontage();
 	HeavyAttackCount[NormalAttackSectionIndex]++;
 }
@@ -59,8 +59,8 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	if (NormalAttackSectionIndex != 0)
 		return;
 
-	GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Magenta, TEXT("Play Earth Charge Heavy Attack0 Montage"));
-	//OwnerCharacter->StopMontage(HeavyAttackMontage);
-	
+	GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Magenta, TEXT("Test") + HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex].ToString());
+	OwnerCharacter->StopMontage(HeavyAttackMontage);
+	IsPlayingHeavyAttack = false;
 	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
 }

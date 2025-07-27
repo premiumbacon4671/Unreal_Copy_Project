@@ -5,20 +5,20 @@
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
-bool UCheckNextAttackAnimNotifyState::Received_NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference) const
+void UCheckNextAttackAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
 	APlayableBaseCharacter* Owner = Cast<APlayableBaseCharacter>(MeshComp->GetOwner());
-	if (nullptr != Owner)
-		return false;
+	if (nullptr == Owner)
+		return;
+	GEngine->AddOnScreenDebugMessage(7, 3, FColor::Red, TEXT("NotifyBegin"));
 	Owner->GetCurSwordStanceComponent()->CanIsInputPressed();
-	return true;
 }
 
-bool UCheckNextAttackAnimNotifyState::Received_NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) const
+void UCheckNextAttackAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	APlayableBaseCharacter* Owner = Cast<APlayableBaseCharacter>(MeshComp->GetOwner());
-	if (nullptr != Owner)
-		return false;
+	if (nullptr == Owner)
+		return;
+	GEngine->AddOnScreenDebugMessage(8, 3, FColor::Red, TEXT("NotifyEnd"));
 	Owner->GetCurSwordStanceComponent()->ResetIsInputPressed();
-	return true;
 }

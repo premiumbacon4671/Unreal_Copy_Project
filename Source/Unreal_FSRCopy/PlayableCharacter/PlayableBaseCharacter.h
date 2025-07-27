@@ -100,7 +100,9 @@ public:
 	void StopMontage(TObjectPtr<UAnimMontage> Montage);
 
 	void PostInitializeComponents() override;
+	UFUNCTION()
 	void AttackMontageStarted(UAnimMontage* Montage);
+	UFUNCTION()
 	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	bool GetIsCombatMode() const { return isCombatMode; }

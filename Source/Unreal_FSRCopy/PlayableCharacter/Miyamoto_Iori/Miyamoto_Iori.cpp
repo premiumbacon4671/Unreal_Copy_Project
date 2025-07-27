@@ -8,7 +8,7 @@
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	CurSwordStance = ESWORDSTANCE::EST_FIRE;
+	CurSwordStance = ESWORDSTANCE::EST_EARTH;
 
 #pragma region CreateComponent
 	//SwordStanceComponents.SetNum(static_cast<int32>(ESWORDSTANCE::EST_MAX));

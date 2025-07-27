@@ -44,17 +44,21 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		//isUseableNormalAttack == false)
 		return;
 
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true &&
-		IsInputPressed == true)
+	if (IsInputPressed == true && IsPossibleNextAttack == false)
 	{
-		SetIsPossibleNextAttack(EATTACKTYPE::AT_HEAVYATTACK);
+		SetIsPossibleNextAttack(EATTACKTYPE::AT_NORMALATTACK);
 		return;
 	}
+
+	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
+	if (IsPlayingNormalAttack == true)
+		return;
 
 	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
 	if (OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, GetAddCurNormalAttackSectionName()) == true)
 	{
 		//isUseableNormalAttack = false;
+		IsPlayingNormalAttack = true;
 	}
 }
 
@@ -64,8 +68,8 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	//기본 적인 강공격 가능 여부 확인
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
-		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
+		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
+		//OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
 		//isUseableNormalAttack == false ||
 		//isUseableHeavyAttack == false)
 		return;
@@ -75,14 +79,17 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	if (HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		IsInputPressed == true)
+	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
+	if (IsInputPressed == true && IsPossibleNextAttack == false)
 	{
 		SetIsPossibleNextAttack(EATTACKTYPE::AT_HEAVYATTACK);
 		return;
 	}
+	//Montage_IsPlaying()이 너무 빨리 false가 되어 중복 재생됨
+	if (IsPlayingHeavyAttack == true)
+		return;
 
-	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
+	//GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
 	
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName()) == true)
 	{
@@ -97,11 +104,11 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
+		IsPlayingNormalAttack == true)
 		//isUseableNormalAttack == false)
 		return;
 
-	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Green, TEXT("Play Triggered Heavy Attack Montage"));
+	//GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Green, TEXT("Play Triggered Heavy Attack Montage"));
 	//OwnerCharacter->GetBodyComponent()->GetAnimInstance()->l
 }
 
@@ -128,9 +135,14 @@ void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
 
 FName UBaseSwordStanceActorComponent::GetAddCurNormalAttackSectionName()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::FromInt(NormalAttackSectionIndex));
 	FName SectionName = NormalAttackSectionNames[NormalAttackSectionIndex];
 	++NormalAttackSectionIndex;
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::FromInt(NormalAttackSectionIndex));
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::FromInt(NormalAttackSectionNames.Num()));
 	NormalAttackSectionIndex %= NormalAttackSectionNames.Num();
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::FromInt(NormalAttackSectionIndex));
+	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Black, FString::FromInt(NormalAttackSectionIndex %= NormalAttackSectionNames.Num()));
 	return SectionName;
 }
 

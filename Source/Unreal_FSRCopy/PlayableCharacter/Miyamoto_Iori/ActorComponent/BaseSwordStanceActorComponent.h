@@ -45,19 +45,21 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackCount;
 	
-	//UPROPERTY(VisibleAnywhere, Category = "Attack")
-	//bool isUseableNormalAttack{ true };
+	//일반 공격 실행 여부 확인
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	bool IsPlayingNormalAttack{ false };
 
-	////강공격 가능 여부 확인
-	//UPROPERTY(VisibleAnywhere, Category = "Attack")
-	//bool isUseableHeavyAttack{ true };
+	//강공격 실행 여부 확인
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	bool IsPlayingHeavyAttack{ false };
 
 	//선입력 가능 여부 확인 notify state에서 사용
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	bool IsInputPressed{ false };
 	//다음 공격 선입력 여부 확인
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	bool IsPossibleNextAttack{ false };
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	EATTACKTYPE eNextAttackType;
 #pragma endregion
 
@@ -86,6 +88,10 @@ public:
 	void ResetAttackInfo();
 	void CanIsInputPressed() { IsInputPressed = true; }
 	void ResetIsInputPressed() { IsInputPressed = false; }
+	void SetIsPlayingNormalAttack() { IsPlayingNormalAttack = true; }
+	void ResetIsPlayingNormalAttack() { IsPlayingNormalAttack = false; }
+	void SetIsPlayingHeavyAttack() { IsPlayingHeavyAttack = true; }
+	void ResetIsPlayingHeavyAttack() { IsPlayingHeavyAttack = false; }
 	//void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }
 	//void ResetNormalAttack();
 	//강공격 연타시 사용
