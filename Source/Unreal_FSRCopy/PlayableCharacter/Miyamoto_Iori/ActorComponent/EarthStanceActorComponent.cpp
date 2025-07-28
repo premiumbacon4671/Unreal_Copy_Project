@@ -32,23 +32,21 @@ void UEarthStanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 {
-
-	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("1111 Play Earth Completed Heavy Attack Montage"));
-	Super::PlayCompletedHeavyAttackMontage();
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
 		return;
 
-	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("2222 Play Earth Completed Heavy Attack Montage"));
-	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
+	//차징 몽타주가 안니면 리턴
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+		return;
+
+	//차징 몽타주가 플레이 중이고, 연타 횟수가 최대 횟수를 초과하면 리턴
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		HeavyAttackCount[NormalAttackSectionIndex] > 0 &&
 		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
-	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("3333 Play Earth Completed Heavy Attack Montage"));
 	HeavyAttackCount[NormalAttackSectionIndex]++;
 	PlayHeavyAttack0ChargeMontage();
 }
@@ -56,11 +54,8 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 {
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
-
 	if (NormalAttackSectionIndex != 0)
 		return;
-
-	GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Magenta, TEXT("Test") + HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex].ToString());
 	OwnerCharacter->StopMontage(HeavyAttackMontage);
 	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
 }

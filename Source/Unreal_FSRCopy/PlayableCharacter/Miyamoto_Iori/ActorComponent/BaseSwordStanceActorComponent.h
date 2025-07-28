@@ -30,14 +30,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Montage")
 	TArray<FName> HeavyAttackSectionNames;
 
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	int NormalAttackSectionIndex{ 0 };
+	
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackMaxCount;
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackCount;
 
+	UPROPERTY(VisibleAnywhere, Category = "Attack")
+	int NormalAttackSectionIndex{ 0 };
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	bool IsPossibleNextAttack{ false };
 	UPROPERTY(EditAnywhere, Category = "Attack")

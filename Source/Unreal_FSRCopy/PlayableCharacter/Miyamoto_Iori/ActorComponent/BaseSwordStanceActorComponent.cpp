@@ -44,11 +44,12 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
 		//isUseableNormalAttack == false)
 		return;
-	asdf
-	if (IsPossibleNextAttack == true)
+	
+	if (IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
 	{
+		IsPossibleNextAttack = true;
 		NextAttackMontage = NormalAttackMontage;
-		NextAttackName = GetAddCurNormalAttackSectionName();
+		NextAttackName = NormalAttackSectionNames[NormalAttackSectionIndex];
 		return;
 	}
 
@@ -69,26 +70,23 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
-		//OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
-		//isUseableNormalAttack == false ||
-		//isUseableHeavyAttack == false)
 		return;
 
 	//연타 강공격 가능 여부 확인
 	//수정 예정
 	if (HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
-
-	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-	/*if (IsInputPressed == true && IsPossibleNextAttack == false)
+	
+	if (IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
 	{
-		SetIsPossibleNextAttack(EATTACKTYPE::AT_HEAVYATTACK);
+		IsPossibleNextAttack = true;
+		NextAttackMontage = HeavyAttackMontage;
+		NextAttackName = HeavyAttackSectionNames[NormalAttackSectionIndex];
 		return;
-	}*/
-	//Montage_IsPlaying()이 너무 빨리 false가 되어 중복 재생됨
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
+	}
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true ||
+		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
 		return;
-
 	//GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
 	
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName()) == true)
@@ -114,23 +112,22 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 
 void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
 {
-	//APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
-	//if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
-	//	OwnerCharacter->IsEvading() == true ||
-	//	nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-	//	OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
-	//	OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
-	//	//isUseableHeavyAttack == true)
-	//	return;
+	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
+		OwnerCharacter->IsEvading() == true ||
+		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
+		return;
 
-	//GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
-	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-	//	HeavyAttackCount[NormalAttackSectionIndex] > 0 &&
-	//	HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
-	//	return;
+	//차징 몽타주가 안니면 리턴
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+		return;
 
-	//HeavyAttackCount[NormalAttackSectionIndex]++;
-	//GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Completed Heavy Attack Montage"));
+	//차징 몽타주가 플레이 중이고, 연타 횟수가 최대 횟수를 초과하면 리턴
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
+		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
+		return;
+
+	HeavyAttackCount[NormalAttackSectionIndex]++;
 }
 
 FName UBaseSwordStanceActorComponent::GetAddCurNormalAttackSectionName()
