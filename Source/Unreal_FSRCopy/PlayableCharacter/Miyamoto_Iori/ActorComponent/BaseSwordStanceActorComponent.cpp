@@ -11,7 +11,8 @@ UBaseSwordStanceActorComponent::UBaseSwordStanceActorComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-	eNextAttackType = EATTACKTYPE::AT_MAX;
+	NextAttackMontage = nullptr;
+	NextAttackName = "";
 	// ...
 }
 
@@ -43,22 +44,21 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
 		//isUseableNormalAttack == false)
 		return;
-
-	if (IsInputPressed == true && IsPossibleNextAttack == false)
+	asdf
+	if (IsPossibleNextAttack == true)
 	{
-		SetIsPossibleNextAttack(EATTACKTYPE::AT_NORMALATTACK);
+		NextAttackMontage = NormalAttackMontage;
+		NextAttackName = GetAddCurNormalAttackSectionName();
 		return;
 	}
 
-	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
-	if (IsPlayingNormalAttack == true)
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
 		return;
 
 	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
 	if (OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, GetAddCurNormalAttackSectionName()) == true)
 	{
-		//isUseableNormalAttack = false;
-		IsPlayingNormalAttack = true;
+
 	}
 }
 
@@ -80,13 +80,13 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 		return;
 
 	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-	if (IsInputPressed == true && IsPossibleNextAttack == false)
+	/*if (IsInputPressed == true && IsPossibleNextAttack == false)
 	{
 		SetIsPossibleNextAttack(EATTACKTYPE::AT_HEAVYATTACK);
 		return;
-	}
+	}*/
 	//Montage_IsPlaying()이 너무 빨리 false가 되어 중복 재생됨
-	if (IsPlayingHeavyAttack == true)
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
 		return;
 
 	//GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
@@ -103,8 +103,8 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
-		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		IsPlayingNormalAttack == true)
+		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
+		//IsPlayingNormalAttack == true)
 		//isUseableNormalAttack == false)
 		return;
 
@@ -114,35 +114,30 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 
 void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
 {
-	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
-	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
-		OwnerCharacter->IsEvading() == true ||
-		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
-		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
-		//isUseableHeavyAttack == true)
-		return;
+	//APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+	//if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
+	//	OwnerCharacter->IsEvading() == true ||
+	//	nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
+	//	OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true ||
+	//	OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+	//	//isUseableHeavyAttack == true)
+	//	return;
 
-	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		HeavyAttackCount[NormalAttackSectionIndex] > 0 &&
-		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
-		return;
+	//GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
+	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
+	//	HeavyAttackCount[NormalAttackSectionIndex] > 0 &&
+	//	HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
+	//	return;
 
-	HeavyAttackCount[NormalAttackSectionIndex]++;
-	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Completed Heavy Attack Montage"));
+	//HeavyAttackCount[NormalAttackSectionIndex]++;
+	//GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Completed Heavy Attack Montage"));
 }
 
 FName UBaseSwordStanceActorComponent::GetAddCurNormalAttackSectionName()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Magenta, FString::FromInt(NormalAttackSectionIndex));
 	FName SectionName = NormalAttackSectionNames[NormalAttackSectionIndex];
 	++NormalAttackSectionIndex;
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Blue, FString::FromInt(NormalAttackSectionIndex));
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, FString::FromInt(NormalAttackSectionNames.Num()));
 	NormalAttackSectionIndex %= NormalAttackSectionNames.Num();
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, FString::FromInt(NormalAttackSectionIndex));
-	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Black, FString::FromInt(NormalAttackSectionIndex %= NormalAttackSectionNames.Num()));
 	return SectionName;
 }
 
@@ -157,29 +152,18 @@ bool UBaseSwordStanceActorComponent::IsAttacking()
 
 void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 {
+	if (IsPossibleNextAttack == false)
+	{
+		ResetAttackInfo();
+		return;
+	}
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
-	if (eNextAttackType == EATTACKTYPE::AT_NORMALATTACK)
-	{
-		PlayNormalAttackMontage();
-	}
-	else if (eNextAttackType == EATTACKTYPE::AT_HEAVYATTACK)
-	{
-		PlayHeavyAttackMontage();
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Red, TEXT("Next Attack Type Error"));
-	}
-	eNextAttackType = EATTACKTYPE::AT_MAX;
+	OwnerCharacter->PlayMontageFullBody(NextAttackMontage, NextAttackName);
 }
 
 void UBaseSwordStanceActorComponent::ResetAttackInfo()
 {
 	NormalAttackSectionIndex = 0;
-	//isUseableNormalAttack = true;
-	//isUseableHeavyAttack = true;
-	IsPossibleNextAttack = false;
-	eNextAttackType = EATTACKTYPE::AT_MAX;
 	for (int i = 0; i < HeavyAttackCount.Num(); ++i)
 	{
 		HeavyAttackCount[i] = 0;

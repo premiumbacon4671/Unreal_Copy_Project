@@ -32,24 +32,25 @@ void UEarthStanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 {
+
+	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("1111 Play Earth Completed Heavy Attack Montage"));
+	Super::PlayCompletedHeavyAttackMontage();
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
-		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
-		IsPlayingNormalAttack == true ||
-		IsPlayingHeavyAttack == false)
-		//isUseableHeavyAttack == true)
+		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
 		return;
 
+	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("2222 Play Earth Completed Heavy Attack Montage"));
 	GEngine->AddOnScreenDebugMessage(6, 3.0f, FColor::Magenta, FString::FromInt(HeavyAttackCount[NormalAttackSectionIndex]));
-	if (IsPlayingHeavyAttack == true &&
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
 		HeavyAttackCount[NormalAttackSectionIndex] > 0 &&
 		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
-	//GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("Play Earth Completed Heavy Attack Montage"));
-	PlayHeavyAttack0ChargeMontage();
+	GEngine->AddOnScreenDebugMessage(4, 3.0f, FColor::Magenta, TEXT("3333 Play Earth Completed Heavy Attack Montage"));
 	HeavyAttackCount[NormalAttackSectionIndex]++;
+	PlayHeavyAttack0ChargeMontage();
 }
 
 void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
@@ -61,6 +62,5 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 
 	GEngine->AddOnScreenDebugMessage(5, 3.0f, FColor::Magenta, TEXT("Test") + HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex].ToString());
 	OwnerCharacter->StopMontage(HeavyAttackMontage);
-	IsPlayingHeavyAttack = false;
 	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
 }

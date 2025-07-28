@@ -11,7 +11,7 @@ void UCheckNextAttackAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshCo
 	if (nullptr == Owner)
 		return;
 	GEngine->AddOnScreenDebugMessage(7, 3, FColor::Red, TEXT("NotifyBegin"));
-	Owner->GetCurSwordStanceComponent()->CanIsInputPressed();
+	Owner->GetCurSwordStanceComponent()->ResetNextAttack();
 }
 
 void UCheckNextAttackAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
@@ -20,5 +20,5 @@ void UCheckNextAttackAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp
 	if (nullptr == Owner)
 		return;
 	GEngine->AddOnScreenDebugMessage(8, 3, FColor::Red, TEXT("NotifyEnd"));
-	Owner->GetCurSwordStanceComponent()->ResetIsInputPressed();
+	Owner->GetCurSwordStanceComponent()->PlayNextAttackMontage();
 }

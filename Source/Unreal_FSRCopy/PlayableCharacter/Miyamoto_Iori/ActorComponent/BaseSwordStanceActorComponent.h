@@ -6,13 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "BaseSwordStanceActorComponent.generated.h"
 
-UENUM(BlueprintType)
-enum class EATTACKTYPE : uint8
-{
-	AT_NORMALATTACK UMETA(DisplayName = "NormalAttack"),
-	AT_HEAVYATTACK UMETA(DisplayName = "HeavyAttack"),
-	AT_MAX
-};
 
 UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseSwordStanceActorComponent : public UActorComponent
@@ -44,23 +37,13 @@ protected:
 	TArray<int> HeavyAttackMaxCount;
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackCount;
-	
-	//일반 공격 실행 여부 확인
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	bool IsPlayingNormalAttack{ false };
 
-	//강공격 실행 여부 확인
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	bool IsPlayingHeavyAttack{ false };
-
-	//선입력 가능 여부 확인 notify state에서 사용
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	bool IsInputPressed{ false };
-	//다음 공격 선입력 여부 확인
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	bool IsPossibleNextAttack{ false };
 	UPROPERTY(EditAnywhere, Category = "Attack")
-	EATTACKTYPE eNextAttackType;
+	TObjectPtr<UAnimMontage> NextAttackMontage;
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	FName NextAttackName;
 #pragma endregion
 
 protected:
@@ -83,15 +66,9 @@ public:
 	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
 	bool GetIsPossibleNextAttack() const { return IsPossibleNextAttack; }
 	void ResetIsPossibleNextAttack() { IsPossibleNextAttack = false; }
-	void SetIsPossibleNextAttack(EATTACKTYPE NextAttackType) { IsPossibleNextAttack = true; eNextAttackType = NextAttackType; }
+	void ResetNextAttack() { IsPossibleNextAttack = false; NextAttackMontage = nullptr; NextAttackName = ""; }
 	void PlayNextAttackMontage();
 	void ResetAttackInfo();
-	void CanIsInputPressed() { IsInputPressed = true; }
-	void ResetIsInputPressed() { IsInputPressed = false; }
-	void SetIsPlayingNormalAttack() { IsPlayingNormalAttack = true; }
-	void ResetIsPlayingNormalAttack() { IsPlayingNormalAttack = false; }
-	void SetIsPlayingHeavyAttack() { IsPlayingHeavyAttack = true; }
-	void ResetIsPlayingHeavyAttack() { IsPlayingHeavyAttack = false; }
 	//void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }
 	//void ResetNormalAttack();
 	//강공격 연타시 사용
