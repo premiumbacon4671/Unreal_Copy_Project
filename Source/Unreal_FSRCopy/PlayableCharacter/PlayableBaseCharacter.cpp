@@ -242,7 +242,7 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 	if (nullptr == Montage)
 		return;
 	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Blue, TEXT("Ended : ") + Montage->GetName());
-	if (Montage == CurSwordStanceComponent->GetNormalAttackMontage() ||
+	/*if (Montage == CurSwordStanceComponent->GetNormalAttackMontage() ||
 		Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
 	{
 
@@ -250,5 +250,5 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 			CurSwordStanceComponent->PlayNextAttackMontage();
 		else
 			CurSwordStanceComponent->ResetAttackInfo();
-	}
+	}*/
 }

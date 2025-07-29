@@ -57,4 +57,7 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 		return;
 	OwnerCharacter->StopMontage(HeavyAttackMontage);
 	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CCCCCPlay Heavy Attack Montage"));
+	HeavyAttackCount[NormalAttackSectionIndex]++;
 }

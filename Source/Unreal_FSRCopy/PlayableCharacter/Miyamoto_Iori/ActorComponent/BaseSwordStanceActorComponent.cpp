@@ -89,9 +89,13 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 		return;
 	//GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
 	
+	//몽타주에서 다음 몽타주로 갈때 소량의 프레임에서 
+	if (IsPossibleNextAttack == true)
+		return;
+
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName()) == true)
 	{
-
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("TTTTTPlay Heavy Attack Montage"));
 		HeavyAttackCount[NormalAttackSectionIndex]++;
 		//isUseableHeavyAttack = false;
 	}
@@ -128,8 +132,6 @@ void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
 		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
-
-	HeavyAttackCount[NormalAttackSectionIndex]++;
 }
 
 FName UBaseSwordStanceActorComponent::GetAddCurNormalAttackSectionName()
@@ -156,8 +158,14 @@ void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 		ResetAttackInfo();
 		return;
 	}
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Play Next Attack Montage"));
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	OwnerCharacter->PlayMontageFullBody(NextAttackMontage, NextAttackName);
+	if(NextAttackMontage == HeavyAttackMontage)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("NNNNNPlay Heavy Attack Montage"));
+		HeavyAttackCount[NormalAttackSectionIndex]++;
+	}
 }
 
 void UBaseSwordStanceActorComponent::ResetAttackInfo()
