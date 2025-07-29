@@ -91,7 +91,7 @@ public:
 	void SetBrakingDecelerationFalling();
 	bool PlayJumpMontage();
 	void PlayJump();
-	bool PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "");
+	bool PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "", float MontageSpeed = 1.0f);
 	void SetCombatMode();
 	virtual void PlayEquipWeaponMontage();
 	virtual void WeaponEquip();

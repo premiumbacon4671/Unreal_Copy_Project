@@ -111,7 +111,7 @@ void APlayableBaseCharacter::PlayEvade()
 {
 	if (nullptr != EvadeMontage &&
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EvadeMontage) == false &&
-		CurSwordStanceComponent->IsAttacking() == false)
+		GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr)
 		PlayMontageFullBody(EvadeMontage);
 }
 
@@ -124,7 +124,8 @@ bool APlayableBaseCharacter::PlayJumpMontage()
 {
 	if (GetMovementComponent()->IsFalling() == false &&
 		nullptr != JumpMontage &&
-		BodyComponent->GetAnimInstance()->Montage_IsPlaying(JumpMontage) == false)
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(JumpMontage) == false &&
+		IsEvading() == false)
 	{
 		PlayMontageFullBody(JumpMontage);
 		return true;
@@ -140,26 +141,15 @@ void APlayableBaseCharacter::PlayJump()
 	}
 }
 
-bool APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName)
+bool APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName, float MontageSpeed)
 {
 	if(Montage == nullptr)
 		return false;
-	BodyComponent->GetAnimInstance()->Montage_Play(Montage);
-	HeadComponent->GetAnimInstance()->Montage_Play(Montage);
-	HairComponent->GetAnimInstance()->Montage_Play(Montage);
-	ArmComponent->GetAnimInstance()->Montage_Play(Montage);
-	LegComponent->GetAnimInstance()->Montage_Play(Montage);
-	FootComponent->GetAnimInstance()->Montage_Play(Montage);
+	GetMesh()->GetAnimInstance()->Montage_Play(Montage, MontageSpeed);
 
 	if(SectionName.IsNone() == false)
 	{
-		BodyComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
-		HeadComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
-		HairComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
-		ArmComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
-		LegComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
-		FootComponent->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
-		
+		GetMesh()->GetAnimInstance()->Montage_JumpToSection(SectionName, Montage);
 	}
 	return true;
 }
@@ -219,6 +209,13 @@ void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
 void APlayableBaseCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+
+
+	HeadComponent->SetMasterPoseComponent(GetMesh());
+	HairComponent->SetMasterPoseComponent(GetMesh());
+	ArmComponent->SetMasterPoseComponent(GetMesh());
+	LegComponent->SetMasterPoseComponent(GetMesh());
+	FootComponent->SetMasterPoseComponent(GetMesh());
 
 	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::AttackMontageStarted);
 	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);

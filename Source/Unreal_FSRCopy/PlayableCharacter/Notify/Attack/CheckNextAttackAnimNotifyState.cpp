@@ -10,7 +10,7 @@ void UCheckNextAttackAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshCo
 	APlayableBaseCharacter* Owner = Cast<APlayableBaseCharacter>(MeshComp->GetOwner());
 	if (nullptr == Owner)
 		return;
-	GEngine->AddOnScreenDebugMessage(7, 3, FColor::Red, TEXT("NotifyBegin"));
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, TEXT("NotifyBegin"));
 	Owner->GetCurSwordStanceComponent()->ResetNextAttack();
 }
 
@@ -19,6 +19,6 @@ void UCheckNextAttackAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp
 	APlayableBaseCharacter* Owner = Cast<APlayableBaseCharacter>(MeshComp->GetOwner());
 	if (nullptr == Owner)
 		return;
-	GEngine->AddOnScreenDebugMessage(8, 3, FColor::Red, TEXT("NotifyEnd"));
+	GEngine->AddOnScreenDebugMessage(-1, 3, FColor::Red, TEXT("NotifyEnd"));
 	Owner->GetCurSwordStanceComponent()->PlayNextAttackMontage();
 }

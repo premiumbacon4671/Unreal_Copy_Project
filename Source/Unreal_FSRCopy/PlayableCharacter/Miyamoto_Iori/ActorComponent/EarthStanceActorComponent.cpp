@@ -38,16 +38,15 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
 		return;
 
-	//차징 몽타주가 안니면 리턴
+	//루프 몽타주가 안니거나 강공격 몽타주가 이미 끝났으면 린턴
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
 		return;
 
-	//차징 몽타주가 플레이 중이고, 연타 횟수가 최대 횟수를 초과하면 리턴
+	//몽타주가 플레이 중이고, 연타 횟수가 최대 횟수를 초과하면 리턴
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
+		HeavyAttackCount[NormalAttackSectionIndex] > HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
-	HeavyAttackCount[NormalAttackSectionIndex]++;
 	PlayHeavyAttack0ChargeMontage();
 }
 

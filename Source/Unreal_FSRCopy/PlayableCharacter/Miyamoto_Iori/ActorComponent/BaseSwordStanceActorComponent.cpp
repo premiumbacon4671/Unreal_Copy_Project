@@ -91,6 +91,8 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName()) == true)
 	{
+
+		HeavyAttackCount[NormalAttackSectionIndex]++;
 		//isUseableHeavyAttack = false;
 	}
 }
