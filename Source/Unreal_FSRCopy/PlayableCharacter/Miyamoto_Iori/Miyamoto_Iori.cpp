@@ -19,7 +19,7 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	//SwordStanceComponents[static_cast<int32>(ESWORDSTANCE::EST_EARTH)] = EarthStance;
 	SwordStanceComponents[0] = EarthStance;
 	UFireStanceActorComponent* FireStance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("FireStanceComponent"));
-	SwordStanceComponents[1] = (FireStance);
+	SwordStanceComponents[1] = FireStance;
 
 #pragma endregion
 	/*switch (CurSwordStance)
@@ -33,12 +33,14 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	default:
 		break;
 	}*/
-	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
+	//CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
 }
 
 void AMiyamoto_Iori::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//CurSwordStance = ESWORDSTANCE::EST_EARTH;
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
 }
 

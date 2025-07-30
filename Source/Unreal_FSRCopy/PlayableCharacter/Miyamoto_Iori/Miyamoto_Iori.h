@@ -25,7 +25,7 @@ class UNREAL_FSRCOPY_API AMiyamoto_Iori : public APlayableBaseCharacter
 	
 private:
 	ESWORDSTANCE CurSwordStance{ ESWORDSTANCE::EST_FIRE };
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = "Sword Stance", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sword Stance", meta = (AllowPrivateAccess = "true"))
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
 public:
 	AMiyamoto_Iori();

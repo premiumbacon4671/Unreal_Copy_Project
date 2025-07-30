@@ -166,6 +166,10 @@ void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("NNNNNPlay Heavy Attack Montage"));
 		HeavyAttackCount[NormalAttackSectionIndex]++;
 	}
+	else if (NextAttackMontage == NormalAttackMontage)
+	{
+		GetAddCurNormalAttackSectionName();
+	}
 }
 
 void UBaseSwordStanceActorComponent::ResetAttackInfo()

@@ -62,7 +62,7 @@ protected:
 #pragma region CombatMode
 	bool isCombatMode{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sword Stance", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, Category = "Sword Stance")
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
 
 	UPROPERTY(VisibleAnywhere)

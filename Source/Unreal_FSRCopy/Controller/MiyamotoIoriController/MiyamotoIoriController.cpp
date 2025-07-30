@@ -10,6 +10,7 @@
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AMiyamotoIoriController::AMiyamotoIoriController()
 {
@@ -47,6 +48,16 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_PCHeavyAttack.IA_PCHeavyAttack'"));
 	if (HeavyAttackActionFinder.Succeeded())
 		HeavyAttackAction = HeavyAttackActionFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> ChangeStanceActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_ChangeStance.IA_ChangeStance'"));
+	if (ChangeStanceActionFinder.Succeeded())
+		ChangeStanceAction = ChangeStanceActionFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> UIMoveActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_UIMove.IA_UIMove'"));
+	if (UIMoveActionFinder.Succeeded())
+		UIMoveAction = UIMoveActionFinder.Object;
 
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextFinder(
 		TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Blueprint/PlayableCharacter/Input/IMC_PlayableCharacter.IMC_PlayableCharacter'"));
@@ -86,6 +97,9 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::HeavyAttackInput);
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::HeavyAttackTriggeredInput);
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::HeavyAttackCompletedInput);
+		input->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::ChangeStanceInput);
+		input->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ChangeStanceCompletedInput);
+		input->BindAction(UIMoveAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::UIMoveInput);
 	}
 }
 
@@ -165,4 +179,18 @@ void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue&
 {
 	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Completed Heavy Attack Input"));
 	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayCompletedHeavyAttackMontage();
+}
+
+void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
+}
+
+void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue& value)
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+}
+
+void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
+{
 }

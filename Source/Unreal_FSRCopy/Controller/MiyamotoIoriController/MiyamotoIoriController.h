@@ -37,6 +37,12 @@ private:
 	TObjectPtr<class UInputAction> HeavyAttackAction;
 
 	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> ChangeStanceAction;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> UIMoveAction;
+
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputMappingContext> MappingContext;
 #pragma endregion
 
@@ -58,6 +64,9 @@ public:
 	void HeavyAttackInput(const FInputActionValue& value);
 	void HeavyAttackTriggeredInput(const FInputActionValue& value);
 	void HeavyAttackCompletedInput(const FInputActionValue& valuve);
+	void ChangeStanceInput(const FInputActionValue& value);
+	void ChangeStanceCompletedInput(const FInputActionValue& value);
+	void UIMoveInput(const FInputActionValue& value);
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 };

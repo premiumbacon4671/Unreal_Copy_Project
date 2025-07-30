@@ -110,6 +110,7 @@ void APlayableBaseCharacter::SetWalk()
 void APlayableBaseCharacter::PlayEvade()
 {
 	if (nullptr != EvadeMontage &&
+		GetMovementComponent()->IsFalling() == false &&
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EvadeMontage) == false &&
 		GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr)
 		PlayMontageFullBody(EvadeMontage);
