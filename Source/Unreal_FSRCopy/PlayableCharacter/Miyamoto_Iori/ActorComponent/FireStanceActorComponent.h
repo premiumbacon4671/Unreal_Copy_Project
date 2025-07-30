@@ -9,9 +9,16 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UFireStanceActorComponent : public UBaseSwordStanceActorComponent
 {
 	GENERATED_BODY()
 	
+protected:
+	virtual void BeginPlay() override;
+
+public:
+	UFireStanceActorComponent();
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
 };

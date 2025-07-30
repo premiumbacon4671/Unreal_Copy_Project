@@ -12,22 +12,34 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	CurSwordStance = ESWORDSTANCE::EST_FIRE;
 
 #pragma region CreateComponent
-	//SwordStanceComponents.SetNum(static_cast<int32>(ESWORDSTANCE::EST_MAX));
+	SwordStanceComponents.SetNum(static_cast<int>(ESWORDSTANCE::EST_MAX));
 	//SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
 
 	UEarthStanceActorComponent* EarthStance = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStanceComponent"));
 	//SwordStanceComponents[static_cast<int32>(ESWORDSTANCE::EST_EARTH)] = EarthStance;
-	SwordStanceComponents.Add(EarthStance);
+	SwordStanceComponents[0] = EarthStance;
 	UFireStanceActorComponent* FireStance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("FireStanceComponent"));
-	SwordStanceComponents.Add(FireStance);
+	SwordStanceComponents[1] = (FireStance);
 
 #pragma endregion
-	CurSwordStanceComponent = SwordStanceComponents[static_cast<int32>(CurSwordStance)];
+	/*switch (CurSwordStance)
+	{
+	case ESWORDSTANCE::EST_EARTH:
+		CurSwordStanceComponent = SwordStanceComponents[0];
+		break;
+	case ESWORDSTANCE::EST_FIRE:
+		CurSwordStanceComponent = SwordStanceComponents[1];
+		break;
+	default:
+		break;
+	}*/
+	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
 }
 
 void AMiyamoto_Iori::BeginPlay()
 {
 	Super::BeginPlay();
+	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
 }
 
 void AMiyamoto_Iori::Tick(float DeltaTime)
