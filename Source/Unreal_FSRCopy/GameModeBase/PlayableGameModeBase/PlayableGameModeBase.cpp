@@ -4,6 +4,7 @@
 #include "GameModeBase/PlayableGameModeBase/PlayableGameModeBase.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
+#include "HUD/PlayerHUD.h"
 
 APlayableGameModeBase::APlayableGameModeBase()
 {
@@ -13,4 +14,5 @@ APlayableGameModeBase::APlayableGameModeBase()
 	if (PlayerCharacterClass.Succeeded())
 		DefaultPawnClass = PlayerCharacterClass.Class;
 	PlayerControllerClass = AMiyamotoIoriController::StaticClass();
+	HUDClass = APlayerHUD::StaticClass();
 }

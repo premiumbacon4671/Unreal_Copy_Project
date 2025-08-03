@@ -8,6 +8,8 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
+#include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
+#include "HUD/PlayerHUD.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -73,12 +75,15 @@ void AMiyamotoIoriController::BeginPlay()
 		InputSystem->AddMappingContext(MappingContext, 0);
 	MiyamotoIori = Cast<APlayableBaseCharacter>(GetCharacter());
 	CurPlayableCharacter = MiyamotoIori;
+	PlayerHUD = Cast<APlayerHUD>(GetHUD());
+
 }
 
 void AMiyamotoIoriController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	isCombat = CurPlayableCharacter->GetIsCombatMode();
+	PlayerHUD->SwordStanceInit(Cast<AMiyamoto_Iori>(MiyamotoIori)->GetCurSwordStance(), Cast<AMiyamoto_Iori>(MiyamotoIori)->GetIsUnlockedSwordStance());
 }
 
 void AMiyamotoIoriController::SetupInputComponent()
@@ -193,4 +198,5 @@ void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue
 
 void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 {
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("UI Move Input"));
 }

@@ -19,6 +19,7 @@ class UNREAL_FSRCOPY_API AMiyamotoIoriController : public APlayerController
 private:
 	TObjectPtr<class APlayableBaseCharacter> CurPlayableCharacter;
 	TObjectPtr<class APlayableBaseCharacter> MiyamotoIori;
+	TObjectPtr<class APlayerHUD> PlayerHUD;
 
 #pragma region InputAction
 	UPROPERTY(VisibleAnywhere)
