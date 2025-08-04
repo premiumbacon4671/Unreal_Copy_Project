@@ -53,6 +53,9 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UImage> Void_Highlight;
 
+	TArray<class SwordStanceButtonUI*> Buttons;
+	//bindwidget사용하기 위한 변수
 public:
 	void Init(ESWORDSTANCE CurSwordStance, TMap<ESWORDSTANCE, bool> isUnlockSwordStance);
+	bool Initialize() override;
 };

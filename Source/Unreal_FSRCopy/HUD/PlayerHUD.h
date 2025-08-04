@@ -23,4 +23,5 @@ public:
 	APlayerHUD();
 	void BeginPlay() override;
 	void SwordStanceInit(ESWORDSTANCE CurSwordStance, TMap<ESWORDSTANCE, bool> isUnlockSwordStance);
+	void PostInitializeComponents() override;
 };

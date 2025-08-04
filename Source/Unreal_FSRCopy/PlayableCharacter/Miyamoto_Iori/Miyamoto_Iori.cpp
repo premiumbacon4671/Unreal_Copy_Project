@@ -9,7 +9,7 @@
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	CurSwordStance = ESWORDSTANCE::EST_EARTH;
+	CurSwordStance = ESWORDSTANCE::EST_FIRE;
 
 #pragma region CreateComponent
 	//SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
@@ -20,11 +20,11 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	UFireStanceActorComponent* FireStance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("FireStanceComponent"));
 	SwordStanceComponents[2] = FireStance;
 
-	UFireStanceActorComponent* a1Stance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("a1StanceComponent"));
+	UBaseSwordStanceActorComponent* a1Stance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("a1StanceComponent"));
 	SwordStanceComponents[1] = a1Stance;
-	UFireStanceActorComponent* a2Stance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("a2StanceComponent"));
+	UBaseSwordStanceActorComponent* a2Stance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("a2StanceComponent"));
 	SwordStanceComponents[3] = a2Stance;
-	UFireStanceActorComponent* a3Stance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("a3StanceComponent"));
+	UBaseSwordStanceActorComponent* a3Stance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("a3StanceComponent"));
 	SwordStanceComponents[4] = a3Stance;
 
 	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_EARTH, true);

@@ -189,11 +189,15 @@ void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue&
 void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 {
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Pause Start"));
+	//UGameplayStatics::SetGamePaused(GetWorld(), true);
 }
 
 void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue& value)
 {
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("Pause End"));
+	//UGameplayStatics::SetGamePaused(GetWorld(), false);
 }
 
 void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)

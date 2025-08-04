@@ -22,6 +22,7 @@ void APlayerHUD::BeginPlay()
 		if (SwordStanceUI)
 		{
 			SwordStanceUI->AddToViewport();
+			
 		}
 		
 	}
@@ -34,4 +35,9 @@ void APlayerHUD::SwordStanceInit(ESWORDSTANCE CurSwordStance, TMap<ESWORDSTANCE,
 	{
 		SwordStanceUI->Init(CurSwordStance, isUnlockSwordStance);
 	}
+}
+
+void APlayerHUD::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 }

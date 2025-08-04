@@ -41,3 +41,10 @@ void USwordStanceUI::Init(ESWORDSTANCE CurSwordStance, TMap<ESWORDSTANCE, bool> 
 		}
 	}
 }
+
+bool USwordStanceUI::Initialize()
+{
+	Super::Initialize();
+	
+	return false;
+}
