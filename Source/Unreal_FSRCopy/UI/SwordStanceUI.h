@@ -18,44 +18,24 @@ class UNREAL_FSRCOPY_API USwordStanceUI : public UUserWidget
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> EarthStance;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Earth_Frame;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Earth_Highlight;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> WaterStance;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Water_Frame;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Water_Highlight;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> FireStance;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Fire_Frame;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Fire_Highlight;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> WindStance;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Wind_Frame;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Wind_Highlight;
-
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> VoidStance;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Void_Frame;
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UImage> Void_Highlight;
-
-	TArray<class SwordStanceButtonUI*> Buttons;
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class USwordStanceButtonUI> SwordButtonClass;
+	//3X3버튼 UI를 위한 변수
+	TArray<TArray<TObjectPtr<class USwordStanceButtonUI>>> Buttons;
 	//bindwidget사용하기 위한 변수
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	TObjectPtr<class USwordStanceButtonUI> EarthStance;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class USwordStanceButtonUI> WaterStance;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class USwordStanceButtonUI> FireStance;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class USwordStanceButtonUI> WindStance;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class USwordStanceButtonUI> VoidStance;
+
 public:
-	void Init(ESWORDSTANCE CurSwordStance, TMap<ESWORDSTANCE, bool> isUnlockSwordStance);
+	void Init(class AMiyamoto_Iori& Miyamoto);
+	void NativeConstruct() override;
 	bool Initialize() override;
 };

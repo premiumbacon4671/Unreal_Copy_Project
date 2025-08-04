@@ -23,14 +23,14 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> HeavyAttackMontage;
 	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UAnimMontage> HikenMontage; 
+	TObjectPtr<UAnimMontage> HikenMontage;
+#pragma endregion
+	bool IsUnlockSwordStance{ false };
 
 	UPROPERTY(EditAnywhere, Category = "Montage")
 	TArray<FName> NormalAttackSectionNames;
 	UPROPERTY(EditAnywhere, Category = "Montage")
 	TArray<FName> HeavyAttackSectionNames;
-
-	
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackMaxCount;
@@ -45,7 +45,6 @@ protected:
 	TObjectPtr<UAnimMontage> NextAttackMontage;
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	FName NextAttackName;
-#pragma endregion
 
 protected:
 	// Called when the game starts
@@ -58,6 +57,9 @@ public:
 	virtual void PlayHeavyAttackMontage();
 	virtual void PlayTriggeredHeavyAttackMontage();
 	virtual void PlayCompletedHeavyAttackMontage();
+
+	void SetIsUnlockSwordStance(bool isUnlock) { IsUnlockSwordStance = isUnlock; }
+	bool GetIsUnlockSwordStance() const { return IsUnlockSwordStance; }
 
 	FName GetAddCurNormalAttackSectionName();
 	FName GetCurHeavyAttackSectionName() { return HeavyAttackSectionNames[NormalAttackSectionIndex]; }

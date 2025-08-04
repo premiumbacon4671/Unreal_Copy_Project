@@ -14,6 +14,8 @@
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+#include "UI/SwordStanceUI.h"
+
 AMiyamotoIoriController::AMiyamotoIoriController()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -65,6 +67,7 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 		TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Blueprint/PlayableCharacter/Input/IMC_PlayableCharacter.IMC_PlayableCharacter'"));
 	if (InputMappingContextFinder.Succeeded())
 		MappingContext = InputMappingContextFinder.Object;
+	
 }
 
 void AMiyamotoIoriController::BeginPlay()
@@ -76,14 +79,12 @@ void AMiyamotoIoriController::BeginPlay()
 	MiyamotoIori = Cast<APlayableBaseCharacter>(GetCharacter());
 	CurPlayableCharacter = MiyamotoIori;
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
-
 }
 
 void AMiyamotoIoriController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	isCombat = CurPlayableCharacter->GetIsCombatMode();
-	PlayerHUD->SwordStanceInit(Cast<AMiyamoto_Iori>(MiyamotoIori)->GetCurSwordStance(), Cast<AMiyamoto_Iori>(MiyamotoIori)->GetIsUnlockedSwordStance());
 }
 
 void AMiyamotoIoriController::SetupInputComponent()
@@ -188,16 +189,16 @@ void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue&
 
 void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 {
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
+	//UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Pause Start"));
-	//UGameplayStatics::SetGamePaused(GetWorld(), true);
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
 }
 
 void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue& value)
 {
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+	//UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("Pause End"));
-	//UGameplayStatics::SetGamePaused(GetWorld(), false);
+	UGameplayStatics::SetGamePaused(GetWorld(), false);
 }
 
 void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)

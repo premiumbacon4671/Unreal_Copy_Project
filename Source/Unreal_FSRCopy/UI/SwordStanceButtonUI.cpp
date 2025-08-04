@@ -4,7 +4,25 @@
 #include "UI/SwordStanceButtonUI.h"
 #include "Components/Image.h"
 
-void USwordStanceButtonUI::SetColor(FLinearColor color)
+void USwordStanceButtonUI::SetColor(FString HexColor)
 {
-	SwordStance->Brush.TintColor = color;
+    FColor SRGBColor = FColor::FromHex(HexColor);
+    FLinearColor LinearColor = FLinearColor(SRGBColor);
+    SwordStance->Brush.TintColor = FSlateColor(LinearColor);
+}
+
+void USwordStanceButtonUI::SetSwordStanceVisibility(ESlateVisibility eVisibility)
+{
+	if (SwordStance)
+	{
+		SwordStance->SetVisibility(eVisibility);
+	}
+}
+
+void USwordStanceButtonUI::SetHighlightVisibility(ESlateVisibility eVisibility)
+{
+	if (Highlight)
+	{
+		Highlight->SetVisibility(eVisibility);
+	}
 }

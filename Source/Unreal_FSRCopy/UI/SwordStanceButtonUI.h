@@ -15,12 +15,15 @@ class UNREAL_FSRCOPY_API USwordStanceButtonUI : public UUserWidget
 	GENERATED_BODY()
 	
 private:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	TObjectPtr<class UImage> SwordStance;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UImage> Frame;
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	TObjectPtr<class UImage> Highlight;
-
-	void SetColor(FLinearColor color);
+	
+public:
+	void SetColor(FString HexColor);
+	void SetSwordStanceVisibility(ESlateVisibility eVisibility);
+	void SetHighlightVisibility(ESlateVisibility eVisibility);
 };

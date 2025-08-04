@@ -4,6 +4,8 @@
 #include "HUD/PlayerHUD.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/SwordStanceUI.h"
+#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
+#include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 
 APlayerHUD::APlayerHUD()
 {
@@ -22,18 +24,17 @@ void APlayerHUD::BeginPlay()
 		if (SwordStanceUI)
 		{
 			SwordStanceUI->AddToViewport();
-			
+			AMiyamotoIoriController* MiyamotoController = Cast<AMiyamotoIoriController>(GetOwningPlayerController());
+			if (MiyamotoController)
+			{
+				AMiyamoto_Iori* Miyamoto = Cast<AMiyamoto_Iori>(MiyamotoController->GetPawn());
+				if (Miyamoto)
+				{
+					//SwordStanceUI->Init(*Miyamoto);
+				}
+			}
 		}
 		
-	}
-}
-
-
-void APlayerHUD::SwordStanceInit(ESWORDSTANCE CurSwordStance, TMap<ESWORDSTANCE, bool> isUnlockSwordStance)
-{
-	if (SwordStanceUI)
-	{
-		SwordStanceUI->Init(CurSwordStance, isUnlockSwordStance);
 	}
 }
 

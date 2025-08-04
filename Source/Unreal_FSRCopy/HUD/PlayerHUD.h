@@ -17,11 +17,10 @@ class UNREAL_FSRCOPY_API APlayerHUD : public AHUD
 	
 private:
 	TSubclassOf<class USwordStanceUI> SwordStanceWidget;
-	TObjectPtr<class USwordStanceUI> SwordStanceUI;
 
 public:
+	TObjectPtr<class USwordStanceUI> SwordStanceUI;
 	APlayerHUD();
 	void BeginPlay() override;
-	void SwordStanceInit(ESWORDSTANCE CurSwordStance, TMap<ESWORDSTANCE, bool> isUnlockSwordStance);
 	void PostInitializeComponents() override;
 };

@@ -16,9 +16,11 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 
 	SwordStanceComponents.SetNum(static_cast<int>(ESWORDSTANCE::EST_MAX));
 	UEarthStanceActorComponent* EarthStance = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStanceComponent"));
+	EarthStance->SetIsUnlockSwordStance(true);
 	SwordStanceComponents[0] = EarthStance;
 	UFireStanceActorComponent* FireStance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("FireStanceComponent"));
 	SwordStanceComponents[2] = FireStance;
+	FireStance->SetIsUnlockSwordStance(true);
 
 	UBaseSwordStanceActorComponent* a1Stance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("a1StanceComponent"));
 	SwordStanceComponents[1] = a1Stance;
@@ -27,11 +29,11 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	UBaseSwordStanceActorComponent* a3Stance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("a3StanceComponent"));
 	SwordStanceComponents[4] = a3Stance;
 
-	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_EARTH, true);
+	/*IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_EARTH, true);
 	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_WATER, false);
 	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_FIRE, true);
 	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_WIND, false);
-	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_VOID, false);
+	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_VOID, false);*/
 #pragma endregion
 	/*switch (CurSwordStance)
 	{
@@ -113,4 +115,9 @@ void AMiyamoto_Iori::WeaponUnEquip()
 	default:
 		break;
 	}
+}
+
+bool AMiyamoto_Iori::GetIsUnlockSwordStance(ESWORDSTANCE SwordStance) const
+{
+	return SwordStanceComponents[static_cast<int>(SwordStance)]->GetIsUnlockSwordStance();
 }

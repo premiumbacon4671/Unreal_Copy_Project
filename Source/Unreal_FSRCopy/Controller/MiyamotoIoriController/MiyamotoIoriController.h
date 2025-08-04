@@ -53,7 +53,7 @@ private:
 public:
 	AMiyamotoIoriController();
 	void BeginPlay();
-	void Tick(float DeltaTime);
+	void Tick(float DeltaTime) override;
 	void SetupInputComponent() override;
 	void MoveInput(const FInputActionValue& value);
 	void MoveEndInput(const FInputActionValue& value);
