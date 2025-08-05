@@ -8,6 +8,8 @@
 
 void USwordStanceUI::Init(AMiyamoto_Iori& Miyamoto)
 {
+	if (&Miyamoto == nullptr)
+		return;
 	if (Miyamoto.GetIsUnlockSwordStance(ESWORDSTANCE::EST_EARTH) == true)
 	{
 		EarthStance->SetSwordStanceVisibility(ESlateVisibility::Visible);

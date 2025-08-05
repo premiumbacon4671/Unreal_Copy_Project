@@ -168,8 +168,8 @@ void APlayableBaseCharacter::SetCombatMode()
 
 void APlayableBaseCharacter::PlayEquipWeaponMontage()
 {
-	if (GetMovementComponent()->IsFalling() == true ||
-		nullptr == EquipMontage ||
+	//if (GetMovementComponent()->IsFalling() == true ||
+		if(nullptr == EquipMontage ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetHeavyAttackMontage()) == true)

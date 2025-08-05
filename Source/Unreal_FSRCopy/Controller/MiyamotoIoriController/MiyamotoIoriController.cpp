@@ -105,12 +105,14 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::HeavyAttackCompletedInput);
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::ChangeStanceInput);
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ChangeStanceCompletedInput);
-		input->BindAction(UIMoveAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::UIMoveInput);
+		input->BindAction(UIMoveAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::UIMoveInput);
 	}
 }
 
 void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
 	isMoveInput = true;
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FVector Forward = GetTransformComponent()->GetForwardVector();
@@ -124,15 +126,21 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 
 	CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
 	CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
+	GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Magenta, TEXT("Move Triggered"));
 }
 
 void AMiyamotoIoriController::MoveEndInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
 	isMoveInput = false;
+	GEngine->AddOnScreenDebugMessage(4, 5.0f, FColor::Green, TEXT("Move Ended"));
 }
 
 void AMiyamotoIoriController::LookInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
 	FVector2D MoveValue = value.Get<FVector2D>(); 
 	//Gamepad Deadzone
 	if (FMath::Abs(MoveValue.X) <= 0.2f)
@@ -145,6 +153,8 @@ void AMiyamotoIoriController::LookInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::SprintInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
 	if(isCombat)
 		return;
 	CurPlayableCharacter->SetMoveSpeed();
@@ -152,6 +162,8 @@ void AMiyamotoIoriController::SprintInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::EvadeInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
 	if (isCombat == false)
 		return;
 	CurPlayableCharacter->PlayEvade();
@@ -159,6 +171,8 @@ void AMiyamotoIoriController::EvadeInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::JumpInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
 	CurPlayableCharacter->Jump();
 	CurPlayableCharacter->PlayJump();
 }
@@ -189,19 +203,25 @@ void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue&
 
 void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 {
-	//UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Pause Start"));
-	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
+	isUIMode = true;
+	PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Visible);
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, TEXT("Pause Start"));
+	//UGameplayStatics::SetGamePaused(GetWorld(), true);
 }
 
 void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue& value)
 {
-	//UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Blue, TEXT("Pause End"));
-	UGameplayStatics::SetGamePaused(GetWorld(), false);
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+	isUIMode = false;
+	PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
+	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
+	//UGameplayStatics::SetGamePaused(GetWorld(), false);
 }
 
 void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 {
+	if (isUIMode == false)
+		return;
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("UI Move Input"));
 }

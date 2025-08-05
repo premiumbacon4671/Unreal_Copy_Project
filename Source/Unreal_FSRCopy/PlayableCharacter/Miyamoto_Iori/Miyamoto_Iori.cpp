@@ -62,8 +62,8 @@ void AMiyamoto_Iori::Tick(float DeltaTime)
 
 void AMiyamoto_Iori::PlayEquipWeaponMontage()
 {
-	if (GetMovementComponent()->IsFalling() == true ||
-		nullptr == EquipMontage ||
+	//if (GetMovementComponent()->IsFalling() == true ||
+		if(nullptr == EquipMontage ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true)
 		return;

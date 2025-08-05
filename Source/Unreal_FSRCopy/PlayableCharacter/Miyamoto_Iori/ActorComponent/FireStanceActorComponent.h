@@ -20,5 +20,6 @@ protected:
 public:
 	UFireStanceActorComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	void PlayCompletedHeavyAttackMontage() override;
+	void PlayHeavyAttack0ChargeMontage();
 };

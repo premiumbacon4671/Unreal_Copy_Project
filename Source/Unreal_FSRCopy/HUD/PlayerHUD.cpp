@@ -42,3 +42,8 @@ void APlayerHUD::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 }
+
+void APlayerHUD::SetSwordStanceUIVisibility(ESlateVisibility eVisibility)
+{
+	SwordStanceUI->SetVisibility(eVisibility);
+}

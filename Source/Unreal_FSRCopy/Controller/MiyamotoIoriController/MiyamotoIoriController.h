@@ -49,6 +49,7 @@ private:
 
 	bool isMoveInput{ false };
 	bool isCombat{ false };
+	bool isUIMode{ false };
 
 public:
 	AMiyamotoIoriController();
