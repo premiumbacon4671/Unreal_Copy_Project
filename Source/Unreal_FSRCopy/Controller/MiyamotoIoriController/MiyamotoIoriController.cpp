@@ -105,7 +105,7 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(HeavyAttackAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::HeavyAttackCompletedInput);
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::ChangeStanceInput);
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ChangeStanceCompletedInput);
-		input->BindAction(UIMoveAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::UIMoveInput);
+		input->BindAction(UIMoveAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::UIMoveInput);
 	}
 }
 
@@ -212,6 +212,8 @@ void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue& value)
 {
+	if (isUIMode == false)
+		return;
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 	isUIMode = false;
 	PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
@@ -224,8 +226,9 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 	if (isUIMode == false)
 		return;
 	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("UI Move Input"));
-
+	float CurrentTime = GetWorld()->GetTimeSeconds();
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FString test = FString::Printf(TEXT("X: %f, Y: %f"), MoveValue.X, MoveValue.Y);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, test);
+	FString CurrentTimeString = FString::Printf(TEXT("Current Time: %f"), CurrentTime);
+	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, CurrentTimeString);
 }
