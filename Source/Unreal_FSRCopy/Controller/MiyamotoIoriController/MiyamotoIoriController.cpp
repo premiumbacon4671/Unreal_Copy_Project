@@ -124,9 +124,10 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 	if (FMath::Abs(MoveValue.Y) <= 0.2f)
 		MoveValue.Y = 0.0f;
 
+	FString test = FString::Printf(TEXT("X: %f, Y: %f"), MoveValue.X, MoveValue.Y);
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, test);
 	CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
 	CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
-	GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Magenta, TEXT("Move Triggered"));
 }
 
 void AMiyamotoIoriController::MoveEndInput(const FInputActionValue& value)
@@ -134,7 +135,6 @@ void AMiyamotoIoriController::MoveEndInput(const FInputActionValue& value)
 	if (isUIMode == true)
 		return;
 	isMoveInput = false;
-	GEngine->AddOnScreenDebugMessage(4, 5.0f, FColor::Green, TEXT("Move Ended"));
 }
 
 void AMiyamotoIoriController::LookInput(const FInputActionValue& value)
@@ -223,5 +223,9 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 {
 	if (isUIMode == false)
 		return;
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("UI Move Input"));
+	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("UI Move Input"));
+
+	FVector2D MoveValue = value.Get<FVector2D>();
+	FString test = FString::Printf(TEXT("X: %f, Y: %f"), MoveValue.X, MoveValue.Y);
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, test);
 }
