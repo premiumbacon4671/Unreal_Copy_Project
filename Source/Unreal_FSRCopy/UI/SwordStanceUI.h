@@ -34,11 +34,12 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class USwordStanceButtonUI> VoidStance;
 
-	FVector2D CurStanceIndex;
+	//X = row Y = Column
+	FIntPoint CurStanceIndex;
 
 public:
 	void Init(class AMiyamoto_Iori& Miyamoto);
 	void NativeConstruct() override;
 	bool Initialize() override;
-	void SelectSwordStance(FVector2D StanceIndex);
+	void SelectSwordStance(FIntPoint StanceIndex);
 };

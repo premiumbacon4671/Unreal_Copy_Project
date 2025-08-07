@@ -23,4 +23,5 @@ public:
 	void BeginPlay() override;
 	void PostInitializeComponents() override;
 	void SetSwordStanceUIVisibility(ESlateVisibility eVisibility);
+	void SelectSwordStance(FIntPoint MoveIndex);
 };

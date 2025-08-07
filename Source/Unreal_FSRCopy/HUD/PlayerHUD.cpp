@@ -47,3 +47,8 @@ void APlayerHUD::SetSwordStanceUIVisibility(ESlateVisibility eVisibility)
 {
 	SwordStanceUI->SetVisibility(eVisibility);
 }
+
+void APlayerHUD::SelectSwordStance(FIntPoint MoveIndex)
+{
+	SwordStanceUI->SelectSwordStance(MoveIndex);
+}

@@ -124,8 +124,6 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 	if (FMath::Abs(MoveValue.Y) <= 0.2f)
 		MoveValue.Y = 0.0f;
 
-	FString test = FString::Printf(TEXT("X: %f, Y: %f"), MoveValue.X, MoveValue.Y);
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, test);
 	CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
 	CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
 }
@@ -225,10 +223,7 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 {
 	if (isUIMode == false)
 		return;
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, TEXT("UI Move Input"));
-	float CurrentTime = GetWorld()->GetTimeSeconds();
-	FVector2D MoveValue = value.Get<FVector2D>();
-	FString test = FString::Printf(TEXT("X: %f, Y: %f"), MoveValue.X, MoveValue.Y);
-	FString CurrentTimeString = FString::Printf(TEXT("Current Time: %f"), CurrentTime);
-	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, CurrentTimeString);
+	//게임패드에서 입력값 확인
+	FIntPoint MoveValue = value.Get<FIntPoint>();
+	PlayerHUD->SelectSwordStance(MoveValue);
 }
