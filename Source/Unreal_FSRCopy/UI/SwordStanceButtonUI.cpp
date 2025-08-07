@@ -26,3 +26,8 @@ void USwordStanceButtonUI::SetHighlightVisibility(ESlateVisibility eVisibility)
 		Highlight->SetVisibility(eVisibility);
 	}
 }
+
+ESlateVisibility USwordStanceButtonUI::GetHVisiblility()
+{
+	return Highlight->GetVisibility();
+}

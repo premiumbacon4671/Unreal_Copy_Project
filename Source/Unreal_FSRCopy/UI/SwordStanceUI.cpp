@@ -135,4 +135,15 @@ void USwordStanceUI::SelectSwordStance(FIntPoint StanceIndex)
 		else if (StanceIndex.Y > 0)
 			NextStanceIndex.X -= StanceIndex.Y;
 	}
+	FString StanceString = FString::Printf(TEXT("X: %d, Y: %d"), CurStanceIndex.X, CurStanceIndex.Y);
+	FString NextStanceString = FString::Printf(TEXT("X: %d, Y: %d"), NextStanceIndex.X, NextStanceIndex.Y);
+	GEngine->AddOnScreenDebugMessage(4, 5.0f, FColor::Green, NextStanceString);
+	GEngine->AddOnScreenDebugMessage(5, 5.0f, FColor::Red, StanceString);
+	FString test1 = FString::Printf(TEXT("1Cur : %d Next : %d"), static_cast<int>(Buttons[CurStanceIndex.X][CurStanceIndex.Y]->GetHVisiblility()), static_cast<int>(Buttons[NextStanceIndex.X][NextStanceIndex.Y]->GetHVisiblility()));
+	GEngine->AddOnScreenDebugMessage(6, 5.0f, FColor::Magenta, test1);
+	Buttons[CurStanceIndex.X][CurStanceIndex.Y]->SetHighlightVisibility(ESlateVisibility::Hidden);
+	Buttons[NextStanceIndex.X][NextStanceIndex.Y]->SetHighlightVisibility(ESlateVisibility::Visible);
+	FString test2 = FString::Printf(TEXT("2Cur : %d Next : %d"), static_cast<int>(Buttons[CurStanceIndex.X][CurStanceIndex.Y]->GetHVisiblility()), static_cast<int>(Buttons[NextStanceIndex.X][NextStanceIndex.Y]->GetHVisiblility()));
+	GEngine->AddOnScreenDebugMessage(7, 5.0f, FColor::Blue, test2);
+	CurStanceIndex = NextStanceIndex;
 }

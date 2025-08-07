@@ -26,4 +26,5 @@ public:
 	void SetColor(FString HexColor);
 	void SetSwordStanceVisibility(ESlateVisibility eVisibility);
 	void SetHighlightVisibility(ESlateVisibility eVisibility);
+	ESlateVisibility GetHVisiblility();
 };

@@ -24,15 +24,6 @@ void APlayerHUD::BeginPlay()
 		if (SwordStanceUI)
 		{
 			SwordStanceUI->AddToViewport();
-			AMiyamotoIoriController* MiyamotoController = Cast<AMiyamotoIoriController>(GetOwningPlayerController());
-			if (MiyamotoController)
-			{
-				AMiyamoto_Iori* Miyamoto = Cast<AMiyamoto_Iori>(MiyamotoController->GetPawn());
-				if (Miyamoto)
-				{
-					//SwordStanceUI->Init(*Miyamoto);
-				}
-			}
 		}
 		
 	}

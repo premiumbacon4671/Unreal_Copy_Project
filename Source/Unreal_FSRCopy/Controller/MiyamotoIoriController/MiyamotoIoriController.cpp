@@ -203,7 +203,7 @@ void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 {
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
 	isUIMode = true;
-	PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Visible);
+	PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::SelfHitTestInvisible);
 	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, TEXT("Pause Start"));
 	//UGameplayStatics::SetGamePaused(GetWorld(), true);
 }
@@ -224,6 +224,9 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 	if (isUIMode == false)
 		return;
 	//게임패드에서 입력값 확인
-	FIntPoint MoveValue = value.Get<FIntPoint>();
-	PlayerHUD->SelectSwordStance(MoveValue);
+	FVector2D MoveValue = value.Get<FVector2D>();
+	FIntPoint iMoveValue(MoveValue.X, MoveValue.Y);
+	FString MoveValueString = FString::Printf(TEXT("X: %d, Y: %d"), iMoveValue.X, iMoveValue.Y);
+	GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, MoveValueString);
+	PlayerHUD->SelectSwordStance(iMoveValue);
 }
