@@ -43,3 +43,8 @@ void APlayerHUD::SelectSwordStance(FIntPoint MoveIndex)
 {
 	SwordStanceUI->SelectSwordStance(MoveIndex);
 }
+
+void APlayerHUD::StartedSwordStanceUI()
+{
+	SwordStanceUI->StartedSwordStanceUI();
+}

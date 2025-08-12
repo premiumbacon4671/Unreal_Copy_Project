@@ -3,6 +3,7 @@
 
 #include "UI/SwordStanceButtonUI.h"
 #include "Components/Image.h"
+#include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 
 void USwordStanceButtonUI::SetColor(FString HexColor)
 {
@@ -24,7 +25,18 @@ void USwordStanceButtonUI::SetHighlightVisibility(ESlateVisibility eVisibility)
 	if (Highlight)
 	{
 		Highlight->SetVisibility(eVisibility);
+
+		// Slate 다시 계산 강제
+		Highlight->InvalidateLayoutAndVolatility(); // 이걸로도 안 되면 아래 방법 추가
+		this->InvalidateLayoutAndVolatility(); // 부모도 다시 계산하도록 요청
+		GetRootWidget()->InvalidateLayoutAndVolatility(); // 루트 위젯에 대해서도 다시 계산 요청
+		
 	}
+}
+
+void USwordStanceButtonUI::SetSwordStanceType(ESWORDSTANCE eSwordStance)
+{
+	SwordStanceType = eSwordStance;
 }
 
 ESlateVisibility USwordStanceButtonUI::GetHVisiblility()

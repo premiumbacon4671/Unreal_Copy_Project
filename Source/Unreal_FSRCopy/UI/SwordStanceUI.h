@@ -34,12 +34,17 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class USwordStanceButtonUI> VoidStance;
 
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UCanvasPanel> CanvasPanel;
+
 	//X = row Y = Column
 	FIntPoint CurStanceIndex;
-
+	FIntPoint ChangeStanceIndex;
 public:
 	void Init(class AMiyamoto_Iori& Miyamoto);
 	void NativeConstruct() override;
 	bool Initialize() override;
 	void SelectSwordStance(FIntPoint StanceIndex);
+	void StartedSwordStanceUI();
+	void EndedSwordStanceUI(class AMiyamoto_Iori* Miyamoto);
 };

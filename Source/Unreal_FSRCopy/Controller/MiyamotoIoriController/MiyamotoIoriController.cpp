@@ -203,9 +203,13 @@ void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 {
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
 	isUIMode = true;
-	PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::SelfHitTestInvisible);
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, TEXT("Pause Start"));
-	//UGameplayStatics::SetGamePaused(GetWorld(), true);
+	if(CurPlayableCharacter == MiyamotoIori)
+	{
+		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::SelfHitTestInvisible);
+		PlayerHUD->StartedSwordStanceUI();
+		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, TEXT("Pause Start"));
+	}
+
 }
 
 void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue& value)
@@ -214,9 +218,11 @@ void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue
 		return;
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 	isUIMode = false;
-	PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
-	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
-	//UGameplayStatics::SetGamePaused(GetWorld(), false);
+	if (CurPlayableCharacter == MiyamotoIori)
+	{
+		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
+		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
+	}
 }
 
 void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
@@ -226,7 +232,8 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 	//게임패드에서 입력값 확인
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FIntPoint iMoveValue(MoveValue.X, MoveValue.Y);
-	FString MoveValueString = FString::Printf(TEXT("X: %d, Y: %d"), iMoveValue.X, iMoveValue.Y);
-	GEngine->AddOnScreenDebugMessage(3, 5.0f, FColor::Green, MoveValueString);
-	PlayerHUD->SelectSwordStance(iMoveValue);
+	if (CurPlayableCharacter == MiyamotoIori)
+	{
+		PlayerHUD->SelectSwordStance(iMoveValue);
+	}
 }

@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+enum class ESWORDSTANCE : uint8;
+
 UCLASS()
 class UNREAL_FSRCOPY_API USwordStanceButtonUI : public UUserWidget
 {
@@ -21,10 +24,14 @@ private:
 	TObjectPtr<class UImage> Frame;
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
 	TObjectPtr<class UImage> Highlight;
+
+	ESWORDSTANCE SwordStanceType;
 	
 public:
 	void SetColor(FString HexColor);
 	void SetSwordStanceVisibility(ESlateVisibility eVisibility);
 	void SetHighlightVisibility(ESlateVisibility eVisibility);
+	void SetSwordStanceType(ESWORDSTANCE eSwordStance);
+	ESWORDSTANCE GetSwordStanceType() const { return SwordStanceType; }
 	ESlateVisibility GetHVisiblility();
 };
