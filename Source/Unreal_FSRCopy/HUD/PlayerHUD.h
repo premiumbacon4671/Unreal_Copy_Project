@@ -10,7 +10,6 @@
  * 
  */
 enum class ESWORDSTANCE : uint8;
-class AMiyamoto_Iori;
 UCLASS()
 class UNREAL_FSRCOPY_API APlayerHUD : public AHUD
 {
@@ -26,4 +25,5 @@ public:
 	void SetSwordStanceUIVisibility(ESlateVisibility eVisibility);
 	void SelectSwordStance(FIntPoint MoveIndex);
 	void StartedSwordStanceUI();
+	void EndedSwordStanceUI(class AMiyamoto_Iori* Miyamoto);
 };

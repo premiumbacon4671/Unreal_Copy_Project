@@ -48,3 +48,8 @@ void APlayerHUD::StartedSwordStanceUI()
 {
 	SwordStanceUI->StartedSwordStanceUI();
 }
+
+void APlayerHUD::EndedSwordStanceUI(AMiyamoto_Iori* Miyamoto)
+{
+	SwordStanceUI->EndedSwordStanceUI(Miyamoto);
+}

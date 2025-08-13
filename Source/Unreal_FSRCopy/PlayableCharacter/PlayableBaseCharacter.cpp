@@ -113,7 +113,9 @@ void APlayableBaseCharacter::PlayEvade()
 		GetMovementComponent()->IsFalling() == false &&
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EvadeMontage) == false &&
 		GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr)
+	{
 		PlayMontageFullBody(EvadeMontage);
+	}
 }
 
 void APlayableBaseCharacter::SetBrakingDecelerationFalling()

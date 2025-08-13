@@ -222,6 +222,7 @@ void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue
 	{
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
 		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
+		PlayerHUD->EndedSwordStanceUI(Cast<AMiyamoto_Iori>(CurPlayableCharacter));
 	}
 }
 

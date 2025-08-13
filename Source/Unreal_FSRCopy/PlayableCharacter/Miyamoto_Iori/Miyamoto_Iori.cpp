@@ -53,11 +53,22 @@ void AMiyamoto_Iori::BeginPlay()
 {
 	Super::BeginPlay();
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
+	NextSwordStance = CurSwordStance;
 }
 
 void AMiyamoto_Iori::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (isCombatMode == true && NextMontage != nullptr)
+	{
+		if (GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr &&
+			GetMovementComponent()->IsFalling() == false)
+		{
+			PlayMontageFullBody(NextMontage, NextMontageSectionName);
+			NextMontage = nullptr;
+			NextMontageSectionName = TEXT("");
+		}
+	}
 }
 
 void AMiyamoto_Iori::PlayEquipWeaponMontage()
@@ -120,4 +131,38 @@ void AMiyamoto_Iori::WeaponUnEquip()
 bool AMiyamoto_Iori::GetIsUnlockSwordStance(ESWORDSTANCE SwordStance) const
 {
 	return SwordStanceComponents[static_cast<int>(SwordStance)]->GetIsUnlockSwordStance();
+}
+
+void AMiyamoto_Iori::ChangeSwordStance(ESWORDSTANCE SwordStance)
+{
+	//end 델리게이트 사용
+	NextSwordStance = SwordStance;
+	NextMontage = EquipMontage;
+	NextMontageSectionName = TEXT("OneHandSwordUnEquip");
+}
+
+void AMiyamoto_Iori::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
+	GetMesh()->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
+}
+
+
+void AMiyamoto_Iori::UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == nullptr || Montage != EquipMontage)
+		return;
+	if (CurSwordStance == NextSwordStance)
+		return;
+
+	bool bt = Montage == EquipMontage;
+	FName test = BodyComponent->GetAnimInstance()->Montage_GetCurrentSection(EquipMontage);
+	bool bn = test == TEXT("OneHandSwordUnEquip");
+	if ( bt == true &&
+		bn)
+	{
+		CurSwordStance = NextSwordStance;
+		PlayEquipWeaponMontage();
+	}
 }

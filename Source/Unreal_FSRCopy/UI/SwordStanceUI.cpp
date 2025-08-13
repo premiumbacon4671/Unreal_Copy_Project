@@ -6,6 +6,7 @@
 #include "Components/CanvasPanel.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "UI/SwordStanceButtonUI.h"
+#include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
 void USwordStanceUI::Init(AMiyamoto_Iori& Miyamoto)
 {
@@ -154,4 +155,22 @@ void USwordStanceUI::StartedSwordStanceUI()
 
 void USwordStanceUI::EndedSwordStanceUI(AMiyamoto_Iori* Miyamoto)
 {
+	for (int x = 0; x < Buttons.Num(); x++)
+	{
+		for (int y = 0; y < Buttons[x].Num(); y++)
+		{
+			if (Buttons[x][y].Get() == nullptr)
+				continue;
+			Buttons[x][y]->SetHighlightVisibility(ESlateVisibility::Hidden);
+		}
+	}
+	ESWORDSTANCE NextStance = Buttons[ChangeStanceIndex.X][ChangeStanceIndex.Y]->GetSwordStanceType();
+	//현재 타입과 바꿀 타입이 같을 때
+	if (Miyamoto->GetCurSwordStance() == NextStance)
+		return;
+	//바꿀 타입이 해금이 안됐을 때
+	if (Miyamoto->GetIsUnlockSwordStance(NextStance) == false)
+		return;
+	CurStanceIndex = ChangeStanceIndex;
+	Miyamoto->ChangeSwordStance(NextStance);
 }

@@ -28,11 +28,12 @@ class UNREAL_FSRCOPY_API AMiyamoto_Iori : public APlayableBaseCharacter
 	
 private:
 	ESWORDSTANCE CurSwordStance{ ESWORDSTANCE::EST_FIRE };
+	ESWORDSTANCE NextSwordStance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sword Stance", meta = (AllowPrivateAccess = "true"))
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
 
-	/*UPROPERTY(VisibleAnywhere, Category = "Sword Stance", meta = (AllowPrivateAccess = "true"))
-	TMap<ESWORDSTANCE, bool> IsUnlockedSwordStance;*/
+	TObjectPtr<UAnimMontage> NextMontage;
+	FName NextMontageSectionName;
 public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;
@@ -44,5 +45,8 @@ public:
 	//TMap<ESWORDSTANCE, bool> GetIsUnlockedSwordStance() const { return IsUnlockedSwordStance; }
 
 	bool GetIsUnlockSwordStance(ESWORDSTANCE SwordStance) const;
-	
+	void ChangeSwordStance(ESWORDSTANCE SwordStance);
+	void PostInitializeComponents() override;
+	UFUNCTION()
+	void UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };
