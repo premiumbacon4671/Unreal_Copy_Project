@@ -14,17 +14,13 @@ class UNREAL_FSRCOPY_API UBaseStateComponent : public UActorComponent
 
 private:
 	UPROPERTY(EditAnywhere, Category = "State")
-	float HP{ 1000.0f };
+	int HP{ 1000 };
 	UPROPERTY(EditAnywhere, Category = "State")
-	float MaxHP{ 1000.0f };
+	int MaxHP{ 1000 };
 	UPROPERTY(EditAnywhere, Category = "State")
-	float AttackPower { 100.0f };
+	int AttackPower { 100 };
 	UPROPERTY(EditAnywhere, Category = "State")
-	float DefencePower { 50.0f };
-	UPROPERTY(EditAnywhere, Category = "State")
-	float Hiken{ 0.0f };
-	UPROPERTY(EditAnywhere, Category = "State")
-	float MaxHiken{ 100.0f };
+	int DefencePower { 50 };
 
 public:	
 	// Sets default values for this component's properties

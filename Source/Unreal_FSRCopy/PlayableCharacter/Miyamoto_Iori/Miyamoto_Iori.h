@@ -33,7 +33,6 @@ private:
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
 
 	TObjectPtr<UAnimMontage> NextMontage;
-	FName NextMontageSectionName;
 public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;
@@ -47,6 +46,8 @@ public:
 	bool GetIsUnlockSwordStance(ESWORDSTANCE SwordStance) const;
 	void ChangeSwordStance(ESWORDSTANCE SwordStance);
 	void PostInitializeComponents() override;
+	UFUNCTION()
+	void UnEquipMontageStarted(UAnimMontage* Montage);
 	UFUNCTION()
 	void UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 };

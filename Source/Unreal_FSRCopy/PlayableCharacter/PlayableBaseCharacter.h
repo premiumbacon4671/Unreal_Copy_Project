@@ -67,6 +67,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> EquipMontage;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAnimMontage> UnEquipMontage;
 	
 #pragma endregion
 public:

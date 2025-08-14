@@ -17,9 +17,9 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	SwordStanceComponents.SetNum(static_cast<int>(ESWORDSTANCE::EST_MAX));
 	UEarthStanceActorComponent* EarthStance = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStanceComponent"));
 	EarthStance->SetIsUnlockSwordStance(true);
-	SwordStanceComponents[0] = EarthStance;
+	SwordStanceComponents[static_cast<int>(ESWORDSTANCE::EST_EARTH)] = EarthStance;
 	UFireStanceActorComponent* FireStance = CreateDefaultSubobject<UFireStanceActorComponent>(TEXT("FireStanceComponent"));
-	SwordStanceComponents[2] = FireStance;
+	SwordStanceComponents[static_cast<int>(ESWORDSTANCE::EST_FIRE)] = FireStance;
 	FireStance->SetIsUnlockSwordStance(true);
 
 	UBaseSwordStanceActorComponent* a1Stance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("a1StanceComponent"));
@@ -64,9 +64,8 @@ void AMiyamoto_Iori::Tick(float DeltaTime)
 		if (GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr &&
 			GetMovementComponent()->IsFalling() == false)
 		{
-			PlayMontageFullBody(NextMontage, NextMontageSectionName);
+			PlayMontageFullBody(NextMontage);
 			NextMontage = nullptr;
-			NextMontageSectionName = TEXT("");
 		}
 	}
 }
@@ -74,24 +73,27 @@ void AMiyamoto_Iori::Tick(float DeltaTime)
 void AMiyamoto_Iori::PlayEquipWeaponMontage()
 {
 	//if (GetMovementComponent()->IsFalling() == true ||
-		if(nullptr == EquipMontage ||
+		if(nullptr == EquipMontage || nullptr == UnEquipMontage ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true)
 		return;
 	FName SectionName;
-
+	UAnimMontage* montage = nullptr;
 	switch (CurSwordStance)
 	{
 	case ESWORDSTANCE::EST_EARTH:
-		SectionName = isCombatMode ? FName(TEXT("OneHandSwordEquip")) : FName(TEXT("OneHandSwordUnEquip"));
+		montage = isCombatMode ? EquipMontage : UnEquipMontage;
 		break;
 	case ESWORDSTANCE::EST_FIRE:
-		SectionName = isCombatMode ? FName(TEXT("OneHandSwordEquip")) : FName(TEXT("OneHandSwordUnEquip"));
+		montage = isCombatMode ? EquipMontage : UnEquipMontage;
 		break;
 	}
 
-	if (!SectionName.IsNone())
-		PlayMontageFullBody(EquipMontage, SectionName);
+	if (montage != nullptr)
+	{
+		GetController()->SetIgnoreMoveInput(true);
+		PlayMontageFullBody(montage);
+	}
 }
 
 void AMiyamoto_Iori::WeaponEquip()
@@ -137,32 +139,34 @@ void AMiyamoto_Iori::ChangeSwordStance(ESWORDSTANCE SwordStance)
 {
 	//end 델리게이트 사용
 	NextSwordStance = SwordStance;
-	NextMontage = EquipMontage;
-	NextMontageSectionName = TEXT("OneHandSwordUnEquip");
+	NextMontage = UnEquipMontage;
+	//NextMontageSectionName = TEXT("OneHandSwordUnEquip");
 }
 
 void AMiyamoto_Iori::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageStarted);
 	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
 	GetMesh()->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
+	
+}
+
+void AMiyamoto_Iori::UnEquipMontageStarted(UAnimMontage* Montage)
+{
+	if (Montage == nullptr || Montage != EquipMontage)
+		return;
+	//NextMontageSectionName = GetMesh()->GetAnimInstance()->Montage_GetCurrentSection()
 }
 
 
 void AMiyamoto_Iori::UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	if (Montage == nullptr || Montage != EquipMontage)
+	if (Montage == nullptr || Montage != UnEquipMontage)
 		return;
 	if (CurSwordStance == NextSwordStance)
 		return;
-
-	bool bt = Montage == EquipMontage;
-	FName test = BodyComponent->GetAnimInstance()->Montage_GetCurrentSection(EquipMontage);
-	bool bn = test == TEXT("OneHandSwordUnEquip");
-	if ( bt == true &&
-		bn)
-	{
-		CurSwordStance = NextSwordStance;
-		PlayEquipWeaponMontage();
-	}
+	CurSwordStance = NextSwordStance;
+	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
+	PlayEquipWeaponMontage();
 }

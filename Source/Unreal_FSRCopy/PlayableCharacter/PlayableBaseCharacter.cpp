@@ -52,6 +52,11 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	if (EquipMontageFinder.Succeeded())
 		EquipMontage = EquipMontageFinder.Object;
 
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> UnEquipMontageFinder(
+		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_UnEquip.AM_UnEquip'"));
+	if (UnEquipMontageFinder.Succeeded())
+		UnEquipMontage = UnEquipMontageFinder.Object;
+
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> EvadeMontageFinder(
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/Animation/AM_Evade.AM_Evade'"));
 	if (EvadeMontageFinder.Succeeded())
@@ -162,7 +167,6 @@ void APlayableBaseCharacter::SetCombatMode()
 	//Test Code
 	//isCombatMode = true;
 	isCombatMode = !isCombatMode;
-	GetController()->SetIgnoreMoveInput(true);
 	PlayEquipWeaponMontage();
 	FString ModeText = isCombatMode ? TEXT("true") : TEXT("false");
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CombatMode : ") + ModeText);
@@ -171,16 +175,26 @@ void APlayableBaseCharacter::SetCombatMode()
 void APlayableBaseCharacter::PlayEquipWeaponMontage()
 {
 	//if (GetMovementComponent()->IsFalling() == true ||
-		if(nullptr == EquipMontage ||
-		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
-		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true ||
+	if (BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetHeavyAttackMontage()) == true)
 		return;
-
-	if(isCombatMode == false)
-		PlayMontageFullBody(EquipMontage, TEXT("UnEquip"));
+	UAnimMontage* Montage = nullptr;
+	if (isCombatMode == true)
+	{
+		if (nullptr == EquipMontage ||
+			BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true)
+			return;
+		Montage = EquipMontage;
+	}
 	else
-		PlayMontageFullBody(EquipMontage, TEXT("equip"));
+	{
+		if (nullptr == UnEquipMontage ||
+			BodyComponent->GetAnimInstance()->Montage_IsPlaying(UnEquipMontage) == true)
+			return;
+		Montage = UnEquipMontage;
+	}
+	GetController()->SetIgnoreMoveInput(true);
+	PlayMontageFullBody(Montage);
 }
 
 void APlayableBaseCharacter::WeaponEquip()
