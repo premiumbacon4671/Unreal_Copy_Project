@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/EarthStanceActorComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/FireStanceActorComponent.h"
+#include "ActorComponent/StateComponent/Miyamoto_ioriStateComponent.h"
 
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
@@ -28,6 +29,8 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	SwordStanceComponents[3] = a2Stance;
 	UBaseSwordStanceActorComponent* a3Stance = CreateDefaultSubobject<UBaseSwordStanceActorComponent>(TEXT("a3StanceComponent"));
 	SwordStanceComponents[4] = a3Stance;
+
+	StatusComponent = CreateDefaultSubobject<UMiyamoto_IoriStateComponent>(TEXT("Miyamoto_IoriStatusComponent"));
 
 	/*IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_EARTH, true);
 	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_WATER, false);
@@ -138,8 +141,18 @@ bool AMiyamoto_Iori::GetIsUnlockSwordStance(ESWORDSTANCE SwordStance) const
 void AMiyamoto_Iori::ChangeSwordStance(ESWORDSTANCE SwordStance)
 {
 	//end 델리게이트 사용
-	NextSwordStance = SwordStance;
-	NextMontage = UnEquipMontage;
+	//전투 상태일 시 상태전환
+	if(isCombatMode == true)
+	{
+		NextSwordStance = SwordStance;
+		NextMontage = UnEquipMontage;
+	}
+	//비전투 상태일 시 검의 형만 변경
+	else
+	{
+		CurSwordStance = SwordStance;
+		NextSwordStance = CurSwordStance;
+	}
 	//NextMontageSectionName = TEXT("OneHandSwordUnEquip");
 }
 

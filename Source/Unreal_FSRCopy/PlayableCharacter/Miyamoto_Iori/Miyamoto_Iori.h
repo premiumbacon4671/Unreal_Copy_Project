@@ -31,8 +31,9 @@ private:
 	ESWORDSTANCE NextSwordStance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sword Stance", meta = (AllowPrivateAccess = "true"))
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
-
+	UPROPERTY(EditAnywhere, Category = "Sword Stance")
 	TObjectPtr<UAnimMontage> NextMontage;
+
 public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;

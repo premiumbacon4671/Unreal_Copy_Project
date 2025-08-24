@@ -41,7 +41,7 @@ private:
 	FIntPoint CurStanceIndex;
 	FIntPoint ChangeStanceIndex;
 public:
-	void Init(class AMiyamoto_Iori& Miyamoto);
+	void Init(class AMiyamoto_Iori* Miyamoto);
 	void NativeConstruct() override;
 	bool Initialize() override;
 	void SelectSwordStance(FIntPoint StanceIndex);

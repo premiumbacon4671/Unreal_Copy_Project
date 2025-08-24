@@ -4,6 +4,7 @@
 #include "HUD/PlayerHUD.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/SwordStanceUI.h"
+#include "UI/PlayableStatusUI.h"
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 
@@ -13,6 +14,10 @@ APlayerHUD::APlayerHUD()
 		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/UI/BP_SwordStanceUI.BP_SwordStanceUI_C"));
 	if(SwordStanceWidgetClass.Succeeded())
 		SwordStanceWidget = SwordStanceWidgetClass.Class;
+	static ConstructorHelpers::FClassFinder<UPlayableStatusUI> PlayableStatusWidgetClass(
+		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_PlayerStateInfoUI.BP_PlayerStateInfoUI_C"));
+	if (PlayableStatusWidgetClass.Succeeded())
+		PlayableStatusWidget = PlayableStatusWidgetClass.Class;
 }
 
 void APlayerHUD::BeginPlay()
@@ -24,8 +29,17 @@ void APlayerHUD::BeginPlay()
 		if (SwordStanceUI)
 		{
 			SwordStanceUI->AddToViewport();
+			SwordStanceUI->Init(Cast<AMiyamoto_Iori>(GetOwningPlayerController()->GetPawn()));
 		}
-		
+	}
+	if (PlayableStatusWidget)
+	{
+		PlayableStatusUI = CreateWidget<UPlayableStatusUI>(GetWorld(), PlayableStatusWidget);
+		if (PlayableStatusUI)
+		{
+			PlayableStatusUI->AddToViewport();
+			PlayableStatusUI->Init(Cast<APlayableBaseCharacter>(GetOwningPlayerController()->GetPawn()));
+		}
 	}
 }
 

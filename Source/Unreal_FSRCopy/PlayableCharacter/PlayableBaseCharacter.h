@@ -57,6 +57,9 @@ protected:
 	TObjectPtr<USkeletalMeshComponent> SecondWeaponComponent;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> SecondWeaponCoverComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UPlayableStateComponent> StatusComponent;
 #pragma endregion
 
 #pragma region CombatMode
@@ -109,4 +112,5 @@ public:
 
 	bool GetIsCombatMode() const { return isCombatMode; }
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
+	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
 };

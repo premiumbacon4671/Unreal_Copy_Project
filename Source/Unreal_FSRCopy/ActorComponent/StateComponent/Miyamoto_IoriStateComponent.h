@@ -3,36 +3,29 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ActorComponent/StateComponent/BaseStateComponent.h"
-#include "PlayableStateComponent.generated.h"
+#include "ActorComponent/StateComponent/PlayableStateComponent.h"
+#include "Miyamoto_IoriStateComponent.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class UNREAL_FSRCOPY_API UPlayableStateComponent : public UBaseStateComponent
+class UNREAL_FSRCOPY_API UMiyamoto_IoriStateComponent : public UPlayableStateComponent
 {
 	GENERATED_BODY()
-	
 private:
 	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Level{ 1 };
+	int LinkSkill{ 70 };
 	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Experience{ 0 };
+	int LinkSkillMax{ 100 };
 	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int MaxExperience{ 0 };
+	int LinkSkillBall{ 1 };
 	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Mat;
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Tec;
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Hiken{ 40 };
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int MaxHiken{ 100 };
+	int LinkSkillBallMax{ 3 };
 
 public:
 	// Sets default values for this component's properties
-	UPlayableStateComponent();
+	UMiyamoto_IoriStateComponent();
 
 protected:
 	// Called when the game starts
@@ -41,5 +34,6 @@ protected:
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	float GetHikentPercent() const { return static_cast<float>(Hiken) / static_cast<float>(MaxHiken); }
+	float GetLinkSkillPercent() const { return static_cast<float>(LinkSkill) / static_cast<float>(LinkSkillMax); }
+	int GetLinkSkillBall() const { return LinkSkillBall; }
 };

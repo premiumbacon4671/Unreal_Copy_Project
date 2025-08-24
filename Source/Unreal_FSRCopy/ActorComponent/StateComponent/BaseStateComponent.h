@@ -14,7 +14,7 @@ class UNREAL_FSRCOPY_API UBaseStateComponent : public UActorComponent
 
 private:
 	UPROPERTY(EditAnywhere, Category = "State")
-	int HP{ 1000 };
+	int HP{ 800 };
 	UPROPERTY(EditAnywhere, Category = "State")
 	int MaxHP{ 1000 };
 	UPROPERTY(EditAnywhere, Category = "State")
@@ -33,5 +33,5 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	float GetHPPercent() const { return static_cast<float>(HP) / static_cast<float>(MaxHP); }
 };

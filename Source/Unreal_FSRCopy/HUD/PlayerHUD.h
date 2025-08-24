@@ -18,6 +18,8 @@ class UNREAL_FSRCOPY_API APlayerHUD : public AHUD
 private:
 	TSubclassOf<class USwordStanceUI> SwordStanceWidget;
 	TObjectPtr<class USwordStanceUI> SwordStanceUI;
+	TSubclassOf<class UPlayableStatusUI> PlayableStatusWidget;
+	TObjectPtr<class UPlayableStatusUI> PlayableStatusUI;
 public:
 	APlayerHUD();
 	void BeginPlay() override;

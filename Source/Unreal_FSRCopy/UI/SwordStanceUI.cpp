@@ -8,7 +8,7 @@
 #include "UI/SwordStanceButtonUI.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
-void USwordStanceUI::Init(AMiyamoto_Iori& Miyamoto)
+void USwordStanceUI::Init(AMiyamoto_Iori* Miyamoto)
 {
 	EarthStance->SetColor(TEXT("#AD8C00FF"));
 	WaterStance->SetColor(TEXT("#00B9E3FF"));
@@ -16,45 +16,45 @@ void USwordStanceUI::Init(AMiyamoto_Iori& Miyamoto)
 	FireStance->SetColor(TEXT("#CA0000FF"));
 	WindStance->SetColor(TEXT("#008A00FF"));
 
-	if (&Miyamoto == nullptr)
+	if (Miyamoto == nullptr)
 		return;
-	if (Miyamoto.GetIsUnlockSwordStance(ESWORDSTANCE::EST_EARTH) == true)
+	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_EARTH) == true)
 	{
 		EarthStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
 		//ui가 켜질 때 상태를 파악해서 하일라이트를 켜는 방향으로 생각 중
-		if(Miyamoto.GetCurSwordStance() == ESWORDSTANCE::EST_EARTH)
+		if(Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_EARTH)
 		{
 			CurStanceIndex = FIntPoint(2, 1);
 		}
 	}
-	if (Miyamoto.GetIsUnlockSwordStance(ESWORDSTANCE::EST_WATER) == true)
+	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_WATER) == true)
 	{
 		WaterStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto.GetCurSwordStance() == ESWORDSTANCE::EST_WATER)
+		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_WATER)
 		{
 			CurStanceIndex = FIntPoint(1, 2);
 		}
 	}
-	if (Miyamoto.GetIsUnlockSwordStance(ESWORDSTANCE::EST_FIRE) == true)
+	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_FIRE) == true)
 	{
 		FireStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto.GetCurSwordStance() == ESWORDSTANCE::EST_FIRE)
+		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_FIRE)
 		{
 			CurStanceIndex = FIntPoint(1, 0);
 		}
 	}
-	if (Miyamoto.GetIsUnlockSwordStance(ESWORDSTANCE::EST_WIND) == true)
+	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_WIND) == true)
 	{
 		WindStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto.GetCurSwordStance() == ESWORDSTANCE::EST_WIND)
+		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_WIND)
 		{
 			CurStanceIndex = FIntPoint(0, 1);
 		}
 	}
-	if (Miyamoto.GetIsUnlockSwordStance(ESWORDSTANCE::EST_VOID) == true)
+	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_VOID) == true)
 	{
 		VoidStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto.GetCurSwordStance() == ESWORDSTANCE::EST_VOID)
+		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_VOID)
 		{
 			CurStanceIndex = FIntPoint(1, 1);
 		}
@@ -91,7 +91,7 @@ void USwordStanceUI::NativeConstruct()
 bool USwordStanceUI::Initialize()
 {
 	Super::Initialize();
-	Init(*Cast<AMiyamoto_Iori>(GetOwningPlayerPawn()));
+	Init(nullptr);
 	return false;
 }
 
