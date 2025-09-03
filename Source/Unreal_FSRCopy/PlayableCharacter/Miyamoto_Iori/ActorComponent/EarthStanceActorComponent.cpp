@@ -23,6 +23,7 @@ UEarthStanceActorComponent::UEarthStanceActorComponent()
 void UEarthStanceActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	EarthStanceShield = MaxEarthStanceShield;
 }
 
 void UEarthStanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -60,4 +61,58 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CCCCCPlay Heavy Attack Montage"));
 	HeavyAttackCount[NormalAttackSectionIndex]++;
+}
+
+void UEarthStanceActorComponent::ReleaseSwordStance()
+{
+	Super::ReleaseSwordStance();
+	//방패 재충전 타이머 생성
+	if(GetWorld()->GetTimerManager().IsTimerActive(ShieldRechargeTimer) == false)
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			ShieldRechargeTimer,
+			this,
+			&UEarthStanceActorComponent::RechargeEarthStanceShield,
+			60.0f, false);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().UnPauseTimer(ShieldRechargeTimer);
+	}
+}
+
+void UEarthStanceActorComponent::InitSwordStance()
+{
+	Super::InitSwordStance();
+	//방패 재충전 타이머 정지
+	if (GetWorld()->GetTimerManager().IsTimerActive(ShieldRechargeTimer) == true)
+	{
+		GetWorld()->GetTimerManager().PauseTimer(ShieldRechargeTimer);
+	}
+}
+
+void UEarthStanceActorComponent::RechargeEarthStanceShield()
+{
+	EarthStanceShield = MaxEarthStanceShield;
+}
+
+int UEarthStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
+{
+	Super::SwordStanceBeforeUpdateHp(Damage); 
+	if (EarthStanceShield > 0)
+	{
+		EarthStanceShield -= Damage;
+		Damage = 0;
+	}
+	return Damage;
+}
+
+void UEarthStanceActorComponent::SwordStanceAfterUpdateHp(int Damage)
+{
+	Super::SwordStanceAfterUpdateHp(Damage);
+}
+
+void UEarthStanceActorComponent::SwordStanceUpdateAttack()
+{
+	Super::SwordStanceUpdateAttack();
 }

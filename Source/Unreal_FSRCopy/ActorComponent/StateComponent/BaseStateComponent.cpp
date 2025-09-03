@@ -32,3 +32,13 @@ void UBaseStateComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
+void UBaseStateComponent::TakeDamage(int DamageAmount)
+{
+	if(DamageAmount <= 0 || HP <= 0)
+		return;
+
+	const float Rand = FMath::FRandRange(0.8f, 1.2f);
+	const int32 FinalDamage = FMath::Max(1, FMath::FloorToInt((DamageAmount - DefencePower) * Rand));
+	HP = FMath::Max(0, HP - FinalDamage);
+}
+

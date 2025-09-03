@@ -14,6 +14,13 @@ class UNREAL_FSRCOPY_API UEarthStanceActorComponent : public UBaseSwordStanceAct
 {
 	GENERATED_BODY()
 
+private:
+	UPROPERTY(EditAnywhere, Category = "Earth Stance")
+	int EarthStanceShield{ 0 };
+	UPROPERTY(EditAnywhere, Category = "Earth Stance")
+	int MaxEarthStanceShield{ 300 };
+
+	FTimerHandle ShieldRechargeTimer;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -24,4 +31,14 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void PlayCompletedHeavyAttackMontage() override;
 	void PlayHeavyAttack0ChargeMontage();
+
+	void ReleaseSwordStance() override;
+	void InitSwordStance() override;
+
+	UFUNCTION()
+	void RechargeEarthStanceShield();
+
+	int SwordStanceBeforeUpdateHp(int Damage) override;
+	void SwordStanceAfterUpdateHp(int Damage) override;
+	void SwordStanceUpdateAttack() override;
 };

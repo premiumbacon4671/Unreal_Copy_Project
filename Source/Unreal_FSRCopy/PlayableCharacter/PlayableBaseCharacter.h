@@ -4,10 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Interface/AttackTraceNotify.h"
 #include "PlayableBaseCharacter.generated.h"
 
 UCLASS()
-class UNREAL_FSRCOPY_API APlayableBaseCharacter : public ACharacter
+class UNREAL_FSRCOPY_API APlayableBaseCharacter : public ACharacter, public IAttackTraceNotify
 {
 	GENERATED_BODY()
 
@@ -58,7 +59,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> SecondWeaponCoverComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Status")
 	TObjectPtr<class UPlayableStateComponent> StatusComponent;
 #pragma endregion
 
@@ -113,4 +114,8 @@ public:
 	bool GetIsCombatMode() const { return isCombatMode; }
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
+
+#pragma region AttackTraceNotify
+	void AttackTrace() override;
+#pragma endregion
 };

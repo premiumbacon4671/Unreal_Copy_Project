@@ -34,4 +34,6 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	float GetHPPercent() const { return static_cast<float>(HP) / static_cast<float>(MaxHP); }
+	int GetAttackPower() const { return AttackPower; }
+	void TakeDamage(int DamageAmount);
 };

@@ -5,6 +5,8 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
+#include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
+#include "ActorComponent/StateComponent/Miyamoto_ioriStateComponent.h"
 
 UFireStanceActorComponent::UFireStanceActorComponent()
 {
@@ -61,4 +63,53 @@ void UFireStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CCCCCPlay Heavy Attack Montage"));
 	HeavyAttackCount[NormalAttackSectionIndex]++;
+}
+
+void UFireStanceActorComponent::ReleaseSwordStance()
+{
+	Super::ReleaseSwordStance();
+	AddAttackSpeed = 0.0f;
+	AddAttackPower = 0;
+}
+
+void UFireStanceActorComponent::InitSwordStance()
+{
+	Super::InitSwordStance();
+	SetAddStanceaAility();
+}
+
+int UFireStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
+{
+	Super::SwordStanceBeforeUpdateHp(Damage);
+	return Damage;
+}
+
+void UFireStanceActorComponent::SwordStanceAfterUpdateHp(int Damage)
+{
+	Super::SwordStanceAfterUpdateHp(Damage);
+	SetAddStanceaAility();
+}
+
+void UFireStanceActorComponent::SwordStanceUpdateAttack()
+{
+	Super::SwordStanceUpdateAttack();
+}
+
+void UFireStanceActorComponent::SetAddStanceaAility()
+{
+	AMiyamoto_Iori* OwnerCharacter = Cast<AMiyamoto_Iori>(GetOwner());
+	if (OwnerCharacter)
+	{
+		float HpPercent = OwnerCharacter->GetStatusComponent()->GetHPPercent();
+		//Hp 70% or AttackSpeed 30%
+		if (HpPercent > 0.7 || AddAttackSpeed >= 0.35)
+			return;
+		float LostHpPercent = 1.0f - HpPercent;
+
+		AddAttackSpeed = LostHpPercent * 0.5f;
+		AddAttackPower = static_cast<int>(OwnerCharacter->GetStatusComponent()->GetAttackPower() * LostHpPercent * 0.3f);
+
+		if(AddAttackSpeed >= 0.35f)
+			AddAttackSpeed = 0.35f;
+	}
 }

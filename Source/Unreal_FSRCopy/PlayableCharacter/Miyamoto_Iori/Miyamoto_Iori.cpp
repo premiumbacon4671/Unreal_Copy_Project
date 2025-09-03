@@ -56,6 +56,7 @@ void AMiyamoto_Iori::BeginPlay()
 {
 	Super::BeginPlay();
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
+	CurSwordStanceComponent->SetIsUseStance(true);
 	NextSwordStance = CurSwordStance;
 }
 
@@ -179,7 +180,9 @@ void AMiyamoto_Iori::UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupte
 		return;
 	if (CurSwordStance == NextSwordStance)
 		return;
+	CurSwordStanceComponent->ReleaseSwordStance();
 	CurSwordStance = NextSwordStance;
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
+	CurSwordStanceComponent->InitSwordStance();
 	PlayEquipWeaponMontage();
 }

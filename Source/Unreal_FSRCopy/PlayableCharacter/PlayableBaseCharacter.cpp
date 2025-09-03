@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
 APlayableBaseCharacter::APlayableBaseCharacter()
@@ -259,13 +260,22 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 	if (nullptr == Montage)
 		return;
 	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Blue, TEXT("Ended : ") + Montage->GetName());
-	/*if (Montage == CurSwordStanceComponent->GetNormalAttackMontage() ||
-		Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
-	{
+}
 
-		if(CurSwordStanceComponent->GetIsPossibleNextAttack() == true)
-			CurSwordStanceComponent->PlayNextAttackMontage();
-		else
-			CurSwordStanceComponent->ResetAttackInfo();
-	}*/
+void APlayableBaseCharacter::AttackTrace()
+{
+	TArray<FHitResult> HitResults;
+	bool isHit = UKismetSystemLibrary::BoxTraceMulti(
+		this,
+		GetActorLocation(), // 박스의 시작 위치
+		GetActorLocation() + GetActorForwardVector() * 100.0f, // 박스의 끝 위치
+		FVector(50.0f, 50.0f, 50.0f), // 박스의 반지름 (X, Y, Z)
+		FRotator::ZeroRotator, // 박스의 회전값
+		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4), // 트레이스 채널
+		false, // 복잡한 충돌첼 충돌 무시 여부
+		{}, // 무시할 액터 배열
+		EDrawDebugTrace::ForDuration, // 디버그 드로잉 옵션
+		HitResults, //HitResults에 결과 저장
+		true// Trace에 자기을 무시할지 여부
+	);
 }

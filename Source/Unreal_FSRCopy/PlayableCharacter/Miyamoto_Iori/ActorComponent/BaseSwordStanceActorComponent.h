@@ -26,6 +26,8 @@ protected:
 	TObjectPtr<UAnimMontage> HikenMontage;
 #pragma endregion
 	bool IsUnlockSwordStance{ false };
+	UPROPERTY(EditAnywhere, Category = "Stance")
+	bool IsUseStance{ false };
 
 	UPROPERTY(EditAnywhere, Category = "Montage")
 	TArray<FName> NormalAttackSectionNames;
@@ -72,10 +74,11 @@ public:
 	void ResetNextAttack() { IsPossibleNextAttack = false; NextAttackMontage = nullptr; NextAttackName = ""; }
 	void PlayNextAttackMontage();
 	void ResetAttackInfo();
-	//void ResetisUseableNormalAttack() { isUseableNormalAttack = true; }
-	//void ResetNormalAttack();
-	//강공격 연타시 사용
-	//void ResetisUseableHeavyAttack() { isUseableHeavyAttack = true; }
-	//강공격 완전 종료시 사용
-	//void ResetHeavyAttack();
+	virtual void ReleaseSwordStance();
+	virtual void InitSwordStance();
+	void SetIsUseStance(bool isUse) { IsUseStance = isUse; }
+
+	virtual int SwordStanceBeforeUpdateHp(int Damage);
+	virtual void SwordStanceAfterUpdateHp(int Damage);
+	virtual void SwordStanceUpdateAttack();
 };

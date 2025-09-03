@@ -13,6 +13,7 @@ UBaseSwordStanceActorComponent::UBaseSwordStanceActorComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	NextAttackMontage = nullptr;
 	NextAttackName = "";
+	IsUseStance = false;
 	// ...
 }
 
@@ -108,12 +109,8 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
-		//IsPlayingNormalAttack == true)
-		//isUseableNormalAttack == false)
 		return;
 
-	//GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Green, TEXT("Play Triggered Heavy Attack Montage"));
-	//OwnerCharacter->GetBodyComponent()->GetAnimInstance()->l
 }
 
 void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
@@ -181,19 +178,26 @@ void UBaseSwordStanceActorComponent::ResetAttackInfo()
 	}
 }
 
-//void UBaseSwordStanceActorComponent::ResetNormalAttack()
-//{
-//	ResetisUseableNormalAttack();
-//	ResetNormalAttackSectionIndex();
-//}
-//
-//void UBaseSwordStanceActorComponent::ResetHeavyAttack()
-//{
-//	ResetisUseableHeavyAttack();
-//	ResetNormalAttackSectionIndex();
-//	for (int i = 0; i < HeavyAttackCount.Num(); ++i)
-//	{
-//		HeavyAttackCount[i] = 0;
-//	}
-//}
+void UBaseSwordStanceActorComponent::ReleaseSwordStance()
+{
+	IsUseStance = false;
+}
+
+void UBaseSwordStanceActorComponent::InitSwordStance()
+{
+	IsUseStance = true;
+}
+
+int UBaseSwordStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
+{
+	return Damage;
+}
+
+void UBaseSwordStanceActorComponent::SwordStanceAfterUpdateHp(int Damage)
+{
+}
+
+void UBaseSwordStanceActorComponent::SwordStanceUpdateAttack()
+{
+}
 
