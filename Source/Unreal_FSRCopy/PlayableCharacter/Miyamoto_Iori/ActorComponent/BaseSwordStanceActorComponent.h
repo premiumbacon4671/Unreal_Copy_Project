@@ -48,6 +48,19 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	FName NextAttackName;
 
+	float AmountAttackSpeed{ 0.0f };
+	const float BasicAttackSpeed{ 1.0f };
+
+	//특수 공격(필살기, 차징, 1회용)
+	//공격력 한번 사용하고 초기화
+	int SpeicalAttackPower{ 0 };
+
+	//차	지 공격
+	float MaxChargeTime{ 4.0f };
+	float CurrentChargeTime{ 0.0f };
+	float ChargeStartTime{ 0.0f };
+	bool IsCharging{ false };
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -80,5 +93,9 @@ public:
 
 	virtual int SwordStanceBeforeUpdateHp(int Damage);
 	virtual void SwordStanceAfterUpdateHp(int Damage);
-	virtual void SwordStanceUpdateAttack();
+	virtual int SwordStanceUpdateAttack();
+
+	bool GetIsPlayHeavyAttackMontage();
+
+	int GetSpeicalAttackPower() const { return SpeicalAttackPower; }
 };

@@ -6,6 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
+#include "ActorComponent/StateComponent/PlayableStateComponent.h"
+#include "Monster/BaseMonster.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values
@@ -171,6 +173,7 @@ void APlayableBaseCharacter::SetCombatMode()
 	PlayEquipWeaponMontage();
 	FString ModeText = isCombatMode ? TEXT("true") : TEXT("false");
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CombatMode : ") + ModeText);
+	CurSwordStanceComponent->InitSwordStance();
 }
 
 void APlayableBaseCharacter::PlayEquipWeaponMontage()
@@ -262,6 +265,27 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Blue, TEXT("Ended : ") + Montage->GetName());
 }
 
+void APlayableBaseCharacter::ResetCounterAttackTimer()
+{
+	GetWorld()->GetTimerManager().ClearTimer(CounterAttackTimerHandle);
+	IsCanConuterAttack = false;
+}
+
+void APlayableBaseCharacter::PCHitBy(int Damage)
+{
+	//Test Code
+	//반격 기능
+	//체력 감소 기능 추가 예정
+	IsCanConuterAttack = true;
+	GetWorld()->GetTimerManager().ClearTimer(CounterAttackTimerHandle);
+	GetWorld()->GetTimerManager().SetTimer(
+		CounterAttackTimerHandle,
+		this,
+		&APlayableBaseCharacter::DisableCounterAttack,
+		1.5f,
+		false);
+}
+
 void APlayableBaseCharacter::AttackTrace()
 {
 	TArray<FHitResult> HitResults;
@@ -278,4 +302,26 @@ void APlayableBaseCharacter::AttackTrace()
 		HitResults, //HitResults에 결과 저장
 		true// Trace에 자기을 무시할지 여부
 	);
+
+	if (isHit)
+	{
+		//플레이어 스탯, 소드 스탠스 컴포넌트에서 데미지 가져오기
+		//수정 예정
+		CurSwordStanceComponent->SwordStanceUpdateAttack();
+		int Damage = StatusComponent->GetTotalAttackPower() + CurSwordStanceComponent->GetSpeicalAttackPower();
+		
+		//크리티컬 및 강공격 사용 여부 확인 bool 함수 작성 예정
+		if (CurSwordStanceComponent->GetIsPlayHeavyAttackMontage())
+			Damage *= 1.3f;
+
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("Damage : %d"), Damage));
+		for(const FHitResult& HitResult : HitResults)
+		{
+			ABaseMonster* Monster = Cast<ABaseMonster>(HitResult.GetActor());
+			if(Monster != nullptr)
+			{
+				Monster->HitBy(Damage);
+			}
+		}
+	}
 }

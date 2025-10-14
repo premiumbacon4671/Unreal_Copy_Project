@@ -20,6 +20,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Earth Stance")
 	int MaxEarthStanceShield{ 300 };
 
+	UPROPERTY(EditAnywhere, Category = "Earth Stance")
+	int ExtraDefencePower{ 0 };
+
+	UPROPERTY(VisibleAnywhere, Category = "Earth Stance")
+	float ExtraDefencePowerPercent{ 0.3f };
+
 	FTimerHandle ShieldRechargeTimer;
 protected:
 	// Called when the game starts
@@ -40,5 +46,5 @@ public:
 
 	int SwordStanceBeforeUpdateHp(int Damage) override;
 	void SwordStanceAfterUpdateHp(int Damage) override;
-	void SwordStanceUpdateAttack() override;
+	int SwordStanceUpdateAttack() override;
 };

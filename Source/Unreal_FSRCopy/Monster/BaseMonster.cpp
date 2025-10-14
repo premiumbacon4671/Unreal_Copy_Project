@@ -4,6 +4,7 @@
 #include "Monster/BaseMonster.h"
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Monster/MonsterUI/MonsterHPBarUserWidget.h"
 
 // Sets default values
 ABaseMonster::ABaseMonster()
@@ -24,7 +25,17 @@ ABaseMonster::ABaseMonster()
 void ABaseMonster::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	UMonsterHPBarUserWidget* HPBarWidget = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
+	if(HPBarWidget && StatusComponent)
+	{
+		HPBarWidget->SetHPBarPercent(StatusComponent->GetHPPercent());
+		StatusComponent->OnTakeDamage.BindLambda([this](float Percent)
+			{
+				UMonsterHPBarUserWidget* HPBarUI = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
+				if(HPBarUI)
+					HPBarUI->SetHPBarPercent(Percent);
+			});
+	}
 }
 
 // Called every frame
@@ -39,5 +50,10 @@ void ABaseMonster::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void ABaseMonster::HitBy(int DamageAmount)
+{
+	StatusComponent->TakeDamage(DamageAmount);
 }
 

@@ -15,9 +15,8 @@ class UNREAL_FSRCOPY_API UFireStanceActorComponent : public UBaseSwordStanceActo
 	GENERATED_BODY()
 	
 private:
-	float BasicAttackSpeed{ 1.0f };
-	float AddAttackSpeed{ 0.0f };
-	int AddAttackPower{ 0 };
+	float ExtraAttackSpeed{ 0.0f };
+	int ExtraAttackPower{ 0 };
 
 protected:
 	virtual void BeginPlay() override;
@@ -33,6 +32,6 @@ public:
 
 	int SwordStanceBeforeUpdateHp(int Damage) override;
 	void SwordStanceAfterUpdateHp(int Damage) override;
-	void SwordStanceUpdateAttack() override;
-	void SetAddStanceaAility();
+	int SwordStanceUpdateAttack() override;
+	void SetExtraStanceaAility();
 };

@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
+#include "ActorComponent/StateComponent/PlayableStateComponent.h"
 
 UEarthStanceActorComponent::UEarthStanceActorComponent()
 {
@@ -39,7 +40,7 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
 		return;
 
-	//루프 몽타주가 안니거나 강공격 몽타주가 이미 끝났으면 린턴
+	//루프 몽타주가 안니거나 강공격 몽타주가 이미 끝났으면 리턴
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
 		return;
 
@@ -48,6 +49,9 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 		HeavyAttackCount[NormalAttackSectionIndex] > HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
+	IsCharging = false;
+	CurrentChargeTime = GetWorld()->GetTimeSeconds() - ChargeStartTime;
+	CurrentChargeTime = FMath::Clamp(CurrentChargeTime, 0.0f, MaxChargeTime);
 	PlayHeavyAttack0ChargeMontage();
 }
 
@@ -57,9 +61,16 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	if (NormalAttackSectionIndex != 0)
 		return;
 	OwnerCharacter->StopMontage(HeavyAttackMontage);
+	//반격 가능 상태면 특수 공격력 추가
+	if (OwnerCharacter->GetIsCanConuterAttack() == true)
+	{
+		SpeicalAttackPower = OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.05f;
+		OwnerCharacter->ResetCounterAttackTimer();
+	}
 	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CCCCCPlay Heavy Attack Montage"));
+	
 	HeavyAttackCount[NormalAttackSectionIndex]++;
 }
 
@@ -79,6 +90,11 @@ void UEarthStanceActorComponent::ReleaseSwordStance()
 	{
 		GetWorld()->GetTimerManager().UnPauseTimer(ShieldRechargeTimer);
 	}
+	UPlayableStateComponent* OwnerCharacterStatus = Cast<APlayableBaseCharacter>(GetOwner())->GetStatusComponent();
+	if (OwnerCharacterStatus == nullptr)
+		return;
+	OwnerCharacterStatus->SubExtraDefencePower(ExtraDefencePower);
+	ExtraDefencePower = 0;
 }
 
 void UEarthStanceActorComponent::InitSwordStance()
@@ -89,6 +105,11 @@ void UEarthStanceActorComponent::InitSwordStance()
 	{
 		GetWorld()->GetTimerManager().PauseTimer(ShieldRechargeTimer);
 	}
+	UPlayableStateComponent* OwnerCharacterStatus = Cast<APlayableBaseCharacter>(GetOwner())->GetStatusComponent();
+	if(OwnerCharacterStatus == nullptr)
+		return;
+	ExtraDefencePower = OwnerCharacterStatus->GetDefencePower() * ExtraDefencePowerPercent;
+	OwnerCharacterStatus->AddExtraDefencePower(ExtraDefencePower);
 }
 
 void UEarthStanceActorComponent::RechargeEarthStanceShield()
@@ -98,10 +119,12 @@ void UEarthStanceActorComponent::RechargeEarthStanceShield()
 
 int UEarthStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
 {
-	Super::SwordStanceBeforeUpdateHp(Damage); 
+	Damage = Super::SwordStanceBeforeUpdateHp(Damage); 
 	if (EarthStanceShield > 0)
 	{
 		EarthStanceShield -= Damage;
+		if(EarthStanceShield < 0)
+			EarthStanceShield = 0;
 		Damage = 0;
 	}
 	return Damage;
@@ -112,7 +135,8 @@ void UEarthStanceActorComponent::SwordStanceAfterUpdateHp(int Damage)
 	Super::SwordStanceAfterUpdateHp(Damage);
 }
 
-void UEarthStanceActorComponent::SwordStanceUpdateAttack()
+int UEarthStanceActorComponent::SwordStanceUpdateAttack()
 {
-	Super::SwordStanceUpdateAttack();
+	int SuperValue = Super::SwordStanceUpdateAttack();
+	return SuperValue;
 }

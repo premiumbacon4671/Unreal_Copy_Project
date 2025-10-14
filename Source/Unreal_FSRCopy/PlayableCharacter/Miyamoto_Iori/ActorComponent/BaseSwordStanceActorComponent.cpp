@@ -22,7 +22,7 @@ UBaseSwordStanceActorComponent::UBaseSwordStanceActorComponent()
 void UBaseSwordStanceActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	AmountAttackSpeed = BasicAttackSpeed;
 	// ...
 	HeavyAttackCount.Init(0, HeavyAttackMaxCount.Num());
 }
@@ -43,7 +43,6 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		OwnerCharacter->IsEvading() == true ||
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false ||
 		OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true)
-		//isUseableNormalAttack == false)
 		return;
 	
 	if (IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
@@ -58,10 +57,7 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		return;
 
 	GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Normal Attack Montage"));
-	if (OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, GetAddCurNormalAttackSectionName()) == true)
-	{
-
-	}
+	OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, GetAddCurNormalAttackSectionName(), AmountAttackSpeed);
 }
 
 void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
@@ -94,11 +90,12 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	if (IsPossibleNextAttack == true)
 		return;
 
-	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName()) == true)
+	//일회성 특수 공격력 초기화
+	SpeicalAttackPower = 0;
+	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName(), AmountAttackSpeed) == true)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("TTTTTPlay Heavy Attack Montage"));
 		HeavyAttackCount[NormalAttackSectionIndex]++;
-		//isUseableHeavyAttack = false;
 	}
 }
 
@@ -111,6 +108,14 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 		nullptr == NormalAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
 		return;
 
+	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+		return;
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("SSSSSPlay Heavy Attack Montage"));
+	if(IsCharging == false)
+	{
+		ChargeStartTime = GetWorld()->GetTimeSeconds();
+		IsCharging = true;
+	}
 }
 
 void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
@@ -129,6 +134,10 @@ void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
 		HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
+
+	IsCharging = false;
+	CurrentChargeTime = GetWorld()->GetTimeSeconds() - ChargeStartTime;
+	CurrentChargeTime = FMath::Clamp(CurrentChargeTime, 0.0f, MaxChargeTime);
 }
 
 FName UBaseSwordStanceActorComponent::GetAddCurNormalAttackSectionName()
@@ -157,7 +166,7 @@ void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 	}
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Play Next Attack Montage"));
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
-	OwnerCharacter->PlayMontageFullBody(NextAttackMontage, NextAttackName);
+	OwnerCharacter->PlayMontageFullBody(NextAttackMontage, NextAttackName, AmountAttackSpeed);
 	if(NextAttackMontage == HeavyAttackMontage)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("NNNNNPlay Heavy Attack Montage"));
@@ -186,6 +195,7 @@ void UBaseSwordStanceActorComponent::ReleaseSwordStance()
 void UBaseSwordStanceActorComponent::InitSwordStance()
 {
 	IsUseStance = true;
+	AmountAttackSpeed = BasicAttackSpeed;
 }
 
 int UBaseSwordStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
@@ -197,7 +207,13 @@ void UBaseSwordStanceActorComponent::SwordStanceAfterUpdateHp(int Damage)
 {
 }
 
-void UBaseSwordStanceActorComponent::SwordStanceUpdateAttack()
+int UBaseSwordStanceActorComponent::SwordStanceUpdateAttack()
 {
+	return 0;
+}
+
+bool UBaseSwordStanceActorComponent::GetIsPlayHeavyAttackMontage()
+{
+	return Cast<APlayableBaseCharacter>(GetOwner())->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage);
 }
 

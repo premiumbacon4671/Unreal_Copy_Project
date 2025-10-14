@@ -6,15 +6,15 @@
 #include "Components/ActorComponent.h"
 #include "BaseStateComponent.generated.h"
 
-
+DECLARE_DELEGATE_OneParam(FOnTakeDamage, float);
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREAL_FSRCOPY_API UBaseStateComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-private:
+protected:
 	UPROPERTY(EditAnywhere, Category = "State")
-	int HP{ 800 };
+	int HP{ 600 };
 	UPROPERTY(EditAnywhere, Category = "State")
 	int MaxHP{ 1000 };
 	UPROPERTY(EditAnywhere, Category = "State")
@@ -30,10 +30,14 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+public:
+	FOnTakeDamage OnTakeDamage;
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	float GetHPPercent() const { return static_cast<float>(HP) / static_cast<float>(MaxHP); }
 	int GetAttackPower() const { return AttackPower; }
 	void TakeDamage(int DamageAmount);
+
+	int GetDefencePower() const { return DefencePower; }
 };

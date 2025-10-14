@@ -65,6 +65,8 @@ protected:
 
 #pragma region CombatMode
 	bool isCombatMode{ false };
+	bool IsCanConuterAttack{ false };
+	FTimerHandle CounterAttackTimerHandle;
 
 	UPROPERTY(EditAnywhere, Category = "Sword Stance")
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
@@ -75,6 +77,7 @@ protected:
 	TObjectPtr<UAnimMontage> UnEquipMontage;
 	
 #pragma endregion
+
 public:
 	// Sets default values for this character's properties
 	APlayableBaseCharacter();
@@ -112,8 +115,13 @@ public:
 	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	bool GetIsCombatMode() const { return isCombatMode; }
+	bool GetIsCanConuterAttack() const { return IsCanConuterAttack; }
+	void DisableCounterAttack() { IsCanConuterAttack = false; }
+	void ResetCounterAttackTimer();
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
+
+	void PCHitBy(int Damage);
 
 #pragma region AttackTraceNotify
 	void AttackTrace() override;

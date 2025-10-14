@@ -40,5 +40,8 @@ void UBaseStateComponent::TakeDamage(int DamageAmount)
 	const float Rand = FMath::FRandRange(0.8f, 1.2f);
 	const int32 FinalDamage = FMath::Max(1, FMath::FloorToInt((DamageAmount - DefencePower) * Rand));
 	HP = FMath::Max(0, HP - FinalDamage);
+
+	if(OnTakeDamage.IsBound())
+		OnTakeDamage.Execute(GetHPPercent());
 }
 

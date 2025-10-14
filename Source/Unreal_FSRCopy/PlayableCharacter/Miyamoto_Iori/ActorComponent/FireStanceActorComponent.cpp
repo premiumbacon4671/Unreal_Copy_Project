@@ -50,6 +50,9 @@ void UFireStanceActorComponent::PlayCompletedHeavyAttackMontage()
 		HeavyAttackCount[NormalAttackSectionIndex] > HeavyAttackMaxCount[NormalAttackSectionIndex])
 		return;
 
+	IsCharging = false;
+	CurrentChargeTime = GetWorld()->GetTimeSeconds() - ChargeStartTime;
+	CurrentChargeTime = FMath::Clamp(CurrentChargeTime, 0.0f, MaxChargeTime);
 	PlayHeavyAttack0ChargeMontage();
 }
 
@@ -59,23 +62,29 @@ void UFireStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	if (NormalAttackSectionIndex != 0)
 		return;
 	OwnerCharacter->StopMontage(HeavyAttackMontage);
-	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
+	SpeicalAttackPower = CurrentChargeTime * OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.1f;
+	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex], AmountAttackSpeed);
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CCCCCPlay Heavy Attack Montage"));
 	HeavyAttackCount[NormalAttackSectionIndex]++;
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("Charge Time : %f"), CurrentChargeTime));
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("ChargeStartTime : %f"), ChargeStartTime));
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("SpeicalAttackPower : %d"), SpeicalAttackPower));
 }
 
 void UFireStanceActorComponent::ReleaseSwordStance()
 {
 	Super::ReleaseSwordStance();
-	AddAttackSpeed = 0.0f;
-	AddAttackPower = 0;
+	ExtraAttackSpeed = 0.0f;
+	UPlayableStateComponent* StateComp = Cast<APlayableBaseCharacter>(GetOwner())->GetStatusComponent();
+	StateComp->SubExtraAttackPower(ExtraAttackPower);
+	ExtraAttackPower = 0;
 }
 
 void UFireStanceActorComponent::InitSwordStance()
 {
 	Super::InitSwordStance();
-	SetAddStanceaAility();
+	SetExtraStanceaAility();
 }
 
 int UFireStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
@@ -87,29 +96,38 @@ int UFireStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
 void UFireStanceActorComponent::SwordStanceAfterUpdateHp(int Damage)
 {
 	Super::SwordStanceAfterUpdateHp(Damage);
-	SetAddStanceaAility();
+	SetExtraStanceaAility();
 }
 
-void UFireStanceActorComponent::SwordStanceUpdateAttack()
+int UFireStanceActorComponent::SwordStanceUpdateAttack()
 {
-	Super::SwordStanceUpdateAttack();
+	int UpdateAttackValue;
+	UpdateAttackValue = Super::SwordStanceUpdateAttack();
+	return UpdateAttackValue;
 }
 
-void UFireStanceActorComponent::SetAddStanceaAility()
+void UFireStanceActorComponent::SetExtraStanceaAility()
 {
 	AMiyamoto_Iori* OwnerCharacter = Cast<AMiyamoto_Iori>(GetOwner());
 	if (OwnerCharacter)
 	{
-		float HpPercent = OwnerCharacter->GetStatusComponent()->GetHPPercent();
+		UPlayableStateComponent* StateComp = OwnerCharacter->GetStatusComponent();
+		float HpPercent = StateComp->GetHPPercent();
 		//Hp 70% or AttackSpeed 30%
-		if (HpPercent > 0.7 || AddAttackSpeed >= 0.35)
+		if (HpPercent > 0.7 || ExtraAttackSpeed >= 0.35)
 			return;
 		float LostHpPercent = 1.0f - HpPercent;
 
-		AddAttackSpeed = LostHpPercent * 0.5f;
-		AddAttackPower = static_cast<int>(OwnerCharacter->GetStatusComponent()->GetAttackPower() * LostHpPercent * 0.3f);
+		ExtraAttackSpeed = LostHpPercent * 0.5f;
+		StateComp->SubExtraAttackPower(ExtraAttackPower);
+		ExtraAttackPower = static_cast<int>(StateComp->GetAttackPower() * LostHpPercent * 0.3f);
+		StateComp->AddExtraAttackPower(ExtraAttackPower);
 
-		if(AddAttackSpeed >= 0.35f)
-			AddAttackSpeed = 0.35f;
+		if(ExtraAttackSpeed >= 0.35f)
+			ExtraAttackSpeed = 0.35f;
+
+		AmountAttackSpeed = BasicAttackSpeed + ExtraAttackSpeed;
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("AddAttackSpeed : %f"), ExtraAttackSpeed));
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("AddAttackPower : %d"), ExtraAttackPower));
 	}
 }
