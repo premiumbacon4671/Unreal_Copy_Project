@@ -27,19 +27,25 @@ class UNREAL_FSRCOPY_API AMiyamoto_Iori : public APlayableBaseCharacter
 	GENERATED_BODY()
 	
 private:
-	ESWORDSTANCE CurSwordStance{ ESWORDSTANCE::EST_FIRE };
-	ESWORDSTANCE NextSwordStance;
+	ESWORDSTANCE eCurSwordStance{ ESWORDSTANCE::EST_FIRE };
+	ESWORDSTANCE eNextSwordStance;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sword Stance", meta = (AllowPrivateAccess = "true"))
 	TArray<class UBaseSwordStanceActorComponent*> SwordStanceComponents;
-	UPROPERTY(EditAnywhere, Category = "Sword Stance")
-	TObjectPtr<UAnimMontage> NextMontage;
+	//NextMontage 실험 코드
+	/*UPROPERTY(EditAnywhere, Category = "Sword Stance")
+	TObjectPtr<UAnimMontage> NextMontage;*/
 
+
+	bool bRetryEquip = { false };
+	void PlayEquipWeaponStateMontage_New(bool bIsEquip) override;
 public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-	ESWORDSTANCE GetCurSwordStance() const { return CurSwordStance; }
+	ESWORDSTANCE GeteCurSwordStance() const { return eCurSwordStance; }
 	void PlayEquipWeaponMontage() override;
+	void PlayUnEquipWeaponMontage();
+	
 	void WeaponEquip() override;
 	void WeaponUnEquip() override;
 	//TMap<ESWORDSTANCE, bool> GetIsUnlockedSwordStance() const { return IsUnlockedSwordStance; }
@@ -49,6 +55,16 @@ public:
 	void PostInitializeComponents() override;
 	UFUNCTION()
 	void UnEquipMontageStarted(UAnimMontage* Montage);
-	UFUNCTION()
-	void UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+
+	void UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted) override;
+
+	//모든 몽타주가 끝날 때 호출되는 함수
+	//부모 클래스로 이동 완료
+	void EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted) override;
+
+
+protected:
+	void ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted) override;
+	virtual void Landed(const FHitResult& Hit) override;
 };

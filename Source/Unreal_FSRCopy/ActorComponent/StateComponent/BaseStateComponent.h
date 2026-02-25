@@ -14,7 +14,7 @@ class UNREAL_FSRCOPY_API UBaseStateComponent : public UActorComponent
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "State")
-	int HP{ 600 };
+	int HP{ 1000 };
 	UPROPERTY(EditAnywhere, Category = "State")
 	int MaxHP{ 1000 };
 	UPROPERTY(EditAnywhere, Category = "State")

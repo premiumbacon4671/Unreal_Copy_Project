@@ -37,8 +37,13 @@ private:
 	float WalkSpeed{ 600.0f };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Options", meta = (AllowPrivateAccess = "true"))
 	float SprintSpeed{ 1200.0f };
+	bool bIsActionLock{ false };
+public:
+	bool GetIsActionLock() const { return bIsActionLock; }
+	void SetIsActionLock(bool Lock);
 #pragma endregion
 
+private:
 #pragma region Moveing
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> JumpMontage;
@@ -102,9 +107,7 @@ public:
 	void PlayJump();
 	bool PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "", float MontageSpeed = 1.0f);
 	void SetCombatMode();
-	virtual void PlayEquipWeaponMontage();
-	virtual void WeaponEquip();
-	virtual void WeaponUnEquip();
+	
 	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
 	void StopMontage(TObjectPtr<UAnimMontage> Montage);
 
@@ -121,9 +124,39 @@ public:
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
 
-	void PCHitBy(int Damage);
+	void PCTakeDamage(int Damage);
+
+#pragma region EquipMontageTest
+	//Old Version
+	virtual void PlayEquipWeaponMontage();
+	virtual void WeaponEquip();
+	virtual void WeaponUnEquip();
+
+	//New Version
+private:
+	virtual void PlayEquipWeaponStateMontage_New(bool bIsEquip);
+	
+public:
+	virtual void PlayEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(true); };
+	virtual void PlayUnEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(false); };
+#pragma endregion
 
 #pragma region AttackTraceNotify
+public:
 	void AttackTrace() override;
 #pragma endregion
+
+	UFUNCTION()
+	virtual void EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	UFUNCTION()
+	virtual void UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+
+	public:
+		// 델리게이트에 등록될 "검사관" 함수 (가상함수 아님, 자식이 건드릴 필요 없음)
+		UFUNCTION()
+		void OnMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted);
+
+protected:
+	// 검사가 통과되면 실행될 "실제 로직" 함수 (가상함수)
+	virtual void ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted);
 };

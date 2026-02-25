@@ -61,15 +61,54 @@ void UFireStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if (NormalAttackSectionIndex != 0)
 		return;
-	OwnerCharacter->StopMontage(HeavyAttackMontage);
-	SpeicalAttackPower = CurrentChargeTime * OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.1f;
-	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex], AmountAttackSpeed);
+	
+	if (ComboAttackIndexMap.Contains(NormalAttackSectionIndex) == true)
+	{
+		int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
+	}
+	else
+		return;
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CCCCCPlay Heavy Attack Montage"));
-	HeavyAttackCount[NormalAttackSectionIndex]++;
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("Charge Time : %f"), CurrentChargeTime));
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("ChargeStartTime : %f"), ChargeStartTime));
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("SpeicalAttackPower : %d"), SpeicalAttackPower));
+	int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
+	if (!HeavyAttackCount.IsValidIndex(ComboAttackIndex)
+		|| !HeavyAttackMaxCount.IsValidIndex(ComboAttackIndex))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex"));
+		return;
+	}
+
+	if (HeavyAttackCount[ComboAttackIndex] >= HeavyAttackMaxCount[ComboAttackIndex])
+	{
+		OwnerCharacter->StopMontage(HeavyAttackMontage);
+		OwnerCharacter->SetIsActionLock(false);
+		return;
+	}
+
+	FName TargetSectionName = NAME_None;
+	if (HeavyAttackSectionNames.IsValidIndex(ComboAttackIndex))
+	{
+		TargetSectionName = HeavyAttackSectionNames[ComboAttackIndex];
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex for HeavyAttackSectionNames"));
+		return;
+	}
+	OwnerCharacter->StopMontage(HeavyAttackMontage);
+	SpeicalAttackPower = CurrentChargeTime * OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.2f;
+	bool bPlayed = OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, TargetSectionName, AmountAttackSpeed);
+	if (bPlayed)
+	{
+		NormalAttackSectionIndex = ComboAttackIndex;
+		HeavyAttackCount[NormalAttackSectionIndex]++;
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("Charge Time : %f"), CurrentChargeTime));
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("ChargeStartTime : %f"), ChargeStartTime));
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("SpeicalAttackPower : %d"), SpeicalAttackPower));
+	}
+	else
+	{
+		OwnerCharacter->SetIsActionLock(false);
+	}
 }
 
 void UFireStanceActorComponent::ReleaseSwordStance()

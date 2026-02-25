@@ -26,7 +26,7 @@ void UMiyamotoIoriAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		isJump = OwnerCharacter->GetMovementComponent()->IsFalling();
 		AMiyamotoIoriController* OwnerController = Cast<AMiyamotoIoriController>(OwnerCharacter->GetController());
 		isEquip = OwnerCharacter->GetIsCombatMode();
-		CurSwordStance = Cast<AMiyamoto_Iori>(OwnerCharacter)->GetCurSwordStance();
+		CurSwordStance = Cast<AMiyamoto_Iori>(OwnerCharacter)->GeteCurSwordStance();
 		if (nullptr != OwnerController)
 			isMoveInput = OwnerController->GetIsMoveInput();
 	}

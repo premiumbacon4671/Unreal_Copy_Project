@@ -39,6 +39,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	TArray<int> HeavyAttackCount;
 
+	//공격 중 연속된 섹션과 다른 공격으로 넘어갈 때, 다음 공격으로 넘어갈 수 있는 섹션 인덱스
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	TMap<int32, int32> ComboAttackIndexMap;
+
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	int NormalAttackSectionIndex{ 0 };
 	UPROPERTY(EditAnywhere, Category = "Attack")

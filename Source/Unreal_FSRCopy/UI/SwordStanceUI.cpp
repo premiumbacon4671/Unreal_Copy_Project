@@ -22,7 +22,7 @@ void USwordStanceUI::Init(AMiyamoto_Iori* Miyamoto)
 	{
 		EarthStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
 		//ui가 켜질 때 상태를 파악해서 하일라이트를 켜는 방향으로 생각 중
-		if(Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_EARTH)
+		if(Miyamoto->GeteCurSwordStance() == ESWORDSTANCE::EST_EARTH)
 		{
 			CurStanceIndex = FIntPoint(2, 1);
 		}
@@ -30,7 +30,7 @@ void USwordStanceUI::Init(AMiyamoto_Iori* Miyamoto)
 	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_WATER) == true)
 	{
 		WaterStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_WATER)
+		if (Miyamoto->GeteCurSwordStance() == ESWORDSTANCE::EST_WATER)
 		{
 			CurStanceIndex = FIntPoint(1, 2);
 		}
@@ -38,7 +38,7 @@ void USwordStanceUI::Init(AMiyamoto_Iori* Miyamoto)
 	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_FIRE) == true)
 	{
 		FireStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_FIRE)
+		if (Miyamoto->GeteCurSwordStance() == ESWORDSTANCE::EST_FIRE)
 		{
 			CurStanceIndex = FIntPoint(1, 0);
 		}
@@ -46,7 +46,7 @@ void USwordStanceUI::Init(AMiyamoto_Iori* Miyamoto)
 	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_WIND) == true)
 	{
 		WindStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_WIND)
+		if (Miyamoto->GeteCurSwordStance() == ESWORDSTANCE::EST_WIND)
 		{
 			CurStanceIndex = FIntPoint(0, 1);
 		}
@@ -54,7 +54,7 @@ void USwordStanceUI::Init(AMiyamoto_Iori* Miyamoto)
 	if (Miyamoto->GetIsUnlockSwordStance(ESWORDSTANCE::EST_VOID) == true)
 	{
 		VoidStance->SetSwordStanceVisibility(ESlateVisibility::Visible);
-		if (Miyamoto->GetCurSwordStance() == ESWORDSTANCE::EST_VOID)
+		if (Miyamoto->GeteCurSwordStance() == ESWORDSTANCE::EST_VOID)
 		{
 			CurStanceIndex = FIntPoint(1, 1);
 		}
@@ -166,7 +166,7 @@ void USwordStanceUI::EndedSwordStanceUI(AMiyamoto_Iori* Miyamoto)
 	}
 	ESWORDSTANCE NextStance = Buttons[ChangeStanceIndex.X][ChangeStanceIndex.Y]->GetSwordStanceType();
 	//현재 타입과 바꿀 타입이 같을 때
-	if (Miyamoto->GetCurSwordStance() == NextStance)
+	if (Miyamoto->GeteCurSwordStance() == NextStance)
 		return;
 	//바꿀 타입이 해금이 안됐을 때
 	if (Miyamoto->GetIsUnlockSwordStance(NextStance) == false)

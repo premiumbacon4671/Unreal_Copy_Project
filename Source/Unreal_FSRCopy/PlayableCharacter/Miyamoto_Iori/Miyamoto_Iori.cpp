@@ -10,7 +10,7 @@
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	CurSwordStance = ESWORDSTANCE::EST_FIRE;
+	eCurSwordStance = ESWORDSTANCE::EST_FIRE;
 
 #pragma region CreateComponent
 	//SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
@@ -55,15 +55,16 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 void AMiyamoto_Iori::BeginPlay()
 {
 	Super::BeginPlay();
-	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
+	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
 	CurSwordStanceComponent->SetIsUseStance(true);
-	NextSwordStance = CurSwordStance;
+	eNextSwordStance = eCurSwordStance;
 }
 
 void AMiyamoto_Iori::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (isCombatMode == true && NextMontage != nullptr)
+	//NextMontage 실험 코드
+	/*if (isCombatMode == true && NextMontage != nullptr)
 	{
 		if (GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr &&
 			GetMovementComponent()->IsFalling() == false)
@@ -71,39 +72,108 @@ void AMiyamoto_Iori::Tick(float DeltaTime)
 			PlayMontageFullBody(NextMontage);
 			NextMontage = nullptr;
 		}
-	}
+	}*/
 }
+
 
 void AMiyamoto_Iori::PlayEquipWeaponMontage()
 {
+	//검을 뽑는 애니메이션 재생
 	//if (GetMovementComponent()->IsFalling() == true ||
-		if(nullptr == EquipMontage || nullptr == UnEquipMontage ||
+	if(nullptr == EquipMontage ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true)
 		return;
 	FName SectionName;
 	UAnimMontage* montage = nullptr;
-	switch (CurSwordStance)
+	switch (eCurSwordStance)
 	{
+	//형태 별로 다른 몽타주를 재생시켜야 하지만 지금은 동일 몽타주 사용
+	//one hand sword equip
 	case ESWORDSTANCE::EST_EARTH:
-		montage = isCombatMode ? EquipMontage : UnEquipMontage;
+		montage = EquipMontage;
 		break;
+	//two hand sword equip
 	case ESWORDSTANCE::EST_FIRE:
-		montage = isCombatMode ? EquipMontage : UnEquipMontage;
+		montage = EquipMontage;
 		break;
 	}
 
 	if (montage != nullptr)
 	{
-		GetController()->SetIgnoreMoveInput(true);
+		//칼 넣는 애니 여기서 작동 안함
+		//칼을 넣을 때 이동 함
+		SetIsActionLock(true);
+		//GetController()->SetIgnoreMoveInput(true);
 		PlayMontageFullBody(montage);
+	}
+}
+
+void AMiyamoto_Iori::PlayUnEquipWeaponMontage()
+{
+	//검을 넣는 애니메이션 재생
+	if (nullptr == UnEquipMontage ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true)
+		return;
+	FName SectionName;
+	UAnimMontage* montage = nullptr;
+	switch (eCurSwordStance)
+	{
+		//형태 별로 다른 몽타주를 재생시켜야 하지만 지금은 동일 몽타주 사용
+		//one hand sword equip
+	case ESWORDSTANCE::EST_EARTH:
+		montage = UnEquipMontage;
+		break;
+		//two hand sword equip
+	case ESWORDSTANCE::EST_FIRE:
+		montage = UnEquipMontage;
+		break;
+	}
+
+	if (montage != nullptr)
+	{
+		//칼 넣는 애니 여기서 작동 안함
+		//칼을 넣을 때 이동 함
+		SetIsActionLock(true);
+		//GetController()->SetIgnoreMoveInput(true);
+		PlayMontageFullBody(montage);
+	}
+}
+
+void AMiyamoto_Iori::PlayEquipWeaponStateMontage_New(bool bIsEquip)
+{
+	if (BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetHeavyAttackMontage()) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(UnEquipMontage) == true)
+		return;
+	TObjectPtr<UAnimMontage> TargetMontage = nullptr;
+
+	switch (eCurSwordStance)
+	{
+		//형태 별로 다른 몽타주를 재생시켜야 하지만 지금은 동일 몽타주 사용
+		case ESWORDSTANCE::EST_EARTH:
+			TargetMontage = bIsEquip ? EquipMontage : UnEquipMontage;
+			break;
+		case ESWORDSTANCE::EST_FIRE:
+			TargetMontage = bIsEquip ? EquipMontage : UnEquipMontage;
+			break;
+	}
+
+
+	if (TargetMontage != nullptr)
+	{
+		SetIsActionLock(true);
+		//GetController()->SetIgnoreMoveInput(true);
+		PlayMontageFullBody(TargetMontage);
 	}
 }
 
 void AMiyamoto_Iori::WeaponEquip()
 {
 	Super::WeaponEquip();
-	switch (CurSwordStance)
+	switch (eCurSwordStance)
 	{
 	case ESWORDSTANCE::EST_EARTH:
 		break;
@@ -120,7 +190,7 @@ void AMiyamoto_Iori::WeaponEquip()
 void AMiyamoto_Iori::WeaponUnEquip()
 {
 	Super::WeaponUnEquip();
-	switch (CurSwordStance)
+	switch (eCurSwordStance)
 	{
 	case ESWORDSTANCE::EST_EARTH:
 		break;
@@ -141,18 +211,33 @@ bool AMiyamoto_Iori::GetIsUnlockSwordStance(ESWORDSTANCE SwordStance) const
 
 void AMiyamoto_Iori::ChangeSwordStance(ESWORDSTANCE SwordStance)
 {
+	if(eCurSwordStance == SwordStance)
+		return;
+
 	//end 델리게이트 사용
 	//전투 상태일 시 상태전환
-	if(isCombatMode == true)
+	if (isCombatMode == true)
 	{
-		NextSwordStance = SwordStance;
-		NextMontage = UnEquipMontage;
+		eNextSwordStance = SwordStance;
+
+		//NextMontage 실험 코드
+		//NextMontage = UnEquipMontage;
+
+		TObjectPtr<UAnimInstance> AnimInstance = BodyComponent->GetAnimInstance();
+
+		if (AnimInstance && AnimInstance->IsAnyMontagePlaying())
+			return;
+		if(GetMovementComponent()->IsFalling() == true)
+			return;
+
+		PlayUnEquipWeaponMontage_New();
 	}
 	//비전투 상태일 시 검의 형만 변경
 	else
 	{
-		CurSwordStance = SwordStance;
-		NextSwordStance = CurSwordStance;
+		eCurSwordStance = SwordStance;
+		eNextSwordStance = eCurSwordStance;
+		CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
 	}
 	//NextMontageSectionName = TEXT("OneHandSwordUnEquip");
 }
@@ -162,8 +247,9 @@ void AMiyamoto_Iori::PostInitializeComponents()
 	Super::PostInitializeComponents();
 	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageStarted);
 	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
-	GetMesh()->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
-	
+	//GetMesh()->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
+	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::OnMontageEndedGeneral);
+	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::EquipMontageEnded);
 }
 
 void AMiyamoto_Iori::UnEquipMontageStarted(UAnimMontage* Montage)
@@ -178,11 +264,74 @@ void AMiyamoto_Iori::UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupte
 {
 	if (Montage == nullptr || Montage != UnEquipMontage)
 		return;
-	if (CurSwordStance == NextSwordStance)
+
+	if(bInterrupted)
 		return;
-	CurSwordStanceComponent->ReleaseSwordStance();
-	CurSwordStance = NextSwordStance;
-	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
-	CurSwordStanceComponent->InitSwordStance();
-	PlayEquipWeaponMontage();
+
+	SetIsActionLock(false);
+	//검 형태 변경
+	if (eCurSwordStance != eNextSwordStance)
+	{
+		CurSwordStanceComponent->ReleaseSwordStance();
+		eCurSwordStance = eNextSwordStance;
+		CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
+		CurSwordStanceComponent->InitSwordStance();
+		//PlayEquipWeaponMontage();
+		//TestCode
+		PlayEquipWeaponMontage_New();
+	}
+}
+
+void AMiyamoto_Iori::EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if(Montage != EquipMontage)
+		return;
+
+	if (bInterrupted)
+	{
+		bRetryEquip = true;
+	}
+	else
+	{
+		SetIsActionLock(false);
+		bRetryEquip = false;
+	}
+}
+
+void AMiyamoto_Iori::ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted)
+{
+	Super::ProcessMontageEndedGeneral(Montage, bInterrupted);
+
+	if (bInterrupted)
+	{
+		return;
+	}
+
+	if(GetCharacterMovement()->IsFalling())
+		return;
+
+	if (eCurSwordStance != eNextSwordStance)
+	{
+		PlayUnEquipWeaponMontage_New();
+	}
+	else if (bRetryEquip)
+	{
+		PlayEquipWeaponMontage_New();
+		bRetryEquip = false;
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("ProcessMontageEndedGeneral"));
+}
+
+void AMiyamoto_Iori::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit); 
+	if (eCurSwordStance != eNextSwordStance)
+	{
+		PlayUnEquipWeaponMontage_New();
+	}
+	else if (bRetryEquip)
+	{
+		PlayEquipWeaponMontage_New();
+		bRetryEquip = false;
+	}
 }

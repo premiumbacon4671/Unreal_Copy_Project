@@ -81,6 +81,7 @@ void APlayableBaseCharacter::BeginPlay()
 void APlayableBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Yellow, FString::Printf(TEXT("ActionLock : %s"), bIsActionLock ? TEXT("true") : TEXT("false")));
 	if(isSprint && GetVelocity().Size2D() < WalkSpeed)
 	{
 		SetWalk();
@@ -92,6 +93,15 @@ void APlayableBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void APlayableBaseCharacter::SetIsActionLock(bool Lock)
+{
+	bIsActionLock = Lock;
+	if(GetController())
+	{
+		GetController()->SetIgnoreMoveInput(Lock);
+	}
 }
 
 void APlayableBaseCharacter::SetMoveSpeed()
@@ -117,6 +127,9 @@ void APlayableBaseCharacter::SetWalk()
 
 void APlayableBaseCharacter::PlayEvade()
 {
+	if(GetIsActionLock())
+		return;
+
 	if (nullptr != EvadeMontage &&
 		GetMovementComponent()->IsFalling() == false &&
 		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EvadeMontage) == false &&
@@ -146,6 +159,9 @@ bool APlayableBaseCharacter::PlayJumpMontage()
 
 void APlayableBaseCharacter::PlayJump()
 {
+	if (GetIsActionLock())
+		return;
+
 	if(PlayJumpMontage())
 	{
 		SetBrakingDecelerationFalling();
@@ -170,7 +186,8 @@ void APlayableBaseCharacter::SetCombatMode()
 	//Test Code
 	//isCombatMode = true;
 	isCombatMode = !isCombatMode;
-	PlayEquipWeaponMontage();
+	//PlayEquipWeaponMontage();
+	PlayEquipWeaponStateMontage_New(isCombatMode);
 	FString ModeText = isCombatMode ? TEXT("true") : TEXT("false");
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CombatMode : ") + ModeText);
 	CurSwordStanceComponent->InitSwordStance();
@@ -197,7 +214,9 @@ void APlayableBaseCharacter::PlayEquipWeaponMontage()
 			return;
 		Montage = UnEquipMontage;
 	}
-	GetController()->SetIgnoreMoveInput(true);
+
+	SetIsActionLock(true);
+	//GetController()->SetIgnoreMoveInput(true);
 	PlayMontageFullBody(Montage);
 }
 
@@ -213,6 +232,25 @@ void APlayableBaseCharacter::WeaponUnEquip()
 	FirstWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
 		FName(TEXT("FirstWeapon")));
+}
+
+void APlayableBaseCharacter::PlayEquipWeaponStateMontage_New(bool bIsEquip)
+{
+	if (BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(CurSwordStanceComponent->GetHeavyAttackMontage()) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(EquipMontage) == true ||
+		BodyComponent->GetAnimInstance()->Montage_IsPlaying(UnEquipMontage) == true)
+		return;
+	TObjectPtr<UAnimMontage> TargetMontage = nullptr;
+
+	TargetMontage = bIsEquip ? EquipMontage : UnEquipMontage;
+
+	if (TargetMontage != nullptr)
+	{
+		SetIsActionLock(true);
+		//GetController()->SetIgnoreMoveInput(true);
+		PlayMontageFullBody(TargetMontage);
+	}
 }
 
 void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
@@ -240,6 +278,9 @@ void APlayableBaseCharacter::PostInitializeComponents()
 
 	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::AttackMontageStarted);
 	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
+	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::OnMontageEndedGeneral);
+	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
+	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
 
 }
 
@@ -262,6 +303,9 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 	//공격 콤보 bool true 확인 후 다음 몽타주 재생
 	if (nullptr == Montage)
 		return;
+	if (bInterrupted)
+		return;
+	CurSwordStanceComponent->ResetAttackInfo();
 	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Blue, TEXT("Ended : ") + Montage->GetName());
 }
 
@@ -271,7 +315,7 @@ void APlayableBaseCharacter::ResetCounterAttackTimer()
 	IsCanConuterAttack = false;
 }
 
-void APlayableBaseCharacter::PCHitBy(int Damage)
+void APlayableBaseCharacter::PCTakeDamage(int Damage)
 {
 	//Test Code
 	//반격 기능
@@ -324,4 +368,63 @@ void APlayableBaseCharacter::AttackTrace()
 			}
 		}
 	}
+}
+
+void APlayableBaseCharacter::OnMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted)
+{
+	
+	//if (bInterrupted)
+	//{
+	//	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Montage Interrupted222"));
+	//	return;
+	//}
+
+	//EquipMontageEnded, UnEquipMontageEnded에서 처리하므로 패스
+	if (Montage == UnEquipMontage || Montage == EquipMontage)
+		return;
+
+	/*if (GetCharacterMovement()->IsFalling() == true)
+		return;*/
+
+	ProcessMontageEndedGeneral(Montage, bInterrupted);
+}
+
+void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (bInterrupted)
+		return;
+
+	if(bInterrupted == false && GetCharacterMovement()->IsFalling() == false)
+	{
+		SetIsActionLock(false);
+	}
+
+	if (bInterrupted == false)
+	{
+		if (Montage == CurSwordStanceComponent->GetHeavyAttackMontage() || Montage == CurSwordStanceComponent->GetNormalAttackMontage())
+			CurSwordStanceComponent->ResetAttackInfo();
+	}
+	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("ProcessMontageEndedGeneral"));
+}
+
+void APlayableBaseCharacter::EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == nullptr || Montage != EquipMontage)
+		return;
+
+	if (bInterrupted)
+		return;
+
+	SetIsActionLock(false);
+}
+
+void APlayableBaseCharacter::UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if (Montage == nullptr || Montage != UnEquipMontage)
+		return;
+
+	if (bInterrupted)
+		return;
+
+	SetIsActionLock(false);
 }

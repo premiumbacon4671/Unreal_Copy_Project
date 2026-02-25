@@ -35,19 +35,22 @@ void UEarthStanceActorComponent::TickComponent(float DeltaTime, ELevelTick TickT
 void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 {
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
-	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
-		OwnerCharacter->IsEvading() == true ||
-		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
+	if (!IsValid(OwnerCharacter))
+		return;
+
+	if (IsCharging == false)
+		return;
+
+	UAnimInstance* AnimInstance = OwnerCharacter->GetBodyComponent()->GetAnimInstance();
+	if (!IsValid(AnimInstance))
 		return;
 
 	//루프 몽타주가 안니거나 강공격 몽타주가 이미 끝났으면 리턴
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
+	if (AnimInstance->Montage_IsPlaying(HeavyAttackMontage) == false)
+	{
+		IsCharging = false;
 		return;
-
-	//몽타주가 플레이 중이고, 연타 횟수가 최대 횟수를 초과하면 리턴
-	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		HeavyAttackCount[NormalAttackSectionIndex] > HeavyAttackMaxCount[NormalAttackSectionIndex])
-		return;
+	}
 
 	IsCharging = false;
 	CurrentChargeTime = GetWorld()->GetTimeSeconds() - ChargeStartTime;
@@ -58,20 +61,67 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 {
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+	if (!IsValid(OwnerCharacter))
+		return;
+
 	if (NormalAttackSectionIndex != 0)
 		return;
-	OwnerCharacter->StopMontage(HeavyAttackMontage);
-	//반격 가능 상태면 특수 공격력 추가
-	if (OwnerCharacter->GetIsCanConuterAttack() == true)
+
+	if (ComboAttackIndexMap.Contains(NormalAttackSectionIndex) == true)
+	{
+		int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
+	}
+	else
+		return;
+	int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
+	if (!HeavyAttackCount.IsValidIndex(ComboAttackIndex)
+		|| !HeavyAttackMaxCount.IsValidIndex(ComboAttackIndex))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex"));
+		return;
+	}
+
+	if(HeavyAttackCount[ComboAttackIndex] >= HeavyAttackMaxCount[ComboAttackIndex])
+	{
+		OwnerCharacter->StopMontage(HeavyAttackMontage);
+		OwnerCharacter->SetIsActionLock(false);
+		return;
+	}
+
+	//반격 보너스
+	bool bSuccessCounter = OwnerCharacter->GetIsCanConuterAttack();
+	if (bSuccessCounter)
 	{
 		SpeicalAttackPower = OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.05f;
 		OwnerCharacter->ResetCounterAttackTimer();
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, TEXT("!!! Success Counter Attack !!!"));
 	}
-	OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, HeavyAttackSectionNames[NormalAttackSectionNames.Num() + NormalAttackSectionIndex]);
+	else
+	{
+		SpeicalAttackPower = 0.0f;
+	}
 
-	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CCCCCPlay Heavy Attack Montage"));
-	
-	HeavyAttackCount[NormalAttackSectionIndex]++;
+	FName TargetSectionName = NAME_None;
+	if(HeavyAttackSectionNames.IsValidIndex(ComboAttackIndex))
+	{
+		TargetSectionName = HeavyAttackSectionNames[ComboAttackIndex];
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex for HeavyAttackSectionNames"));
+		return;
+	}
+	OwnerCharacter->StopMontage(HeavyAttackMontage);
+	bool bPlayed = OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, TargetSectionName, AmountAttackSpeed);
+	if(bPlayed == true)
+	{
+		NormalAttackSectionIndex = ComboAttackIndex;
+		HeavyAttackCount[NormalAttackSectionIndex]++;
+	}
+	else
+	{
+		OwnerCharacter->SetIsActionLock(false);
+	}
 }
 
 void UEarthStanceActorComponent::ReleaseSwordStance()
