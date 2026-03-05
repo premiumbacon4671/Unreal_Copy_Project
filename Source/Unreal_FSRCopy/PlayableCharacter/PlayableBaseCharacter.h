@@ -37,6 +37,7 @@ private:
 	float WalkSpeed{ 600.0f };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Options", meta = (AllowPrivateAccess = "true"))
 	float SprintSpeed{ 1200.0f };
+	//공격, 무기 변경 중 움직임이나 다른 행동을 못하게 하는 락
 	bool bIsActionLock{ false };
 public:
 	bool GetIsActionLock() const { return bIsActionLock; }
@@ -70,8 +71,6 @@ protected:
 
 #pragma region CombatMode
 	bool isCombatMode{ false };
-	bool IsCanConuterAttack{ false };
-	FTimerHandle CounterAttackTimerHandle;
 
 	UPROPERTY(EditAnywhere, Category = "Sword Stance")
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
@@ -80,6 +79,19 @@ protected:
 	TObjectPtr<UAnimMontage> EquipMontage;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> UnEquipMontage;
+
+	//저스트 가드
+	bool IsCanGuardConuterAttack{ false };
+	FTimerHandle GuardCounterAttackTimerHale;
+	//회피 및 반격
+	//저스트회피 가능한 상태
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Dodge")
+	bool bIsPerfectDodgeWindow{ false };
+	// 응격(반격) 입력을 대기
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Counter")
+	bool bIsWaitingForCounterInput{ false };
+	FTimerHandle CounterInputTimerHandle;
+
 	
 #pragma endregion
 
@@ -118,8 +130,8 @@ public:
 	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	bool GetIsCombatMode() const { return isCombatMode; }
-	bool GetIsCanConuterAttack() const { return IsCanConuterAttack; }
-	void DisableCounterAttack() { IsCanConuterAttack = false; }
+	bool GetIsCanGuardConuterAttack() const { return IsCanGuardConuterAttack; }
+	void DisableCounterAttack() { IsCanGuardConuterAttack = false; }
 	void ResetCounterAttackTimer();
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
@@ -139,6 +151,18 @@ private:
 public:
 	virtual void PlayEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(true); };
 	virtual void PlayUnEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(false); };
+#pragma endregion
+
+#pragma region PerfectDodge
+	void SetPerfectDodgeWindow(bool bIsPDW) { bIsPerfectDodgeWindow = bIsPDW; }
+	bool GetIsPerfectDodgeWindow() const { return bIsPerfectDodgeWindow; }
+	void SetWaitingForCounterInput(bool bIsWaiting) { bIsWaitingForCounterInput = bIsWaiting; }
+	bool GetIsWaitingForCounterInput() const { return bIsWaitingForCounterInput; }
+
+	//몬스터 공격이 닿았을 때
+	void OnPerfectDodgeSuccess(AActor* Attacker);
+	//대기 시간이 끝났을 때(반격 입력이 없는 경우)
+	void EndCounterInputWindow();
 #pragma endregion
 
 #pragma region AttackTraceNotify

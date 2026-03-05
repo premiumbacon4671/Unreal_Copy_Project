@@ -9,6 +9,7 @@
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
 #include "Monster/BaseMonster.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 APlayableBaseCharacter::APlayableBaseCharacter()
@@ -255,8 +256,8 @@ void APlayableBaseCharacter::PlayEquipWeaponStateMontage_New(bool bIsEquip)
 
 void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
 {
-	if(Montage == nullptr)
-		return;
+	/*if(Montage == nullptr)
+		return;*/
 	BodyComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
 	HeadComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
 	HairComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
@@ -311,8 +312,8 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 
 void APlayableBaseCharacter::ResetCounterAttackTimer()
 {
-	GetWorld()->GetTimerManager().ClearTimer(CounterAttackTimerHandle);
-	IsCanConuterAttack = false;
+	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHale);
+	IsCanGuardConuterAttack = false;
 }
 
 void APlayableBaseCharacter::PCTakeDamage(int Damage)
@@ -320,14 +321,45 @@ void APlayableBaseCharacter::PCTakeDamage(int Damage)
 	//Test Code
 	//반격 기능
 	//체력 감소 기능 추가 예정
-	IsCanConuterAttack = true;
-	GetWorld()->GetTimerManager().ClearTimer(CounterAttackTimerHandle);
+	IsCanGuardConuterAttack = true;
+	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHale);
 	GetWorld()->GetTimerManager().SetTimer(
-		CounterAttackTimerHandle,
+		GuardCounterAttackTimerHale,
 		this,
 		&APlayableBaseCharacter::DisableCounterAttack,
 		1.5f,
 		false);
+}
+
+void APlayableBaseCharacter::OnPerfectDodgeSuccess(AActor* Attacker)
+{
+	bIsPerfectDodgeWindow = false;
+	bIsWaitingForCounterInput = true;
+
+	float DelayTime = 0.05f;
+	SetIsActionLock(true);
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), DelayTime);
+
+	//응격 UI 추가 예정
+	//ShowCounterAttackUI();
+
+	float RealTimeDelay = 3.0f;
+	float ScaledDelay = RealTimeDelay * DelayTime;
+	GetWorldTimerManager().ClearTimer(CounterInputTimerHandle);
+	GetWorldTimerManager().SetTimer(CounterInputTimerHandle, this, &APlayableBaseCharacter::EndCounterInputWindow, ScaledDelay, false);
+}
+
+void APlayableBaseCharacter::EndCounterInputWindow()
+{
+	if(!bIsWaitingForCounterInput)
+		return;
+	bIsWaitingForCounterInput = false;
+	SetIsActionLock(false);
+	GetWorldTimerManager().ClearTimer(CounterInputTimerHandle);
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+	//응격 UI 제거 예정
+	//HideCounterAttackUI();
+	//카운터 공격 몽타주 실행
 }
 
 void APlayableBaseCharacter::AttackTrace()
@@ -403,6 +435,12 @@ void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, b
 	{
 		if (Montage == CurSwordStanceComponent->GetHeavyAttackMontage() || Montage == CurSwordStanceComponent->GetNormalAttackMontage())
 			CurSwordStanceComponent->ResetAttackInfo();
+	}
+
+	//Test Code
+	if(Montage == EvadeMontage)
+	{
+		OnPerfectDodgeSuccess(nullptr);
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("ProcessMontageEndedGeneral"));
 }

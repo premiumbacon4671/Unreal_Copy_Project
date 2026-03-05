@@ -24,6 +24,8 @@ protected:
 	TObjectPtr<UAnimMontage> HeavyAttackMontage;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> HikenMontage;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAnimMontage> CounterAttackMontage;
 #pragma endregion
 	bool IsUnlockSwordStance{ false };
 	UPROPERTY(EditAnywhere, Category = "Stance")
@@ -98,6 +100,7 @@ public:
 	virtual int SwordStanceBeforeUpdateHp(int Damage);
 	virtual void SwordStanceAfterUpdateHp(int Damage);
 	virtual int SwordStanceUpdateAttack();
+
 
 	bool GetIsPlayHeavyAttackMontage();
 

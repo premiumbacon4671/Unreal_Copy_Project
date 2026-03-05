@@ -20,6 +20,11 @@ UFireStanceActorComponent::UFireStanceActorComponent()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_FireHeavyAttack.AM_FireHeavyAttack'"));
 	if (HeavyAttackMontageFinder.Succeeded())
 		HeavyAttackMontage = HeavyAttackMontageFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> CounterAttackMontageFinder(
+		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_TwoHandsCounterAttaack.AM_TwoHandsCounterAttaack'"));
+	if (CounterAttackMontageFinder.Succeeded())
+		CounterAttackMontage = CounterAttackMontageFinder.Object;
 }
 
 

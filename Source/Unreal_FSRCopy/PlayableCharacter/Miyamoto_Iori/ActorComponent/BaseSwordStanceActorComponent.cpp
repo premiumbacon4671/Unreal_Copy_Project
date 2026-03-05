@@ -42,6 +42,18 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if(!IsValid(OwnerCharacter) || !IsValid(NormalAttackMontage))
 		return;
+	
+
+	if (OwnerCharacter->GetIsWaitingForCounterInput())
+	{
+		OwnerCharacter->EndCounterInputWindow();
+		OwnerCharacter->StopMontage(nullptr);
+		//반격 몽타주 재생
+		//응격을 위한 시간 정지 상태가 되었을 때 다른 입력을 받지 않도록 하는 코드 필요
+		OwnerCharacter->PlayMontageFullBody(CounterAttackMontage, NAME_None, AmountAttackSpeed);
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Cyan, FString::Printf(TEXT("CounterAttack"), NormalAttackSectionIndex));
+		return;
+	}
 
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true || OwnerCharacter->GetIsCombatMode() == false)
@@ -49,7 +61,7 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 
 	UAnimInstance* AnimInstance = OwnerCharacter->GetBodyComponent()->GetAnimInstance();
 
-	if(!IsValid(AnimInstance))
+	if (!IsValid(AnimInstance))
 		return;
 
 	if(AnimInstance->Montage_IsPlaying(HeavyAttackMontage) == true)
@@ -93,6 +105,11 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 		OwnerCharacter->GetIsCombatMode() == false)
 		return;
 	
+	//강공격을 통한 응격은 없음
+	//현재 TestCode로 인해 사용 중 수정 예정
+	if (OwnerCharacter->GetIsWaitingForCounterInput())
+		return;
+
 	UAnimInstance* AnimInstance = OwnerCharacter->GetBodyComponent()->GetAnimInstance();
 	if(!IsValid(AnimInstance))
 		return;

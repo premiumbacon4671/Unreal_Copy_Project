@@ -19,6 +19,11 @@ UEarthStanceActorComponent::UEarthStanceActorComponent()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_EarthHeavyAttack.AM_EarthHeavyAttack'"));
 	if (HeavyAttackMontageFinder.Succeeded())
 		HeavyAttackMontage = HeavyAttackMontageFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> CounterAttackMontageFinder(
+		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_OneHandCounterAttack.AM_OneHandCounterAttack'"));
+	if (CounterAttackMontageFinder.Succeeded())
+		CounterAttackMontage = CounterAttackMontageFinder.Object;
 }
 
 void UEarthStanceActorComponent::BeginPlay()
@@ -89,7 +94,7 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	}
 
 	//반격 보너스
-	bool bSuccessCounter = OwnerCharacter->GetIsCanConuterAttack();
+	bool bSuccessCounter = OwnerCharacter->GetIsCanGuardConuterAttack();
 	if (bSuccessCounter)
 	{
 		SpeicalAttackPower = OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.05f;

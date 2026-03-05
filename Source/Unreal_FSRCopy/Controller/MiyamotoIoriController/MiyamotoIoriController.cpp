@@ -139,6 +139,8 @@ void AMiyamotoIoriController::LookInput(const FInputActionValue& value)
 {
 	if (isUIMode == true)
 		return;
+	if(CurPlayableCharacter->GetIsWaitingForCounterInput())
+		return;
 	FVector2D MoveValue = value.Get<FVector2D>(); 
 	//Gamepad Deadzone
 	if (FMath::Abs(MoveValue.X) <= 0.2f)
