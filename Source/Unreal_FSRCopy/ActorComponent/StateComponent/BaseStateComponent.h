@@ -38,6 +38,6 @@ public:
 	float GetHPPercent() const { return static_cast<float>(HP) / static_cast<float>(MaxHP); }
 	int GetAttackPower() const { return AttackPower; }
 	void TakeDamage(int DamageAmount);
-
+	bool IsDead() const { return HP <= 0; }
 	int GetDefencePower() const { return DefencePower; }
 };

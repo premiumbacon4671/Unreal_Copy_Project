@@ -10,11 +10,22 @@
 #include "Monster/BaseMonster.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/CounterAttackUI.h"
+#include "Components/WidgetComponent.h"
+#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
+
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputSubsystemInterface.h"
+#include "EnhancedInputComponent.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
+//#include "EnhancedInputLocalPlayerSubsystem.h" // 인풋 서브시스템용
+#include "Blueprint/UserWidget.h"              // CreateWidget 및 UI용
 
 // Sets default values
 APlayableBaseCharacter::APlayableBaseCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 #pragma region CreateComponent
 	BodyComponent = GetMesh();
@@ -70,12 +81,42 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	SpringArm->bUsePawnControlRotation = true;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	//응격UI 기본 세팅
+	static ConstructorHelpers::FClassFinder<UCounterAttackUI> CounterAttackWidgetClass(
+		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_CounterAttack.BP_CounterAttack_C"));
+	if (CounterAttackWidgetClass.Succeeded())
+		CounterAttackWidget = CounterAttackWidgetClass.Class;
 }
 
 // Called when the game starts or when spawned
 void APlayableBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	if (CounterAttackWidget)
+	{
+		//CounterAttackUI = CreateWidget<UCounterAttackUI>(GetWorld(), CounterAttackWidget);
+		if (CounterAttackUI)
+		{
+			//CounterAttackUI->AddToViewport();
+			//CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+
+	/*if (CounterAttackWidgetComponent)
+	{
+		CounterAttackUI = Cast<UCounterAttackUI>(CounterAttackWidgetComponent->GetUserWidgetObject());
+		if (CounterAttackUI)
+		{
+			FKey CurrentKey = GetCounterAttackInputKey();
+			if (EKeys::Invalid == CurrentKey)
+			{
+				CurrentKey = EKeys::J;
+			}
+			CounterAttackUI->UpdateKeyIcon(CurrentKey);
+			CounterAttackWidgetComponent->SetVisibility(true);
+		}
+	}*/
 }
 
 // Called every frame
@@ -89,11 +130,17 @@ void APlayableBaseCharacter::Tick(float DeltaTime)
 	}
 }
 
+void APlayableBaseCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	InitializeIconUI();
+	CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
+}
+
 // Called to bind functionality to input
 void APlayableBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 }
 
 void APlayableBaseCharacter::SetIsActionLock(bool Lock)
@@ -355,6 +402,7 @@ void APlayableBaseCharacter::EndCounterInputWindow()
 		return;
 	bIsWaitingForCounterInput = false;
 	SetIsActionLock(false);
+	CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
 	GetWorldTimerManager().ClearTimer(CounterInputTimerHandle);
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 	//응격 UI 제거 예정
@@ -441,8 +489,105 @@ void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, b
 	if(Montage == EvadeMontage)
 	{
 		OnPerfectDodgeSuccess(nullptr);
+		CounterAttackUI->SetVisibility(ESlateVisibility::Visible);
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("ProcessMontageEndedGeneral"));
+}
+
+FKey APlayableBaseCharacter::GetCounterAttackInputKey() const
+{
+	//InputMappingContext 데이터를 바로 직접 참고하는 방식
+	//선정이유
+	//1. 게임 시작 후 IMC에 등록해도 내부에서 빌드하는 약간의 시간으로 인해 키를 받아오지 못하는 현상이 발생
+	//NextTick으로 처리해도 동일한 현상이 발생
+	//0.1초의 딜레이를 주었을 때 정상적으로 키를 받아오는 것을 확인
+	//이런 문제를 해결하기 위해 IMC 데이터를 직접 참고하는 방식으로 변경
+	if (AMiyamotoIoriController* PC = Cast<AMiyamotoIoriController>(GetController()))
+	{
+		UInputMappingContext* IMC = PC->GetDefaultMappingContext();
+
+		if (!IMC)
+			return EKeys::Invalid;
+
+		const TArray<FEnhancedActionKeyMapping>& Mappings = IMC->GetMappings();
+		TArray<FKey> MappedKeys;
+		for (const FEnhancedActionKeyMapping& Mapping : Mappings)
+		{
+			if (Mapping.Action == PC->GetNormalAttackAction())
+			{
+				MappedKeys.Add(Mapping.Key);
+			}
+		}
+		if (MappedKeys.Num() > 0)
+		{
+			return MappedKeys[0];
+		}
+	}
+
+	return EKeys::Invalid;
+
+	//if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	//{
+	//	// 1. 인풋 서브시스템 가져오기
+	//	if (auto* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+	//	{
+	//		AMiyamotoIoriController* IoriController = Cast<AMiyamotoIoriController>(PC);
+	//		UInputAction* Test = IoriController->GetNormalAttackAction();
+	//		// 2. IA_CounterAttack 액션에 매핑된 모든 키 리스트 가져오기
+	//		TArray<FKey> MappedKeys = Subsystem->QueryKeysMappedToAction(Test);
+
+	//		// 3. 매핑된 키가 있다면 첫 번째 키를 반환 (보통 0번이 주 입력키)
+	//		if (MappedKeys.Num() > 0)
+	//		{
+	//			return MappedKeys[0];
+	//		}
+	//	}
+	//}
+
+	//return EKeys::Invalid;
+}
+
+void APlayableBaseCharacter::InitializeIconUI()
+{
+	/*GetWorldTimerManager().SetTimerForNextTick([this]() {
+			
+		});*/
+	if (CounterAttackWidget)
+	{
+		CounterAttackUI = CreateWidget<UCounterAttackUI>(GetWorld(), CounterAttackWidget);
+		if (CounterAttackUI) {
+			CounterAttackUI->AddToViewport();
+			FKey Key = GetCounterAttackInputKey();
+			if (EKeys::Invalid == Key)
+			{
+				Key = EKeys::I;
+			}
+			CounterAttackUI->UpdateKeyIcon(Key);
+			//CounterAttackUI->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+	//0.1초 딜레이 코드
+	/*if (CounterAttackWidget)
+	{
+		CounterAttackUI = CreateWidget<UCounterAttackUI>(GetWorld(), CounterAttackWidget);
+		if (CounterAttackUI)
+		{
+			CounterAttackUI->AddToViewport();
+			CounterAttackUI->SetVisibility(ESlateVisibility::Visible);
+
+			// NextTick 대신 명시적으로 0.1초의 시간을 줍니다.
+			FTimerHandle TempHandle;
+			GetWorldTimerManager().SetTimer(TempHandle, [this]()
+				{
+					if (CounterAttackUI)
+					{
+						FKey Key = GetCounterAttackInputKey();
+						// ... (이하 동일)
+						CounterAttackUI->UpdateKeyIcon(Key);
+					}
+				}, 0.1f, false); // 0.1초 뒤에 실행
+		}
+	}*/
 }
 
 void APlayableBaseCharacter::EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)

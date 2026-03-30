@@ -24,6 +24,7 @@ protected:
 	TObjectPtr<UAnimMontage> HeavyAttackMontage;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> HikenMontage;
+	//응격 몽타주
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAnimMontage> CounterAttackMontage;
 #pragma endregion

@@ -78,6 +78,7 @@ void AMiyamotoIoriController::BeginPlay()
 		InputSystem->AddMappingContext(MappingContext, 0);
 	MiyamotoIori = Cast<APlayableBaseCharacter>(GetCharacter());
 	CurPlayableCharacter = MiyamotoIori;
+	//CurPlayableCharacter->InitializeIconUI();
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
 }
 

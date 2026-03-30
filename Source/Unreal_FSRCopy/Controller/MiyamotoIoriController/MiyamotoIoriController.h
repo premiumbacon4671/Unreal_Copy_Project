@@ -71,4 +71,6 @@ public:
 	void UIMoveInput(const FInputActionValue& value);
 
 	bool GetIsMoveInput() const { return isMoveInput; }
+	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }
+	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }
 };

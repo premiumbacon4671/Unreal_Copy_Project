@@ -42,8 +42,8 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if(!IsValid(OwnerCharacter) || !IsValid(NormalAttackMontage))
 		return;
-	
 
+	//ÀÀ°Ý(ÆÛÆåÆ® ´åÁö) ¸ùÅ¸ÁÖ Àç»ý
 	if (OwnerCharacter->GetIsWaitingForCounterInput())
 	{
 		OwnerCharacter->EndCounterInputWindow();
@@ -54,6 +54,7 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Cyan, FString::Printf(TEXT("CounterAttack"), NormalAttackSectionIndex));
 		return;
 	}
+
 
 	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
 		OwnerCharacter->IsEvading() == true || OwnerCharacter->GetIsCombatMode() == false)

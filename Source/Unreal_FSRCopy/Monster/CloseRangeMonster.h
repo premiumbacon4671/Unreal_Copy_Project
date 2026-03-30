@@ -13,5 +13,11 @@ UCLASS()
 class UNREAL_FSRCOPY_API ACloseRangeMonster : public ABaseMonster
 {
 	GENERATED_BODY()
-	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float MeleeAttackRange = 150.0f;
+
+public:
+	ACloseRangeMonster();
+	void MonsterAttackTrace();
 };

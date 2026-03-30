@@ -16,6 +16,14 @@ private:
 	TObjectPtr<class UBaseStateComponent> StatusComponent;
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	TObjectPtr<class UWidgetComponent> HPBarWidgetComponent;
+
+	FTimerHandle DeathTimerHandle;
+protected:
+	//자식 클래스에서 설정
+	UPROPERTY(VisibleAnywhere, Category = "Montage")
+	TObjectPtr<UAnimMontage> HitByMontage;
+	UPROPERTY(VisibleAnywhere, Category = "Montage")
+	TObjectPtr<UAnimMontage> DeathMontage;
 public:
 	// Sets default values for this character's properties
 	ABaseMonster();
@@ -28,8 +36,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	void HitBy(int DamageAmount);
-	void MonAttackTrace();
+	bool IsDead();
 };

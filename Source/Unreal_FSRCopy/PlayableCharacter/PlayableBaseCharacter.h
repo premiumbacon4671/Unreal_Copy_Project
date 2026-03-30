@@ -53,7 +53,7 @@ private:
 #pragma endregion
 
 protected:
-#pragma region Component
+#pragma region protected Component
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> BodyComponent;
 	UPROPERTY(VisibleAnywhere)
@@ -91,8 +91,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Counter")
 	bool bIsWaitingForCounterInput{ false };
 	FTimerHandle CounterInputTimerHandle;
+#pragma endregion
 
-	
+#pragma region UI
+protected:
+	TSubclassOf<class UCounterAttackUI> CounterAttackWidget;
+	TObjectPtr<class UCounterAttackUI> CounterAttackUI;
 #pragma endregion
 
 public:
@@ -106,7 +110,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	void PossessedBy(AController* NewController) override;
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	void SetMoveSpeed();
@@ -170,6 +174,12 @@ public:
 	void AttackTrace() override;
 #pragma endregion
 
+#pragma region UI
+	FKey GetCounterAttackInputKey() const;
+	//입력키에 맞는 UI 아이콘을 설정하는 함수
+	void InitializeIconUI();
+#pragma endregion
+
 	UFUNCTION()
 	virtual void EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	UFUNCTION()
@@ -183,4 +193,5 @@ public:
 protected:
 	// 검사가 통과되면 실행될 "실제 로직" 함수 (가상함수)
 	virtual void ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted);
+
 };
