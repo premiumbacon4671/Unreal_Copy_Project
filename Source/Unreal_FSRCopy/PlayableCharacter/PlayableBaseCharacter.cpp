@@ -83,40 +83,26 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	//응격UI 기본 세팅
-	static ConstructorHelpers::FClassFinder<UCounterAttackUI> CounterAttackWidgetClass(
+
+	CounterAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CounterAttackWidget"));
+	CounterAttackWidgetComponent->SetupAttachment(GetRootComponent());
+	static ConstructorHelpers::FClassFinder<UUserWidget> CounterAttackWidgetClassFinder(
 		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_CounterAttack.BP_CounterAttack_C"));
-	if (CounterAttackWidgetClass.Succeeded())
-		CounterAttackWidget = CounterAttackWidgetClass.Class;
+	if (CounterAttackWidgetClassFinder.Succeeded())
+	{
+		CounterAttackWidgetComponent->SetWidgetClass(CounterAttackWidgetClassFinder.Class);
+	}
+	CounterAttackWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	
 }
 
 // Called when the game starts or when spawned
 void APlayableBaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	if (CounterAttackWidget)
-	{
-		//CounterAttackUI = CreateWidget<UCounterAttackUI>(GetWorld(), CounterAttackWidget);
-		if (CounterAttackUI)
-		{
-			//CounterAttackUI->AddToViewport();
-			//CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
-		}
-	}
-
-	/*if (CounterAttackWidgetComponent)
-	{
-		CounterAttackUI = Cast<UCounterAttackUI>(CounterAttackWidgetComponent->GetUserWidgetObject());
-		if (CounterAttackUI)
-		{
-			FKey CurrentKey = GetCounterAttackInputKey();
-			if (EKeys::Invalid == CurrentKey)
-			{
-				CurrentKey = EKeys::J;
-			}
-			CounterAttackUI->UpdateKeyIcon(CurrentKey);
-			CounterAttackWidgetComponent->SetVisibility(true);
-		}
-	}*/
+	CounterAttackWidget = Cast<UCounterAttackUI>(CounterAttackWidgetComponent->GetUserWidgetObject());
+	InitializeIconUI();
+	CounterAttackWidgetComponent->SetVisibility(false);
 }
 
 // Called every frame
@@ -133,8 +119,7 @@ void APlayableBaseCharacter::Tick(float DeltaTime)
 void APlayableBaseCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	InitializeIconUI();
-	CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
+	//CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
 }
 
 // Called to bind functionality to input
@@ -402,7 +387,8 @@ void APlayableBaseCharacter::EndCounterInputWindow()
 		return;
 	bIsWaitingForCounterInput = false;
 	SetIsActionLock(false);
-	CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
+	//CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
+	CounterAttackWidgetComponent->SetVisibility(false);
 	GetWorldTimerManager().ClearTimer(CounterInputTimerHandle);
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 	//응격 UI 제거 예정
@@ -489,7 +475,8 @@ void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, b
 	if(Montage == EvadeMontage)
 	{
 		OnPerfectDodgeSuccess(nullptr);
-		CounterAttackUI->SetVisibility(ESlateVisibility::Visible);
+		//CounterAttackWidget->SetVisibility(ESlateVisibility::Visible);
+		CounterAttackWidgetComponent->SetVisibility(true);
 	}
 	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("ProcessMontageEndedGeneral"));
 }
@@ -549,22 +536,14 @@ FKey APlayableBaseCharacter::GetCounterAttackInputKey() const
 
 void APlayableBaseCharacter::InitializeIconUI()
 {
-	/*GetWorldTimerManager().SetTimerForNextTick([this]() {
-			
-		});*/
 	if (CounterAttackWidget)
 	{
-		CounterAttackUI = CreateWidget<UCounterAttackUI>(GetWorld(), CounterAttackWidget);
-		if (CounterAttackUI) {
-			CounterAttackUI->AddToViewport();
-			FKey Key = GetCounterAttackInputKey();
-			if (EKeys::Invalid == Key)
-			{
-				Key = EKeys::I;
-			}
-			CounterAttackUI->UpdateKeyIcon(Key);
-			//CounterAttackUI->SetVisibility(ESlateVisibility::Visible);
+		FKey Key = GetCounterAttackInputKey();
+		if (EKeys::Invalid == Key)
+		{
+			Key = EKeys::I;
 		}
+		CounterAttackWidget->UpdateKeyIcon(Key);
 	}
 	//0.1초 딜레이 코드
 	/*if (CounterAttackWidget)

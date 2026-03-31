@@ -67,6 +67,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Status")
 	TObjectPtr<class UPlayableStateComponent> StatusComponent;
+	TObjectPtr<class UCounterAttackUI> CounterAttackWidget;
 #pragma endregion
 
 #pragma region CombatMode
@@ -94,9 +95,10 @@ protected:
 #pragma endregion
 
 #pragma region UI
-protected:
-	TSubclassOf<class UCounterAttackUI> CounterAttackWidget;
-	TObjectPtr<class UCounterAttackUI> CounterAttackUI;
+private:
+	
+	UPROPERTY(VisibleAnywhere, Category = "UI")
+	TObjectPtr<class UWidgetComponent> CounterAttackWidgetComponent;
 #pragma endregion
 
 public:
