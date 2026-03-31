@@ -2,8 +2,10 @@
 
 
 #include "Monster/BaseMonster.h"
-#include "ActorComponent/StateComponent/BaseStateComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Controller/MonsterAI/BaseMonsterAIController.h"
+
+#include "ActorComponent/StateComponent/BaseStateComponent.h"
 #include "Monster/MonsterUI/MonsterHPBarUserWidget.h"
 
 // Sets default values
@@ -19,6 +21,9 @@ ABaseMonster::ABaseMonster()
 	if (HPBarWidgetClass.Succeeded())
 		HPBarWidgetComponent->SetWidgetClass(HPBarWidgetClass.Class);
 	HPBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
+	AIControllerClass = ABaseMonster::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 // Called when the game starts or when spawned
