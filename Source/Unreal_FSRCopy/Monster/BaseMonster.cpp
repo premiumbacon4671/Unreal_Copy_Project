@@ -7,6 +7,7 @@
 
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
 #include "Monster/MonsterUI/MonsterHPBarUserWidget.h"
+#include "PlayableCharacter/PlayableBaseCharacter.h"
 
 // Sets default values
 ABaseMonster::ABaseMonster()
@@ -30,17 +31,7 @@ ABaseMonster::ABaseMonster()
 void ABaseMonster::BeginPlay()
 {
 	Super::BeginPlay();
-	UMonsterHPBarUserWidget* HPBarWidget = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
-	if(HPBarWidget && StatusComponent)
-	{
-		HPBarWidget->SetHPBarPercent(StatusComponent->GetHPPercent());
-		StatusComponent->OnTakeDamage.BindLambda([this](float Percent)
-			{
-				UMonsterHPBarUserWidget* HPBarUI = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
-				if(HPBarUI)
-					HPBarUI->SetHPBarPercent(Percent);
-			});
-	}
+	
 }
 
 // Called every frame
@@ -69,5 +60,58 @@ void ABaseMonster::HitBy(int DamageAmount)
 
 bool ABaseMonster::IsDead()
 {
+	if (bIsInitialized == false)
+		return false;
 	return StatusComponent->IsDead();
+}
+
+void ABaseMonster::MonsterNormalAttack(APlayableBaseCharacter* Target)
+{
+	if(StatusComponent->IsDead() || nullptr == NormalAttackMontage || nullptr == Target)
+		return;
+	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage))
+		return;
+
+	FVector TargetDirection = Target->GetActorLocation() - GetActorLocation();
+	FRotator LookAtRotation = FRotationMatrix::MakeFromX(TargetDirection).Rotator();
+	SetActorRotation(LookAtRotation);
+	PlayAnimMontage(NormalAttackMontage);
+}
+
+void ABaseMonster::PostInitializeComponents()
+{
+	Super::PostInitializeComponents(); 
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &ABaseMonster::OnAttackMontageEnded);
+	}
+}
+
+void ABaseMonster::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	if(Montage == NormalAttackMontage || Montage == HitByMontage)
+	{
+		OnAttackMontageEndedDelegate.ExecuteIfBound();
+	}
+}
+
+void ABaseMonster::InitStat(const FBaseStat& Data)
+{
+	StatusComponent->InitState(Data);
+	bIsInitialized = true;
+
+	//CombatZone에서 Spawn되는 몬스터는 BeginPlay 당시 스탯이 초기화되지 않은 상태이므로, HPBarWidget의 초기 HPPercent를 설정하기 위해 InitStat에서 처리
+	UMonsterHPBarUserWidget* HPBarWidget = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
+	if (HPBarWidget && StatusComponent)
+	{
+		HPBarWidget->SetHPBarPercent(StatusComponent->GetHPPercent());
+		StatusComponent->OnTakeDamage.BindLambda([this](float Percent)
+			{
+				UMonsterHPBarUserWidget* HPBarUI = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
+				if (HPBarUI)
+				{
+					HPBarUI->SetHPBarPercent(Percent);
+				}
+			});
+	}
 }

@@ -54,7 +54,7 @@ protected:
 	TObjectPtr<UAnimMontage> NextAttackMontage;
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	FName NextAttackName;
-
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	float AmountAttackSpeed{ 0.0f };
 	const float BasicAttackSpeed{ 1.0f };
 

@@ -9,35 +9,57 @@
 /**
  * 
  */
+
+class APlayableBaseCharacter;
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnInitializedStat, APlayableBaseCharacter*)
+
+USTRUCT(BlueprintType)
+struct FPlayableStat : public FBaseStat
+{
+	GENERATED_BODY()
+public:
+	FPlayableStat() :
+		Level(1),
+		Experience(0),
+		MaxExperience(0),
+		Mat(0),
+		Tec(0),
+		Hiken(40),
+		MaxHiken(100),
+		ExtraAttackPower(0),
+		ExtraDefencePower(0) {
+	}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int Level;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int Experience;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int MaxExperience;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int Mat;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int Tec;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int Hiken;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int MaxHiken;
+	//특성(버프, 디버프, 검의 형)을 통해 얻는 가변 가능한 능력치
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int ExtraAttackPower;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
+	int ExtraDefencePower;
+};
+
 UCLASS()
 class UNREAL_FSRCOPY_API UPlayableStateComponent : public UBaseStateComponent
 {
 	GENERATED_BODY()
 	
 protected:
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Level{ 1 };
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Experience{ 0 };
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int MaxExperience{ 0 };
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Mat;
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Tec;
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int Hiken{ 40 };
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int MaxHiken{ 100 };
-
-	//특성(버프, 디버프, 검의 형)을 통해 얻는 가변 가능한 능력치
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int ExtraAttackPower{ 0 };
-	UPROPERTY(EditAnywhere, Category = "PlayableState")
-	int ExtraDefencePower{ 0 };
-	
-
+	UPROPERTY(EditAnywhere, Category = "PlayableStat")
+	FPlayableStat PlayableStat;
 public:
+	FOnInitializedStat OnInitializedStat;
 	// Sets default values for this component's properties
 	UPlayableStateComponent();
 
@@ -48,12 +70,21 @@ protected:
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	float GetHikentPercent() const { return static_cast<float>(Hiken) / static_cast<float>(MaxHiken); }
-	void AddExtraAttackPower(int iExtraAttackPower) { ExtraAttackPower += iExtraAttackPower; }
-	void SubExtraAttackPower(int iExtraAttackPower) { ExtraAttackPower -= iExtraAttackPower; if (ExtraAttackPower <= 0) ExtraAttackPower = 0; }
-	int GetExtraAttackPower() const { return ExtraAttackPower; }
-	int GetTotalAttackPower() const { return AttackPower + ExtraAttackPower; }
-	void AddExtraDefencePower(int iExtraDefencePower) { ExtraDefencePower += iExtraDefencePower; }
-	void SubExtraDefencePower(int iExtraDefencePower) { ExtraDefencePower -= iExtraDefencePower; if (ExtraDefencePower <= 0) ExtraDefencePower = 0; }
-	int GetExtraDefencePower() const { return ExtraDefencePower; }
+	virtual FBaseStat& GetStat() override { return PlayableStat; }
+	virtual const FBaseStat& GetStat() const override { return PlayableStat; }
+	//FPlayableStat단계의 스탯을 변경하는 모든 함수는 GetPlayableStat 함수를 통해서 접근해야 한다.
+	//자식 클래스도 각자의 구조체 변수를 가지기 때문에, 각자의 변수에 접근하기 위해서는 GetPlayableStat 함수를 virtual로 선언해야 한다.
+	//자식 클래스가 계속 생길 수록 override계속 해줘야 하는 문제가 있음.
+	virtual FPlayableStat& GetPlayableStat() { return PlayableStat; }
+	virtual const FPlayableStat& GetPlayableStat() const { return PlayableStat; }
+
+	float GetHikentPercent() const { return static_cast<float>(GetPlayableStat().Hiken) / static_cast<float>(GetPlayableStat().MaxHiken); }
+	void AddExtraAttackPower(int iExtraAttackPower) { GetPlayableStat().ExtraAttackPower += iExtraAttackPower; }
+	void SubExtraAttackPower(int iExtraAttackPower) { GetPlayableStat().ExtraAttackPower -= iExtraAttackPower; if (GetPlayableStat().ExtraAttackPower <= 0) GetPlayableStat().ExtraAttackPower = 0; }
+	int GetExtraAttackPower() const { return GetPlayableStat().ExtraAttackPower; }
+	int GetTotalAttackPower() const { return GetPlayableStat().AttackPower + GetPlayableStat().ExtraAttackPower; }
+	void AddExtraDefencePower(int iExtraDefencePower) { GetPlayableStat().ExtraDefencePower += iExtraDefencePower; }
+	void SubExtraDefencePower(int iExtraDefencePower) { GetPlayableStat().ExtraDefencePower -= iExtraDefencePower; if (GetPlayableStat().ExtraDefencePower <= 0) GetPlayableStat().ExtraDefencePower = 0; }
+	int GetExtraDefencePower() const { return GetPlayableStat().ExtraDefencePower; }
+	virtual void InitState(const FBaseStat& InBaseStat) override;
 };

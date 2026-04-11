@@ -17,6 +17,11 @@ ACloseRangeMonster::ACloseRangeMonster()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/Monster/Animation/Werewolf/AM_WerewolfDeath.AM_WerewolfDeath'"));
 	if (DeathMontageObjectFinder.Succeeded())
 		DeathMontage = DeathMontageObjectFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> NormalAttackMontageObjectFinder(
+		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/Monster/Animation/Werewolf/AM_WerewolfAttack.AM_WerewolfAttack'"));
+	if (NormalAttackMontageObjectFinder.Succeeded())
+		NormalAttackMontage = NormalAttackMontageObjectFinder.Object;
 }
 
 void ACloseRangeMonster::MonsterAttackTrace()

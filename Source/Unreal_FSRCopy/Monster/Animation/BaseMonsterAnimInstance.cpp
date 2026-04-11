@@ -14,5 +14,9 @@ void UBaseMonsterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		MoveSpeed = OwnerCharacter->GetVelocity().Size();
 		IsMove = MoveSpeed > 0.0f;
 		IsDead = OwnerCharacter->IsDead();
+		if (IsDead)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("IsDead : ") + OwnerCharacter->GetName());
+		}
 	}
 }

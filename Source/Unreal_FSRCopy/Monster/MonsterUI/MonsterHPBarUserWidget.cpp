@@ -7,5 +7,8 @@
 void UMonsterHPBarUserWidget::SetHPBarPercent(float Percent)
 {
 	if (HPBar)
+	{
+		
 		HPBar->SetPercent(Percent);
+	}
 }

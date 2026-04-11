@@ -2,6 +2,7 @@
 
 
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
+#include "PlayableCharacter/PlayableBaseCharacter.h"
 
 UPlayableStateComponent::UPlayableStateComponent()
 {
@@ -16,4 +17,10 @@ void UPlayableStateComponent::BeginPlay()
 void UPlayableStateComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void UPlayableStateComponent::InitState(const FBaseStat& InBaseStat)
+{
+	PlayableStat = static_cast<const FPlayableStat&>(InBaseStat);
+	OnInitializedStat.Broadcast(Cast<APlayableBaseCharacter>(GetOwner()));
 }

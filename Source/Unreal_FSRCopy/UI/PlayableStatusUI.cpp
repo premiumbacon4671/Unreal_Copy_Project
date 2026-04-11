@@ -18,6 +18,13 @@ void UPlayableStatusUI::NativeConstruct()
 	LinkBalls[3] = LinkBall4;
 	LinkBalls[4] = LinkBall5;
 	LinkBalls[5] = LinkBall6;
+	if(APlayableBaseCharacter* PlayerCharacter = Cast<APlayableBaseCharacter>(GetOwningPlayerPawn()))
+	{
+		if(UPlayableStateComponent* PlayerStatus = PlayerCharacter->GetStatusComponent())
+		{
+			PlayerStatus->OnInitializedStat.AddUObject(this, &UPlayableStatusUI::Init);
+		}
+	}
 }
 
 void UPlayableStatusUI::SetLinkBallVisibility(int Index, ESlateVisibility InVisibility)
@@ -45,6 +52,7 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 	{
 		SetLinkBallVisibility(i, ESlateVisibility::Visible);
 	}
+
 }
 
 void UPlayableStatusUI::SetHPBarPercent(float Percent)

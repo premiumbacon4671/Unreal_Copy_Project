@@ -2,7 +2,7 @@
 
 
 #include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
-#include "Miyamoto_IoriStateComponent.h"
+#include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 
 UMiyamoto_IoriStateComponent::UMiyamoto_IoriStateComponent()
 {
@@ -17,4 +17,10 @@ void UMiyamoto_IoriStateComponent::BeginPlay()
 void UMiyamoto_IoriStateComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+}
+
+void UMiyamoto_IoriStateComponent::InitState(const FBaseStat& InBaseStat)
+{
+	Miyamoto_IoriStat = static_cast<const FMiyamoto_IoriStat&>(InBaseStat);
+	OnInitializedStat.Broadcast(Cast<APlayableBaseCharacter>(GetOwner()));
 }

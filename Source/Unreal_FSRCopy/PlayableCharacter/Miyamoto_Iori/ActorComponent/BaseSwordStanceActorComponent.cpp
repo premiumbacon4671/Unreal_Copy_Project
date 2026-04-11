@@ -33,7 +33,6 @@ void UBaseSwordStanceActorComponent::TickComponent(float DeltaTime, ELevelTick T
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Cyan, FString::Printf(TEXT("AddNA %d"), NormalAttackSectionIndex));
 	// ...
 }
 
@@ -91,7 +90,10 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 	OwnerCharacter->SetIsActionLock(true);
 
 	//GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, FString::Printf(TEXT("Play Normal Attack Montage AttackSpeed %f"), AmountAttackSpeed));
+
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("AmountAttackSpeed %d"), AmountAttackSpeed));
 	OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, GetAddCurNormalAttackSectionName(), AmountAttackSpeed);
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, FString::Printf(TEXT("AmountAttackSpeed %d"), AmountAttackSpeed));
 }
 
 void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()

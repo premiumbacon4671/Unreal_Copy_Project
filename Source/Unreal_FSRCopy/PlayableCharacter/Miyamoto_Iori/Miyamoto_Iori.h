@@ -43,6 +43,9 @@ public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	ESWORDSTANCE GeteCurSwordStance() const { return eCurSwordStance; }
+
+	virtual void InitializeStatus() override;
+
 	void PlayEquipWeaponMontage() override;
 	void PlayUnEquipWeaponMontage();
 	

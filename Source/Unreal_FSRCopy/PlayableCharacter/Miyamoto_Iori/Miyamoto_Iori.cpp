@@ -3,6 +3,9 @@
 
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Engine/DataTable.h"
+
+
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/EarthStanceActorComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/FireStanceActorComponent.h"
 #include "ActorComponent/StateComponent/Miyamoto_ioriStateComponent.h"
@@ -38,6 +41,10 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_WIND, false);
 	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_VOID, false);*/
 #pragma endregion
+	static ConstructorHelpers::FObjectFinder<UDataTable> MiyamotoDataTable(TEXT("/Script/Engine.DataTable'/Game/Blueprint/PlayableCharacter/Data/DT_MiyamotoIoriStat.DT_MiyamotoIoriStat'"));
+	if (MiyamotoDataTable.Succeeded())
+		PlayableDataTable = MiyamotoDataTable.Object;
+
 	/*switch (CurSwordStance)
 	{
 	case ESWORDSTANCE::EST_EARTH:
@@ -58,6 +65,8 @@ void AMiyamoto_Iori::BeginPlay()
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
 	CurSwordStanceComponent->SetIsUseStance(true);
 	eNextSwordStance = eCurSwordStance;
+	//stat 초기화 예정
+	InitializeStatus();
 }
 
 void AMiyamoto_Iori::Tick(float DeltaTime)
@@ -75,6 +84,15 @@ void AMiyamoto_Iori::Tick(float DeltaTime)
 	}*/
 }
 
+
+void AMiyamoto_Iori::InitializeStatus()
+{
+	//세이브 파일이 없는 관계로 레벨1로 고정, 추후 세이브 파일이 생기면 레벨에 맞는 스탯으로 초기화
+	FName StatDataName = *FString::Printf(TEXT("Level%d"), 1);
+	FMiyamoto_IoriStat* IoriStat = PlayableDataTable->FindRow<FMiyamoto_IoriStat>(StatDataName, TEXT("MiyamotoIoriDataTable"));
+	if (nullptr != IoriStat)
+		StatusComponent->InitState(*IoriStat);
+}
 
 void AMiyamoto_Iori::PlayEquipWeaponMontage()
 {

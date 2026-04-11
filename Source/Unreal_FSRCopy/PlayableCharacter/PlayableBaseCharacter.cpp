@@ -286,6 +286,11 @@ void APlayableBaseCharacter::PlayEquipWeaponStateMontage_New(bool bIsEquip)
 	}
 }
 
+void APlayableBaseCharacter::InitializeStatus()
+{
+	//StatusComponent->InitState(NewStat);
+}
+
 void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
 {
 	/*if(Montage == nullptr)

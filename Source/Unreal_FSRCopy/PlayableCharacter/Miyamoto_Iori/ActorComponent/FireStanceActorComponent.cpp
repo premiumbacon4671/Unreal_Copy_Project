@@ -161,7 +161,6 @@ void UFireStanceActorComponent::SetExtraStanceaAility()
 		if (HpPercent > 0.7 || ExtraAttackSpeed >= 0.35)
 			return;
 		float LostHpPercent = 1.0f - HpPercent;
-
 		ExtraAttackSpeed = LostHpPercent * 0.5f;
 		StateComp->SubExtraAttackPower(ExtraAttackPower);
 		ExtraAttackPower = static_cast<int>(StateComp->GetAttackPower() * LostHpPercent * 0.3f);

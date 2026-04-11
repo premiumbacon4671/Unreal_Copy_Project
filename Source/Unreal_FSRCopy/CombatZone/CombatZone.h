@@ -30,7 +30,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CombatZoneEntrance", meta = (AllowPrivateAccess = "true"))
 	TArray<class UBoxComponent*> CombatZoneEntranceComponents;
 
-
+	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class ABaseMonster> SpawnMonsterClass;
+	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (AllowPrivateAccess = "true"))
+	TArray<FName> StatDataNames;
+	TObjectPtr<class UDataTable> MonsterDataTable;
 public:
 	// Sets default values for this actor's properties
 	ACombatZone();
@@ -45,4 +49,6 @@ public:
 	void CreateCombatZoneEntranceComponents();
 	UFUNCTION()
 	void CombatZoneEntranceOnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION()
+	void SpawnMonsters();
 };

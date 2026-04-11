@@ -7,6 +7,8 @@
 #include "Interface/AttackTraceNotify.h"
 #include "PlayableBaseCharacter.generated.h"
 
+struct FPlayableStat;
+
 UCLASS()
 class UNREAL_FSRCOPY_API APlayableBaseCharacter : public ACharacter, public IAttackTraceNotify
 {
@@ -31,7 +33,14 @@ private:
 	TObjectPtr<class UCameraComponent> Camera;
 #pragma endregion
 
+#pragma region Status
+protected:
+	//향후 서번트 스탯 필요 변수 작성예정
+	TObjectPtr<class UDataTable> PlayableDataTable;
+#pragma endregion
+
 #pragma region MoveOptions
+private:
 	bool isSprint{ false };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Options", meta = (AllowPrivateAccess = "true"))
 	float WalkSpeed{ 600.0f };
@@ -67,7 +76,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Status")
 	TObjectPtr<class UPlayableStateComponent> StatusComponent;
-	TObjectPtr<class UCounterAttackUI> CounterAttackWidget;
 #pragma endregion
 
 #pragma region CombatMode
@@ -99,6 +107,7 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	TObjectPtr<class UWidgetComponent> CounterAttackWidgetComponent;
+	TObjectPtr<class UCounterAttackUI> CounterAttackWidget;
 #pragma endregion
 
 public:
@@ -157,6 +166,10 @@ private:
 public:
 	virtual void PlayEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(true); };
 	virtual void PlayUnEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(false); };
+#pragma endregion
+
+#pragma region Stat
+	virtual void InitializeStatus();
 #pragma endregion
 
 #pragma region PerfectDodge

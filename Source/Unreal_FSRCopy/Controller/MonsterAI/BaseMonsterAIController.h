@@ -21,4 +21,7 @@ private:
 
 public:
 	ABaseMonsterAIController();
+	void PlayBehaviorTree();
+protected:
+	void OnPossess(APawn* InPawn) override;
 };
