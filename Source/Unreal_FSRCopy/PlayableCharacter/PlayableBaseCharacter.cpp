@@ -169,6 +169,14 @@ void APlayableBaseCharacter::PlayEvade()
 		GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr)
 	{
 		PlayMontageFullBody(EvadeMontage);
+
+		//저스트회피 성공 판정
+		SetPerfectDodgeWindow(true);
+		GetWorldTimerManager().ClearTimer(PerfectDodgeTimerHandle);
+		FTimerDelegate TimerDel;
+		TimerDel.BindUObject(this, &APlayableBaseCharacter::SetPerfectDodgeWindow, false);
+		//Test용 3초, 향후 수정 예정
+		GetWorldTimerManager().SetTimer(PerfectDodgeTimerHandle, TimerDel, 0.5f, false);
 	}
 }
 
@@ -349,8 +357,8 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 
 void APlayableBaseCharacter::ResetCounterAttackTimer()
 {
-	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHale);
-	IsCanGuardConuterAttack = false;
+	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHandle);
+	DisableCounterAttack();
 }
 
 void APlayableBaseCharacter::PCTakeDamage(int Damage)
@@ -359,9 +367,9 @@ void APlayableBaseCharacter::PCTakeDamage(int Damage)
 	//반격 기능
 	//체력 감소 기능 추가 예정
 	IsCanGuardConuterAttack = true;
-	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHale);
+	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(
-		GuardCounterAttackTimerHale,
+		GuardCounterAttackTimerHandle,
 		this,
 		&APlayableBaseCharacter::DisableCounterAttack,
 		1.5f,
@@ -372,13 +380,14 @@ void APlayableBaseCharacter::OnPerfectDodgeSuccess(AActor* Attacker)
 {
 	bIsPerfectDodgeWindow = false;
 	bIsWaitingForCounterInput = true;
+	LastAttacker = Cast<ACharacter>(Attacker);
+	//저스트 회피 UI
+	CounterAttackWidgetComponent->SetVisibility(true);
+
+	SetIsActionLock(true);
 
 	float DelayTime = 0.05f;
-	SetIsActionLock(true);
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), DelayTime);
-
-	//응격 UI 추가 예정
-	//ShowCounterAttackUI();
 
 	float RealTimeDelay = 3.0f;
 	float ScaledDelay = RealTimeDelay * DelayTime;
@@ -392,13 +401,10 @@ void APlayableBaseCharacter::EndCounterInputWindow()
 		return;
 	bIsWaitingForCounterInput = false;
 	SetIsActionLock(false);
-	//CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
+	LastAttacker = nullptr;
 	CounterAttackWidgetComponent->SetVisibility(false);
 	GetWorldTimerManager().ClearTimer(CounterInputTimerHandle);
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
-	//응격 UI 제거 예정
-	//HideCounterAttackUI();
-	//카운터 공격 몽타주 실행
 }
 
 void APlayableBaseCharacter::AttackTrace()
@@ -477,12 +483,12 @@ void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, b
 	}
 
 	//Test Code
-	if(Montage == EvadeMontage)
-	{
-		OnPerfectDodgeSuccess(nullptr);
-		//CounterAttackWidget->SetVisibility(ESlateVisibility::Visible);
-		CounterAttackWidgetComponent->SetVisibility(true);
-	}
+	//if(Montage == EvadeMontage)
+	//{
+	//	OnPerfectDodgeSuccess(nullptr);
+	//	//CounterAttackWidget->SetVisibility(ESlateVisibility::Visible);
+	//	CounterAttackWidgetComponent->SetVisibility(true);
+	//}
 	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("ProcessMontageEndedGeneral"));
 }
 

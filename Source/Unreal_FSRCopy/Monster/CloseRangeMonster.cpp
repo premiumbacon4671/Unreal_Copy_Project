@@ -24,7 +24,7 @@ ACloseRangeMonster::ACloseRangeMonster()
 		NormalAttackMontage = NormalAttackMontageObjectFinder.Object;
 }
 
-void ACloseRangeMonster::MonsterAttackTrace()
+void ACloseRangeMonster::AttackTrace()
 {
 	TArray<FHitResult> HitResults;
 	bool isHit = UKismetSystemLibrary::BoxTraceMulti(
@@ -33,7 +33,7 @@ void ACloseRangeMonster::MonsterAttackTrace()
 		GetActorLocation() + GetActorForwardVector() * 100.0f, // 박스의 끝 위치
 		FVector(50.0f, 50.0f, 50.0f), // 박스의 반지름 (X, Y, Z)
 		FRotator::ZeroRotator, // 박스의 회전값
-		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4), // 트레이스 채널
+		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel5), // 트레이스 채널
 		false, // 복잡한 충돌첼 충돌 무시 여부
 		{}, // 무시할 액터 배열
 		EDrawDebugTrace::ForDuration, // 디버그 드로잉 옵션

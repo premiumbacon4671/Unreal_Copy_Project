@@ -91,7 +91,8 @@ protected:
 
 	//저스트 가드
 	bool IsCanGuardConuterAttack{ false };
-	FTimerHandle GuardCounterAttackTimerHale;
+	FTimerHandle GuardCounterAttackTimerHandle;
+
 	//회피 및 반격
 	//저스트회피 가능한 상태
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Dodge")
@@ -99,7 +100,12 @@ protected:
 	// 응격(반격) 입력을 대기
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Counter")
 	bool bIsWaitingForCounterInput{ false };
+	//저스트회피 타이머
+	FTimerHandle PerfectDodgeTimerHandle;
+	//입력 대기타이머
 	FTimerHandle CounterInputTimerHandle;
+
+	TObjectPtr<class ACharacter> LastAttacker;
 #pragma endregion
 
 #pragma region UI
@@ -182,6 +188,7 @@ public:
 	void OnPerfectDodgeSuccess(AActor* Attacker);
 	//대기 시간이 끝났을 때(반격 입력이 없는 경우)
 	void EndCounterInputWindow();
+	ACharacter* GetLastAttacker() const { return LastAttacker; }
 #pragma endregion
 
 #pragma region AttackTraceNotify

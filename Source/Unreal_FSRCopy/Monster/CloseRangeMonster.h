@@ -19,5 +19,5 @@ protected:
 
 public:
 	ACloseRangeMonster();
-	void MonsterAttackTrace();
+	virtual void AttackTrace() override;
 };

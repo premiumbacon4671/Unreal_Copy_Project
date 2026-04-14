@@ -45,12 +45,34 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 	//응격(퍼펙트 닷지) 몽타주 재생
 	if (OwnerCharacter->GetIsWaitingForCounterInput())
 	{
+		ACharacter* TargetMonster = OwnerCharacter->GetLastAttacker();
 		OwnerCharacter->EndCounterInputWindow();
 		OwnerCharacter->StopMontage(nullptr);
 		//반격 몽타주 재생
 		//응격을 위한 시간 정지 상태가 되었을 때 다른 입력을 받지 않도록 하는 코드 필요
-		OwnerCharacter->PlayMontageFullBody(CounterAttackMontage, NAME_None, AmountAttackSpeed);
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Cyan, FString::Printf(TEXT("CounterAttack"), NormalAttackSectionIndex));
+		if(IsValid(TargetMonster) == true)
+		{
+			FVector PlayerLocation = OwnerCharacter->GetActorLocation();
+			FVector MonsterLocation = TargetMonster->GetActorLocation();
+			FVector DirectionToMonster = (MonsterLocation - PlayerLocation).GetSafeNormal2D();
+			FRotator TargetRotation = DirectionToMonster.Rotation();
+
+			float CurrentDistance = FVector::Dist2D(PlayerLocation, MonsterLocation);
+			float AttackRange = 30.0f;
+			float SafeDistance = AttackRange;
+
+			FVector Destination = PlayerLocation;
+			if (CurrentDistance > SafeDistance)
+			{
+				Destination = MonsterLocation - (DirectionToMonster * SafeDistance);
+			}
+
+			Destination.Z = PlayerLocation.Z;
+			OwnerCharacter->SetActorLocationAndRotation(Destination, TargetRotation, true);
+
+			OwnerCharacter->PlayMontageFullBody(CounterAttackMontage, NAME_None, AmountAttackSpeed);
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Cyan, FString::Printf(TEXT("CounterAttack"), NormalAttackSectionIndex));
+		}
 		return;
 	}
 

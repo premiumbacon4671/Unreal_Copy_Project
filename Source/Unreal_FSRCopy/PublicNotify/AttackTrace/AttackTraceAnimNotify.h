@@ -4,15 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimNotifies/AnimNotify.h"
-#include "PCAttackTraceAnimNotify.generated.h"
+#include "AttackTraceAnimNotify.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class UNREAL_FSRCOPY_API UPCAttackTraceAnimNotify : public UAnimNotify
+class UNREAL_FSRCOPY_API UAttackTraceAnimNotify : public UAnimNotify
 {
 	GENERATED_BODY()
+	
 public:
 	void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };

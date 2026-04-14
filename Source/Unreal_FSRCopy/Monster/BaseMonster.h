@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+#include "Interface/AttackTraceNotify.h"
 #include "BaseMonster.generated.h"
 
 struct FBaseStat;
 DECLARE_DELEGATE(FOnAttackMontageEndedDelegate);
 UCLASS()
-class UNREAL_FSRCOPY_API ABaseMonster : public ACharacter
+class UNREAL_FSRCOPY_API ABaseMonster : public ACharacter, public IAttackTraceNotify
 {
 	GENERATED_BODY()
 
@@ -53,4 +55,5 @@ public:
 
 	void InitStat(const FBaseStat& Data);
 	void SetIsInitialized(bool bValue) { bIsInitialized = bValue; }
+	virtual void AttackTrace() override;
 };

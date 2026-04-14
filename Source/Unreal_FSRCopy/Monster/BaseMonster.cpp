@@ -115,3 +115,8 @@ void ABaseMonster::InitStat(const FBaseStat& Data)
 			});
 	}
 }
+
+void ABaseMonster::AttackTrace()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("BaseMonster AttackTrace"));
+}
