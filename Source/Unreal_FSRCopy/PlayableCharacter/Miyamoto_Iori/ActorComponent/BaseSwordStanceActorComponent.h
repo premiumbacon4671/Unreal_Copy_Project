@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
+#include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
 #include "BaseSwordStanceActorComponent.generated.h"
 
 
@@ -32,15 +34,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stance")
 	bool IsUseStance{ false };
 
-	UPROPERTY(EditAnywhere, Category = "Montage")
-	TArray<FName> NormalAttackSectionNames;
-	UPROPERTY(EditAnywhere, Category = "Montage")
-	TArray<FName> HeavyAttackSectionNames;
-
-	UPROPERTY(EditAnywhere, Category = "Attack")
-	TArray<int> HeavyAttackMaxCount;
-	UPROPERTY(VisibleAnywhere, Category = "Attack")
-	TArray<int> HeavyAttackCount;
+	UPROPERTY(EditAnywhere, Category = "AttackData")
+	TArray<FAttackData> NormalAttackData;
+	UPROPERTY(EditAnywhere, Category = "AttackData")
+	TArray<FAttackData> HeavyAttackData;
 
 	//공격 중 연속된 섹션과 다른 공격으로 넘어갈 때, 다음 공격으로 넘어갈 수 있는 섹션 인덱스
 	UPROPERTY(EditAnywhere, Category = "Attack")
@@ -84,7 +81,7 @@ public:
 	bool GetIsUnlockSwordStance() const { return IsUnlockSwordStance; }
 
 	FName GetAddCurNormalAttackSectionName();
-	FName GetCurHeavyAttackSectionName() { return HeavyAttackSectionNames[NormalAttackSectionIndex]; }
+	FName GetCurHeavyAttackSectionName() { return HeavyAttackData[NormalAttackSectionIndex].MontageSectionName; }
 	void ResetNormalAttackSectionIndex() { NormalAttackSectionIndex = 0; }
 	bool IsAttacking();
 	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }

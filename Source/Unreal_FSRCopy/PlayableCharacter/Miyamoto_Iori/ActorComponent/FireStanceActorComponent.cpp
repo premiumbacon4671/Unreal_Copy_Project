@@ -52,7 +52,7 @@ void UFireStanceActorComponent::PlayCompletedHeavyAttackMontage()
 
 	//몽타주가 플레이 중이고, 연타 횟수가 최대 횟수를 초과하면 리턴
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true &&
-		HeavyAttackCount[NormalAttackSectionIndex] > HeavyAttackMaxCount[NormalAttackSectionIndex])
+		HeavyAttackData[NormalAttackSectionIndex].AttackCount > HeavyAttackData[NormalAttackSectionIndex].AttackMaxCount)
 		return;
 
 	IsCharging = false;
@@ -66,46 +66,47 @@ void UFireStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if (NormalAttackSectionIndex != 0)
 		return;
-	
+	//콤보 공격 인덱스 가져오기
+	int32 ComboAttackIndex;
 	if (ComboAttackIndexMap.Contains(NormalAttackSectionIndex) == true)
 	{
-		int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
+		ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
 	}
 	else
 		return;
 
-	int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
-	if (!HeavyAttackCount.IsValidIndex(ComboAttackIndex)
-		|| !HeavyAttackMaxCount.IsValidIndex(ComboAttackIndex))
+	//콤보 공격 인덱스가 유효한지 확인
+	if (HeavyAttackData.IsValidIndex(ComboAttackIndex) == false)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex"));
 		return;
 	}
-
-	if (HeavyAttackCount[ComboAttackIndex] >= HeavyAttackMaxCount[ComboAttackIndex])
+	//콤보 공격 최대 횟수에 도달했는지 확인
+	if (HeavyAttackData[ComboAttackIndex].AttackCount >= HeavyAttackData[ComboAttackIndex].AttackMaxCount)
 	{
 		OwnerCharacter->StopMontage(HeavyAttackMontage);
 		OwnerCharacter->SetIsActionLock(false);
 		return;
 	}
-
+	//콤보 공격 섹션 이름 가져오기
 	FName TargetSectionName = NAME_None;
-	if (HeavyAttackSectionNames.IsValidIndex(ComboAttackIndex))
+	if (HeavyAttackData.IsValidIndex(ComboAttackIndex) == true)
 	{
-		TargetSectionName = HeavyAttackSectionNames[ComboAttackIndex];
+		TargetSectionName = HeavyAttackData[ComboAttackIndex].MontageSectionName;
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex for HeavyAttackSectionNames"));
 		return;
 	}
+	//몽타주 플레이
 	OwnerCharacter->StopMontage(HeavyAttackMontage);
 	SpeicalAttackPower = CurrentChargeTime * OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.2f;
 	bool bPlayed = OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, TargetSectionName, AmountAttackSpeed);
 	if (bPlayed)
 	{
 		NormalAttackSectionIndex = ComboAttackIndex;
-		HeavyAttackCount[NormalAttackSectionIndex]++;
+		HeavyAttackData[ComboAttackIndex].AttackCount++;
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("Charge Time : %f"), CurrentChargeTime));
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("ChargeStartTime : %f"), ChargeStartTime));
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("SpeicalAttackPower : %d"), SpeicalAttackPower));

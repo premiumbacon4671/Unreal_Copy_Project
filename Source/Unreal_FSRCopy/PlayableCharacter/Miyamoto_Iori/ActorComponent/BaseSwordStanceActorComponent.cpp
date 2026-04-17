@@ -24,7 +24,6 @@ void UBaseSwordStanceActorComponent::BeginPlay()
 	Super::BeginPlay();
 	AmountAttackSpeed = BasicAttackSpeed;
 	// ...
-	HeavyAttackCount.Init(0, HeavyAttackMaxCount.Num());
 }
 
 
@@ -99,10 +98,10 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 			{
 				IsPossibleNextAttack = true;
 				NextAttackMontage = NormalAttackMontage;
-				if (NormalAttackSectionNames.IsValidIndex(NormalAttackSectionIndex))
+				if (NormalAttackData[NormalAttackSectionIndex].MontageSectionName != NAME_None)
 				{
 					GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("NA %d"), NormalAttackSectionIndex));
-					NextAttackName = NormalAttackSectionNames[NormalAttackSectionIndex];
+					NextAttackName = NormalAttackData[NormalAttackSectionIndex].MontageSectionName;
 				}
 			}
 		}
@@ -145,7 +144,7 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 		if(AnimInstance->Montage_IsPlaying(HeavyAttackMontage) || AnimInstance->Montage_IsPlaying(NormalAttackMontage))
 		{
 			//연타 강공격 가능 여부 확인
-			if (HeavyAttackCount[NormalAttackSectionIndex] >= HeavyAttackMaxCount[NormalAttackSectionIndex])
+			if (HeavyAttackData[NormalAttackSectionIndex].AttackCount >= HeavyAttackData[NormalAttackSectionIndex].AttackMaxCount)
 				return;
 
 			if(IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
@@ -154,22 +153,12 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 				IsPossibleNextAttack = true;
 				NextAttackMontage = HeavyAttackMontage;
 				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("HA %d"), NormalAttackSectionIndex));
-				if (HeavyAttackSectionNames.IsValidIndex(NormalAttackSectionIndex))
-					NextAttackName = HeavyAttackSectionNames[NormalAttackSectionIndex];
+				if (HeavyAttackData[NormalAttackSectionIndex].MontageSectionName != NAME_None)
+					NextAttackName = HeavyAttackData[NormalAttackSectionIndex].MontageSectionName;
 			}
 		}
 		return;
 	}
-	
-
-	//if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == true ||
-	//	OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(NormalAttackMontage) == true)
-	//	return;
-	//GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, TEXT("Play Heavy Attack Montage"));
-	
-	//몽타주에서 다음 몽타주로 갈때 소량의 프레임에서 
-	//if (IsPossibleNextAttack == true)
-	//	return;
 
 	OwnerCharacter->SetIsActionLock(true);
 
@@ -182,7 +171,7 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName(), AmountAttackSpeed) == true)
 	{
-		HeavyAttackCount[NormalAttackSectionIndex]++;
+		HeavyAttackData[NormalAttackSectionIndex].AttackCount++;
 		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("TTTTTPlay Heavy Attack Montage"));
 	}
 	else
@@ -238,9 +227,10 @@ void UBaseSwordStanceActorComponent::PlayCompletedHeavyAttackMontage()
 
 FName UBaseSwordStanceActorComponent::GetAddCurNormalAttackSectionName()
 {
-	FName SectionName = NormalAttackSectionNames[NormalAttackSectionIndex];
+	FName SectionName = NormalAttackData[NormalAttackSectionIndex].MontageSectionName;
 	++NormalAttackSectionIndex;
-	NormalAttackSectionIndex %= NormalAttackSectionNames.Num();
+	//마지막 공격 섹션 이후에는 다시 처음 공격 섹션으로 돌아감
+	NormalAttackSectionIndex %= NormalAttackData.Num();
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("AddNA %d"), NormalAttackSectionIndex));
 	return SectionName;
 }
@@ -268,7 +258,7 @@ void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 	if(NextAttackMontage == HeavyAttackMontage)
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("NNNNNPlay Heavy Attack Montage"));
-		HeavyAttackCount[NormalAttackSectionIndex]++;
+		HeavyAttackData[NormalAttackSectionIndex].AttackCount++;
 	}
 	else if (NextAttackMontage == NormalAttackMontage)
 	{
@@ -279,9 +269,9 @@ void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 void UBaseSwordStanceActorComponent::ResetAttackInfo()
 {
 	NormalAttackSectionIndex = 0;
-	for (int i = 0; i < HeavyAttackCount.Num(); ++i)
+	for (int i = 0; i < HeavyAttackData.Num(); ++i)
 	{
-		HeavyAttackCount[i] = 0;
+		HeavyAttackData[i].AttackCount = 0;
 	}
 	SpeicalAttackPower = 0;
 }

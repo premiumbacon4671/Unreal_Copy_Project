@@ -71,22 +71,22 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 
 	if (NormalAttackSectionIndex != 0)
 		return;
-
+	//콤보 공격 인덱스 가져오기
+	int32 ComboAttackIndex;
 	if (ComboAttackIndexMap.Contains(NormalAttackSectionIndex) == true)
 	{
-		int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
+		ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
 	}
 	else
 		return;
-	int32 ComboAttackIndex = ComboAttackIndexMap[NormalAttackSectionIndex];
-	if (!HeavyAttackCount.IsValidIndex(ComboAttackIndex)
-		|| !HeavyAttackMaxCount.IsValidIndex(ComboAttackIndex))
+	//콤보 공격 인덱스가 유효한지 확인
+	if(HeavyAttackData.IsValidIndex(ComboAttackIndex) == false)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex"));
 		return;
 	}
-
-	if(HeavyAttackCount[ComboAttackIndex] >= HeavyAttackMaxCount[ComboAttackIndex])
+	//콤보 공격 최대 횟수에 도달했는지 확인
+	if(HeavyAttackData[ComboAttackIndex].AttackCount >= HeavyAttackData[ComboAttackIndex].AttackMaxCount)
 	{
 		OwnerCharacter->StopMontage(HeavyAttackMontage);
 		OwnerCharacter->SetIsActionLock(false);
@@ -105,23 +105,24 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	{
 		SpeicalAttackPower = 0.0f;
 	}
-
+	//콤보 공격 섹션 이름 가져오기
 	FName TargetSectionName = NAME_None;
-	if(HeavyAttackSectionNames.IsValidIndex(ComboAttackIndex))
+	if(HeavyAttackData[ComboAttackIndex].MontageSectionName != NAME_None)
 	{
-		TargetSectionName = HeavyAttackSectionNames[ComboAttackIndex];
+		TargetSectionName = HeavyAttackData[ComboAttackIndex].MontageSectionName;
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Invalid ComboAttackIndex for HeavyAttackSectionNames"));
 		return;
 	}
+	//다음 공격 몽타주 재생
 	OwnerCharacter->StopMontage(HeavyAttackMontage);
 	bool bPlayed = OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, TargetSectionName, AmountAttackSpeed);
 	if(bPlayed == true)
 	{
 		NormalAttackSectionIndex = ComboAttackIndex;
-		HeavyAttackCount[NormalAttackSectionIndex]++;
+		HeavyAttackData[NormalAttackSectionIndex].AttackCount++;
 	}
 	else
 	{
