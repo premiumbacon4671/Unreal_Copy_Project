@@ -3,6 +3,10 @@
 
 #include "Monster/CloseRangeMonster.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/DamageEvents.h"
+
+#include "ActorComponent/StateComponent/BaseStateComponent.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 
 ACloseRangeMonster::ACloseRangeMonster()
@@ -24,22 +28,31 @@ ACloseRangeMonster::ACloseRangeMonster()
 		NormalAttackMontage = NormalAttackMontageObjectFinder.Object;
 }
 
-void ACloseRangeMonster::AttackTrace()
+void ACloseRangeMonster::AttackTrace(EAttackVariety AttackVariety)
 {
+	//AttackVariety 일반 몬스터는 일반 공격만 존재하기에 AttackVariety는 사용하지 않음
 	TArray<FHitResult> HitResults;
-	bool isHit = UKismetSystemLibrary::BoxTraceMulti(
-		this,
-		GetActorLocation(), // 박스의 시작 위치
-		GetActorLocation() + GetActorForwardVector() * 100.0f, // 박스의 끝 위치
-		FVector(50.0f, 50.0f, 50.0f), // 박스의 반지름 (X, Y, Z)
-		FRotator::ZeroRotator, // 박스의 회전값
-		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel5), // 트레이스 채널
-		false, // 복잡한 충돌첼 충돌 무시 여부
-		{}, // 무시할 액터 배열
-		EDrawDebugTrace::ForDuration, // 디버그 드로잉 옵션
-		HitResults, //HitResults에 결과 저장
-		true// Trace에 자기을 무시할지 여부
-	);
+	bool isHit;
+	switch (MonsterAttackData.AttackTraceData.AttackShape)
+	{
+	default:
+	case EAttackShape::Box:
+		isHit = UKismetSystemLibrary::BoxTraceMulti(
+			this,
+			GetActorLocation(), // 박스의 시작 위치
+			GetActorLocation() + GetActorForwardVector() * MonsterAttackData.AttackTraceData.ForwardDistance, // 박스의 끝 위치
+			MonsterAttackData.AttackTraceData.BoxHalfSize, // 박스의 반지름 (X, Y, Z)
+			FRotator::ZeroRotator, // 박스의 회전값
+			UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel5), // 트레이스 채널
+			false, // 복잡한 충돌첼 충돌 무시 여부
+			{}, // 무시할 액터 배열
+			EDrawDebugTrace::ForDuration, // 디버그 드로잉 옵션
+			HitResults, //HitResults에 결과 저장
+			true// Trace에 자기을 무시할지 여부
+		);
+		break;
+	}
+	
 
 	if (isHit)
 	{
@@ -64,7 +77,11 @@ void ACloseRangeMonster::AttackTrace()
 				//공격 피격 판정
 				else
 				{
-					//UGameplayStatics::ApplyDamage(HitPlayableCharacter, StatusComponent->GetTotalAttackPower(), GetController(), this, nullptr);
+					int DamageAmount = StatusComponent->GetAttackPower();
+					//데미지 랜덤화 (0.8~1.2배)
+					const float Rand = FMath::FRandRange(0.8f, 1.2f);
+					const int32 FinalDamage = DamageAmount * Rand;
+					UGameplayStatics::ApplyDamage(HitPlayableCharacter, FinalDamage, GetController(), this, nullptr);
 				}
 			}
 		}

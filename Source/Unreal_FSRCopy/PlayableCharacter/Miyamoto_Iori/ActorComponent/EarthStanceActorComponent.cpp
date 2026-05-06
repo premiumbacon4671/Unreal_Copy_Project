@@ -4,8 +4,10 @@
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/EarthStanceActorComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
+#include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
 
 UEarthStanceActorComponent::UEarthStanceActorComponent()
 {
@@ -50,7 +52,7 @@ void UEarthStanceActorComponent::PlayCompletedHeavyAttackMontage()
 	if (!IsValid(AnimInstance))
 		return;
 
-	//루프 몽타주가 안니거나 강공격 몽타주가 이미 끝났으면 리턴
+	//루프 몽타주가 아니거나 강공격 몽타주가 이미 끝났으면 리턴
 	if (AnimInstance->Montage_IsPlaying(HeavyAttackMontage) == false)
 	{
 		IsCharging = false;
@@ -97,7 +99,7 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	bool bSuccessCounter = OwnerCharacter->GetIsCanGuardConuterAttack();
 	if (bSuccessCounter)
 	{
-		SpeicalAttackPower = OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.05f;
+		SpeicalAttackPower = OwnerCharacter->GetStatusComponent()->GetTotalAttackPower() * 0.5f;
 		OwnerCharacter->ResetCounterAttackTimer();
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, TEXT("!!! Success Counter Attack !!!"));
 	}
@@ -175,7 +177,8 @@ void UEarthStanceActorComponent::RechargeEarthStanceShield()
 
 int UEarthStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
 {
-	Damage = Super::SwordStanceBeforeUpdateHp(Damage); 
+	Damage = Super::SwordStanceBeforeUpdateHp(Damage);
+	
 	if (EarthStanceShield > 0)
 	{
 		EarthStanceShield -= Damage;

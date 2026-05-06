@@ -86,5 +86,6 @@ public:
 	void AddExtraDefencePower(int iExtraDefencePower) { GetPlayableStat().ExtraDefencePower += iExtraDefencePower; }
 	void SubExtraDefencePower(int iExtraDefencePower) { GetPlayableStat().ExtraDefencePower -= iExtraDefencePower; if (GetPlayableStat().ExtraDefencePower <= 0) GetPlayableStat().ExtraDefencePower = 0; }
 	int GetExtraDefencePower() const { return GetPlayableStat().ExtraDefencePower; }
+	int GetTotalDefencePower() const { return GetPlayableStat().DefencePower + GetPlayableStat().ExtraDefencePower; }
 	virtual void InitState(const FBaseStat& InBaseStat) override;
 };

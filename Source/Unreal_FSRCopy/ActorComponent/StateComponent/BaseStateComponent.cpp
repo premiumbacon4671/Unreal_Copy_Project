@@ -37,9 +37,7 @@ void UBaseStateComponent::TakeDamage(int DamageAmount)
 	if(DamageAmount <= 0 || GetStat().CurHP <= 0)
 		return;
 
-	const float Rand = FMath::FRandRange(0.8f, 1.2f);
-	const int32 FinalDamage = FMath::Max(1, FMath::FloorToInt((DamageAmount - GetStat().DefencePower) * Rand));
-	GetStat().CurHP = FMath::Max(0, GetStat().CurHP - FinalDamage);
+	GetStat().CurHP = FMath::Max(0, (GetStat().CurHP - DamageAmount));
 
 	if(OnTakeDamage.IsBound())
 		OnTakeDamage.Execute(GetHPPercent());

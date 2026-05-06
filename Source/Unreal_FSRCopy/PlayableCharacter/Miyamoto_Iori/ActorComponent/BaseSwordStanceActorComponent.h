@@ -8,6 +8,7 @@
 #include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
 #include "BaseSwordStanceActorComponent.generated.h"
 
+//enum class EAttackVariety;
 
 UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseSwordStanceActorComponent : public UActorComponent
@@ -35,9 +36,9 @@ protected:
 	bool IsUseStance{ false };
 
 	UPROPERTY(EditAnywhere, Category = "AttackData")
-	TArray<FAttackData> NormalAttackData;
+	TArray<struct FAttackData> NormalAttackData;
 	UPROPERTY(EditAnywhere, Category = "AttackData")
-	TArray<FAttackData> HeavyAttackData;
+	TArray<struct FAttackData> HeavyAttackData;
 
 	//공격 중 연속된 섹션과 다른 공격으로 넘어갈 때, 다음 공격으로 넘어갈 수 있는 섹션 인덱스
 	UPROPERTY(EditAnywhere, Category = "Attack")
@@ -45,8 +46,21 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Attack")
 	int NormalAttackSectionIndex{ 0 };
-	UPROPERTY(EditAnywhere, Category = "Attack")
+
+	//선입력 가능 확인 여부와 선입력 확인 여부 기능 분리 예정
+	// 
 	bool IsPossibleNextAttack{ false };
+	// 
+	//선입력 제어
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	bool bIsAttackQueued { false };
+	//선입력 상태 제어
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	bool bCanReceiveInput { false };
+	//다음 공격으로 넘어가는 중인지 제어
+	UPROPERTY(EditAnywhere, Category = "Attack")
+	bool bIsNextAttackTransitioning { false };
+
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TObjectPtr<UAnimMontage> NextAttackMontage;
 	UPROPERTY(EditAnywhere, Category = "Attack")
@@ -57,6 +71,7 @@ protected:
 
 	//특수 공격(필살기, 차징, 1회용)
 	//공격력 한번 사용하고 초기화
+	UPROPERTY(EditAnywhere, Category = "Attack")
 	int SpeicalAttackPower{ 0 };
 
 	//차	지 공격
@@ -81,16 +96,19 @@ public:
 	bool GetIsUnlockSwordStance() const { return IsUnlockSwordStance; }
 
 	FName GetAddCurNormalAttackSectionName();
-	FName GetCurHeavyAttackSectionName() { return HeavyAttackData[NormalAttackSectionIndex].MontageSectionName; }
+	FName GetCurHeavyAttackSectionName();
 	void ResetNormalAttackSectionIndex() { NormalAttackSectionIndex = 0; }
 	bool IsAttacking();
 	UAnimMontage* GetNormalAttackMontage() const { return NormalAttackMontage; }
 	UAnimMontage* GetHeavyAttackMontage() const { return HeavyAttackMontage; }
-	bool GetIsPossibleNextAttack() const { return IsPossibleNextAttack; }
-	void ResetIsPossibleNextAttack() { IsPossibleNextAttack = false; }
-	void ResetNextAttack() { IsPossibleNextAttack = false; NextAttackMontage = nullptr; NextAttackName = ""; }
 	void PlayNextAttackMontage();
+	
+	void ResetNextAttack();
 	void ResetAttackInfo();
+	
+	bool GetbIsNextAttackTransitioning() const { return bIsNextAttackTransitioning; }
+	void ResetbIsNextAttackTransitioning() { bIsNextAttackTransitioning = false; }
+
 	virtual void ReleaseSwordStance();
 	virtual void InitSwordStance();
 	void SetIsUseStance(bool isUse) { IsUseStance = isUse; }
@@ -103,4 +121,6 @@ public:
 	bool GetIsPlayHeavyAttackMontage();
 
 	int GetSpeicalAttackPower() const { return SpeicalAttackPower; }
+	void ResetSpeicalAttackPower() { SpeicalAttackPower = 0; }
+	float GetDamageMultiplier(EAttackVariety AttackVariety);
 };

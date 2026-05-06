@@ -5,22 +5,22 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
-#include "ActorComponent/StateComponent/PlayableStateComponent.h"
-#include "Monster/BaseMonster.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "UI/CounterAttackUI.h"
 #include "Components/WidgetComponent.h"
-#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
-
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputSubsystemInterface.h"
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
-//#include "EnhancedInputLocalPlayerSubsystem.h" // 인풋 서브시스템용
-#include "Blueprint/UserWidget.h"              // CreateWidget 및 UI용
+#include "Blueprint/UserWidget.h"   
+#include "Engine/DamageEvents.h"
+
+#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
+#include "UI/CounterAttackUI.h"
+#include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
+#include "ActorComponent/StateComponent/PlayableStateComponent.h"
+#include "Monster/BaseMonster.h"
 
 // Sets default values
 APlayableBaseCharacter::APlayableBaseCharacter()
@@ -323,7 +323,7 @@ void APlayableBaseCharacter::PostInitializeComponents()
 	FootComponent->SetMasterPoseComponent(GetMesh());
 
 	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::AttackMontageStarted);
-	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
+	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::OnMontageEndedGeneral);
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
@@ -332,27 +332,35 @@ void APlayableBaseCharacter::PostInitializeComponents()
 
 void APlayableBaseCharacter::AttackMontageStarted(UAnimMontage* Montage)
 {
-	//공격 콤보 bool false 초기화
-	if(nullptr == Montage)
-		return;
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, TEXT("Started : ") + Montage->GetName());
-
-	if (Montage == CurSwordStanceComponent->GetNormalAttackMontage() ||
-		Montage == CurSwordStanceComponent->GetHeavyAttackMontage())
-	{
-		CurSwordStanceComponent->ResetIsPossibleNextAttack();
-	}
+	
 }
 
 void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
-	//공격 콤보 bool true 확인 후 다음 몽타주 재생
-	if (nullptr == Montage)
+	if (Montage != CurSwordStanceComponent->GetHeavyAttackMontage() && Montage != CurSwordStanceComponent->GetNormalAttackMontage())
 		return;
-	if (bInterrupted)
-		return;
-	CurSwordStanceComponent->ResetAttackInfo();
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Blue, TEXT("Ended : ") + Montage->GetName());
+
+	//공격 성공 여부와 관계없이 특수 공격력 초기화
+	CurSwordStanceComponent->ResetSpeicalAttackPower();
+	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("SpeicalAttackPower : %d, Montage : %s, Interrupted : %s"), CurSwordStanceComponent->GetSpeicalAttackPower(), *Montage->GetName(), bInterrupted ? TEXT("true") : TEXT("false")));
+
+	//공격이 중단되었을 때
+	if (bInterrupted == true)
+	{
+		//공격이 중단되었지만 다음 공격으로의 전환이 이루어지고 있지 않을 때 공격 정보 초기화
+		//피격과 같은 강제적인 중단이 발생했을 때
+		if(CurSwordStanceComponent->GetbIsNextAttackTransitioning() == false)
+		{
+			CurSwordStanceComponent->ResetAttackInfo();
+		}
+		//다음 공격으로의 전환이 이루어지고 있을 때 공격 정보 초기화 지연
+		CurSwordStanceComponent->ResetbIsNextAttackTransitioning();
+	}
+	//공격이 중단되지 않고 정상적으로 끝났을 때 공격 정보 초기화
+	else
+	{
+		CurSwordStanceComponent->ResetAttackInfo();
+	}
 }
 
 void APlayableBaseCharacter::ResetCounterAttackTimer()
@@ -361,12 +369,22 @@ void APlayableBaseCharacter::ResetCounterAttackTimer()
 	DisableCounterAttack();
 }
 
-void APlayableBaseCharacter::PCTakeDamage(int Damage)
+float APlayableBaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	//Test Code
-	//반격 기능
-	//체력 감소 기능 추가 예정
+	float DefencePower = StatusComponent->GetTotalDefencePower();
+	//최소데미지 1로 설정
+	DamageAmount = FMath::Max(DamageAmount - DefencePower, 1.0f);
+	//공격 형에 따른 조정
+	//땅의 형 쉴드
+	//불의 형 데미지 계산 이후 공격력, 공격 속도 증가
+	DamageAmount = CurSwordStanceComponent->SwordStanceBeforeUpdateHp(DamageAmount);
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	CurSwordStanceComponent->SwordStanceAfterUpdateHp(ActualDamage);
+	StatusComponent->TakeDamage(ActualDamage);
+
+	//저스트 가드 판정
 	IsCanGuardConuterAttack = true;
+	//1.5초 후 저스트 가드 판정 초기화
 	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHandle);
 	GetWorld()->GetTimerManager().SetTimer(
 		GuardCounterAttackTimerHandle,
@@ -374,6 +392,8 @@ void APlayableBaseCharacter::PCTakeDamage(int Damage)
 		&APlayableBaseCharacter::DisableCounterAttack,
 		1.5f,
 		false);
+
+	return ActualDamage;
 }
 
 void APlayableBaseCharacter::OnPerfectDodgeSuccess(AActor* Attacker)
@@ -407,7 +427,7 @@ void APlayableBaseCharacter::EndCounterInputWindow()
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 }
 
-void APlayableBaseCharacter::AttackTrace()
+void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 {
 	TArray<FHitResult> HitResults;
 	bool isHit = UKismetSystemLibrary::BoxTraceMulti(
@@ -431,17 +451,21 @@ void APlayableBaseCharacter::AttackTrace()
 		CurSwordStanceComponent->SwordStanceUpdateAttack();
 		int Damage = StatusComponent->GetTotalAttackPower() + CurSwordStanceComponent->GetSpeicalAttackPower();
 		
+		//데미지 랜덤화 (0.8~1.2배)
+		const float Rand = FMath::FRandRange(0.8f, 1.2f);
+		int32 FinalDamage = Damage * Rand;
 		//크리티컬 및 강공격 사용 여부 확인 bool 함수 작성 예정
-		if (CurSwordStanceComponent->GetIsPlayHeavyAttackMontage())
-			Damage *= 1.3f;
+		//if (CurSwordStanceComponent->GetIsPlayHeavyAttackMontage())
+		FinalDamage *= CurSwordStanceComponent->GetDamageMultiplier(AttackVariety);
 
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("Damage : %d"), Damage));
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("Damage : %d"), FinalDamage));
 		for(const FHitResult& HitResult : HitResults)
 		{
 			ABaseMonster* Monster = Cast<ABaseMonster>(HitResult.GetActor());
 			if(Monster != nullptr)
 			{
-				Monster->HitBy(Damage);
+				//Monster->HitBy(FinalDamage);
+				UGameplayStatics::ApplyDamage(Monster, FinalDamage, GetController(), this, UDamageType::StaticClass());
 			}
 		}
 	}
@@ -465,7 +489,6 @@ void APlayableBaseCharacter::OnMontageEndedGeneral(UAnimMontage* Montage, bool b
 
 	ProcessMontageEndedGeneral(Montage, bInterrupted);
 }
-
 void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted)
 {
 	if (bInterrupted)
@@ -476,11 +499,7 @@ void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, b
 		SetIsActionLock(false);
 	}
 
-	if (bInterrupted == false)
-	{
-		if (Montage == CurSwordStanceComponent->GetHeavyAttackMontage() || Montage == CurSwordStanceComponent->GetNormalAttackMontage())
-			CurSwordStanceComponent->ResetAttackInfo();
-	}
+	
 
 	//Test Code
 	//if(Montage == EvadeMontage)

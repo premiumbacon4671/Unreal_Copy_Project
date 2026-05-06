@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
 #include "AttackTraceNotify.generated.h"
 
 // This class does not need to be modified.
@@ -22,5 +23,5 @@ class UNREAL_FSRCOPY_API IAttackTraceNotify
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void AttackTrace() = 0;
+	virtual void AttackTrace(EAttackVariety AttackVariety) = 0;
 };

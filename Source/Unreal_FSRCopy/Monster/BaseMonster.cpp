@@ -3,8 +3,8 @@
 
 #include "Monster/BaseMonster.h"
 #include "Components/WidgetComponent.h"
-#include "Controller/MonsterAI/BaseMonsterAIController.h"
 
+#include "Controller/MonsterAI/BaseMonsterAIController.h"
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
 #include "Monster/MonsterUI/MonsterHPBarUserWidget.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
@@ -45,6 +45,7 @@ void ABaseMonster::HitBy(int DamageAmount)
 {
 	if(HitByMontage == nullptr)
 		return;
+
 	StatusComponent->TakeDamage(DamageAmount);
 	if(StatusComponent->IsDead())
 	{
@@ -56,6 +57,30 @@ void ABaseMonster::HitBy(int DamageAmount)
 	}
 	else
 		PlayAnimMontage(HitByMontage);
+}
+
+float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (HitByMontage == nullptr)
+		return 0.0f;
+	float DefencePower = StatusComponent->GetDefencePower();
+	//최소데미지 1로 설정
+	DamageAmount = FMath::Max(DamageAmount - DefencePower, 1.0f);
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	StatusComponent->TakeDamage(ActualDamage);
+
+	if (StatusComponent->IsDead())
+	{
+		PlayAnimMontage(DeathMontage);
+		GetWorld()->GetTimerManager().SetTimer(DeathTimerHandle, [this]()
+			{
+				Destroy();
+			}, 5.0f, false);
+	}
+	else
+		PlayAnimMontage(HitByMontage);
+	return ActualDamage;
 }
 
 bool ABaseMonster::IsDead()
@@ -116,7 +141,7 @@ void ABaseMonster::InitStat(const FBaseStat& Data)
 	}
 }
 
-void ABaseMonster::AttackTrace()
+void ABaseMonster::AttackTrace(EAttackVariety AttackVariety)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("BaseMonster AttackTrace"));
 }

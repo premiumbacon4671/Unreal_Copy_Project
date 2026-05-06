@@ -4,9 +4,11 @@
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/FireStanceActorComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "ActorComponent/StateComponent/Miyamoto_ioriStateComponent.h"
+#include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
 
 UFireStanceActorComponent::UFireStanceActorComponent()
 {

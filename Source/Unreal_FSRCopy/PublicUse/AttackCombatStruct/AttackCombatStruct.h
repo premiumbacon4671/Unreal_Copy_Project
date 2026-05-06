@@ -27,6 +27,14 @@ enum class EAttackType : uint8
 	LongRange
 };
 
+UENUM(BlueprintType)
+enum class EAttackVariety : uint8
+{
+	Normal,
+	Heavy,
+	Special
+};
+
 //AttackTrace에 필요한 데이터들을 담는 구조체
 USTRUCT(BlueprintType)
 struct FAttackTraceData

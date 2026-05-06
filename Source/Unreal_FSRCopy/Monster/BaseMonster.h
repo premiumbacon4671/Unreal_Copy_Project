@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 
 #include "Interface/AttackTraceNotify.h"
+#include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
 #include "BaseMonster.generated.h"
 
 struct FBaseStat;
@@ -16,15 +17,16 @@ class UNREAL_FSRCOPY_API ABaseMonster : public ACharacter, public IAttackTraceNo
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = "Status")
-	TObjectPtr<class UBaseStateComponent> StatusComponent;
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	TObjectPtr<class UWidgetComponent> HPBarWidgetComponent;
 
 	FTimerHandle DeathTimerHandle;
 
 	bool bIsInitialized{ false };
+
 protected:
+	UPROPERTY(VisibleAnywhere, Category = "Status")
+	TObjectPtr<class UBaseStateComponent> StatusComponent;
 	//자식 클래스에서 설정
 	UPROPERTY(VisibleAnywhere, Category = "Montage")
 	TObjectPtr<UAnimMontage> HitByMontage;
@@ -32,6 +34,9 @@ protected:
 	TObjectPtr<UAnimMontage> DeathMontage;
 	UPROPERTY(VisibleAnywhere, Category = "Montage");
 	TObjectPtr<UAnimMontage> NormalAttackMontage;
+
+	UPROPERTY(EditAnywhere, Category = "AttackData")
+	FAttackData MonsterAttackData;
 public:
 	// Sets default values for this character's properties
 	ABaseMonster();
@@ -45,6 +50,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void HitBy(int DamageAmount);
+	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	bool IsDead();
 	void MonsterNormalAttack(class APlayableBaseCharacter* Target);
 
@@ -55,5 +61,5 @@ public:
 
 	void InitStat(const FBaseStat& Data);
 	void SetIsInitialized(bool bValue) { bIsInitialized = bValue; }
-	virtual void AttackTrace() override;
+	virtual void AttackTrace(EAttackVariety AttackVariety) override;
 };

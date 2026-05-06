@@ -90,6 +90,7 @@ protected:
 	TObjectPtr<UAnimMontage> UnEquipMontage;
 
 	//저스트 가드
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Guard")
 	bool IsCanGuardConuterAttack{ false };
 	FTimerHandle GuardCounterAttackTimerHandle;
 
@@ -145,10 +146,7 @@ public:
 	void StopMontage(TObjectPtr<UAnimMontage> Montage);
 
 	void PostInitializeComponents() override;
-	UFUNCTION()
-	void AttackMontageStarted(UAnimMontage* Montage);
-	UFUNCTION()
-	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	
 
 	bool GetIsCombatMode() const { return isCombatMode; }
 	bool GetIsCanGuardConuterAttack() const { return IsCanGuardConuterAttack; }
@@ -157,8 +155,7 @@ public:
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
 	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
 
-	void PCTakeDamage(int Damage);
-
+	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 #pragma region EquipMontageTest
 	//Old Version
 	virtual void PlayEquipWeaponMontage();
@@ -193,7 +190,7 @@ public:
 
 #pragma region AttackTraceNotify
 public:
-	void AttackTrace() override;
+	void AttackTrace(EAttackVariety AttackVariety) override;
 #pragma endregion
 
 #pragma region UI
@@ -202,15 +199,22 @@ public:
 	void InitializeIconUI();
 #pragma endregion
 
+#pragma region Montage Delegate
+public:
 	UFUNCTION()
 	virtual void EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	UFUNCTION()
 	virtual void UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
-	public:
 		// 델리게이트에 등록될 "검사관" 함수 (가상함수 아님, 자식이 건드릴 필요 없음)
 		UFUNCTION()
 		void OnMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted);
+
+		UFUNCTION()
+		void AttackMontageStarted(UAnimMontage* Montage);
+		UFUNCTION()
+		void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+#pragma endregion
 
 protected:
 	// 검사가 통과되면 실행될 "실제 로직" 함수 (가상함수)

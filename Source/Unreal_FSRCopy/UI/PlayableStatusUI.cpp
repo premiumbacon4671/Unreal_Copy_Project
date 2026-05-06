@@ -53,6 +53,11 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 		SetLinkBallVisibility(i, ESlateVisibility::Visible);
 	}
 
+	MiyamotoStatus->OnTakeDamage.BindLambda([this](float Percent)
+		{
+			SetHPBarPercent(Percent);
+		});
+
 }
 
 void UPlayableStatusUI::SetHPBarPercent(float Percent)

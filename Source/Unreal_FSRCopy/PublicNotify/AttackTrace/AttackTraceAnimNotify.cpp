@@ -21,5 +21,5 @@ void UAttackTraceAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSeque
 	IAttackTraceNotify* AttackTraceNotify = Cast<IAttackTraceNotify>(MeshComp->GetOwner());
 	if (!AttackTraceNotify)
 		return;
-	AttackTraceNotify->AttackTrace();
+	AttackTraceNotify->AttackTrace(AttackVariety);
 }

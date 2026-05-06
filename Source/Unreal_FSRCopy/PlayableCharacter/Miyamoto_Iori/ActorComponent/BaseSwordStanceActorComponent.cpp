@@ -5,6 +5,7 @@
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
 // Sets default values for this component's properties
 UBaseSwordStanceActorComponent::UBaseSwordStanceActorComponent()
 {
@@ -91,12 +92,16 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 	//다른 행동 중인지 판단
 	if (OwnerCharacter->GetIsActionLock())
 	{
-		if (AnimInstance->Montage_IsPlaying(NormalAttackMontage))
+		if (AnimInstance->Montage_IsPlaying(NormalAttackMontage) && bCanReceiveInput == true)
 		{
+
 			//다음 공격 선입력
-			if (IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
+			//if (IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
+			if (bIsAttackQueued == false && NormalAttackSectionIndex > 0)
 			{
-				IsPossibleNextAttack = true;
+				//IsPossibleNextAttack = true;
+				bIsAttackQueued = true;
+				bCanEverAffectNavigation = false;
 				NextAttackMontage = NormalAttackMontage;
 				if (NormalAttackData[NormalAttackSectionIndex].MontageSectionName != NAME_None)
 				{
@@ -147,10 +152,13 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 			if (HeavyAttackData[NormalAttackSectionIndex].AttackCount >= HeavyAttackData[NormalAttackSectionIndex].AttackMaxCount)
 				return;
 
-			if(IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
+			//if(IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
+			if (bIsAttackQueued == false && bCanReceiveInput == true && NormalAttackSectionIndex > 0)
 			{
 				//다음 공격 선입력
-				IsPossibleNextAttack = true;
+				//IsPossibleNextAttack = true;
+				bIsAttackQueued = true;
+				bCanReceiveInput = false;
 				NextAttackMontage = HeavyAttackMontage;
 				GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("HA %d"), NormalAttackSectionIndex));
 				if (HeavyAttackData[NormalAttackSectionIndex].MontageSectionName != NAME_None)
@@ -165,9 +173,6 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	//일회성 특수 공격력 초기화
 	//코드 수정 예정
 	//뭔가 위험함
-	IsCharging = false;
-	SpeicalAttackPower = 0;
-	CurrentChargeTime = 0.0f;
 
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName(), AmountAttackSpeed) == true)
 	{
@@ -235,6 +240,11 @@ FName UBaseSwordStanceActorComponent::GetAddCurNormalAttackSectionName()
 	return SectionName;
 }
 
+FName UBaseSwordStanceActorComponent::GetCurHeavyAttackSectionName()
+{
+	return HeavyAttackData[NormalAttackSectionIndex].MontageSectionName;
+}
+
 bool UBaseSwordStanceActorComponent::IsAttacking()
 {
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
@@ -244,14 +254,30 @@ bool UBaseSwordStanceActorComponent::IsAttacking()
 	return false;
 }
 
+void UBaseSwordStanceActorComponent::ResetNextAttack()
+{
+	//입력 받을 수 있는 상태로 변경
+	bCanReceiveInput = true;
+
+	//IsPossibleNextAttack = false;
+	bIsAttackQueued = false;
+	bIsNextAttackTransitioning = false;
+	NextAttackMontage = nullptr; 
+	NextAttackName = NAME_None;
+}
+
 void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 {
-	if (IsPossibleNextAttack == false)
+	//if (IsPossibleNextAttack == false)
+	if (bIsAttackQueued == false)
 	{
 		ResetAttackInfo();
 		return;
 	}
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Magenta, FString::Printf(TEXT("Test %s"), *NextAttackName.ToString()));
+
+	//다음 공격으로 넘어가는 중을 제어하는 플래그 활성화
+	bIsNextAttackTransitioning = true;
 
 	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	OwnerCharacter->PlayMontageFullBody(NextAttackMontage, NextAttackName, AmountAttackSpeed);
@@ -264,6 +290,7 @@ void UBaseSwordStanceActorComponent::PlayNextAttackMontage()
 	{
 		GetAddCurNormalAttackSectionName();
 	}
+	bIsAttackQueued = false;
 }
 
 void UBaseSwordStanceActorComponent::ResetAttackInfo()
@@ -273,7 +300,15 @@ void UBaseSwordStanceActorComponent::ResetAttackInfo()
 	{
 		HeavyAttackData[i].AttackCount = 0;
 	}
+
+	IsCharging = false;
 	SpeicalAttackPower = 0;
+	CurrentChargeTime = 0.0f;
+	SpeicalAttackPower = 0;
+
+	bIsAttackQueued = false;
+	bCanReceiveInput = false;
+	bIsNextAttackTransitioning = false;
 }
 
 void UBaseSwordStanceActorComponent::ReleaseSwordStance()
@@ -304,5 +339,22 @@ int UBaseSwordStanceActorComponent::SwordStanceUpdateAttack()
 bool UBaseSwordStanceActorComponent::GetIsPlayHeavyAttackMontage()
 {
 	return Cast<APlayableBaseCharacter>(GetOwner())->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage);
+}
+
+float UBaseSwordStanceActorComponent::GetDamageMultiplier(EAttackVariety AttackVariety)
+{
+	switch (AttackVariety)
+	{
+	case EAttackVariety::Normal:
+		return NormalAttackData[NormalAttackSectionIndex].DamageMultiplier;
+	case EAttackVariety::Heavy:
+		return HeavyAttackData[NormalAttackSectionIndex].DamageMultiplier;
+		break;
+	case EAttackVariety::Special:
+		break;
+	default:
+		break;
+	}
+	return 1.0f;
 }
 
