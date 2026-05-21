@@ -8,7 +8,8 @@
 
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/EarthStanceActorComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/FireStanceActorComponent.h"
-#include "ActorComponent/StateComponent/Miyamoto_ioriStateComponent.h"
+#include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
+#include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
 
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
@@ -35,36 +36,22 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 
 	StatusComponent = CreateDefaultSubobject<UMiyamoto_IoriStateComponent>(TEXT("Miyamoto_IoriStatusComponent"));
 
-	/*IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_EARTH, true);
-	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_WATER, false);
-	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_FIRE, true);
-	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_WIND, false);
-	IsUnlockedSwordStance.Add(ESWORDSTANCE::EST_VOID, false);*/
+	SkillActionComponent = CreateDefaultSubobject<USkillActionComponent>(TEXT("SkillActionComponent"));
 #pragma endregion
 	static ConstructorHelpers::FObjectFinder<UDataTable> MiyamotoDataTable(TEXT("/Script/Engine.DataTable'/Game/Blueprint/PlayableCharacter/Data/DT_MiyamotoIoriStat.DT_MiyamotoIoriStat'"));
 	if (MiyamotoDataTable.Succeeded())
 		PlayableDataTable = MiyamotoDataTable.Object;
-
-	/*switch (CurSwordStance)
-	{
-	case ESWORDSTANCE::EST_EARTH:
-		CurSwordStanceComponent = SwordStanceComponents[0];
-		break;
-	case ESWORDSTANCE::EST_FIRE:
-		CurSwordStanceComponent = SwordStanceComponents[1];
-		break;
-	default:
-		break;
-	}*/
-	//CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(CurSwordStance)];
 }
 
 void AMiyamoto_Iori::BeginPlay()
 {
 	Super::BeginPlay();
 	CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
-	CurSwordStanceComponent->SetIsUseStance(true);
+	InitializeSwordStance();
 	eNextSwordStance = eCurSwordStance;
+
+
+
 	//stat 초기화 예정
 	InitializeStatus();
 }
@@ -91,7 +78,9 @@ void AMiyamoto_Iori::InitializeStatus()
 	FName StatDataName = *FString::Printf(TEXT("Level%d"), 1);
 	FMiyamoto_IoriStat* IoriStat = PlayableDataTable->FindRow<FMiyamoto_IoriStat>(StatDataName, TEXT("MiyamotoIoriDataTable"));
 	if (nullptr != IoriStat)
+	{
 		StatusComponent->InitState(*IoriStat);
+	}
 }
 
 void AMiyamoto_Iori::PlayEquipWeaponMontage()
@@ -293,7 +282,7 @@ void AMiyamoto_Iori::UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupte
 		CurSwordStanceComponent->ReleaseSwordStance();
 		eCurSwordStance = eNextSwordStance;
 		CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
-		CurSwordStanceComponent->InitSwordStance();
+		InitializeSwordStance();
 		//PlayEquipWeaponMontage();
 		//TestCode
 		PlayEquipWeaponMontage_New();

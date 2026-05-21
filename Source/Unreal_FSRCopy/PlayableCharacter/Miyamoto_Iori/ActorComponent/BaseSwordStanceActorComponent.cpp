@@ -170,10 +170,6 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 
 	OwnerCharacter->SetIsActionLock(true);
 
-	//일회성 특수 공격력 초기화
-	//코드 수정 예정
-	//뭔가 위험함
-
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName(), AmountAttackSpeed) == true)
 	{
 		HeavyAttackData[NormalAttackSectionIndex].AttackCount++;
@@ -350,11 +346,27 @@ float UBaseSwordStanceActorComponent::GetDamageMultiplier(EAttackVariety AttackV
 	case EAttackVariety::Heavy:
 		return HeavyAttackData[NormalAttackSectionIndex].DamageMultiplier;
 		break;
-	case EAttackVariety::Special:
+	case EAttackVariety::Counter:
 		break;
 	default:
 		break;
 	}
 	return 1.0f;
+}
+
+FAttackData UBaseSwordStanceActorComponent::GetAttackData(EAttackVariety AttackVariety)
+{
+	switch (AttackVariety)
+	{
+		case EAttackVariety::Normal:
+			return NormalAttackData[NormalAttackSectionIndex];
+		case EAttackVariety::Heavy:
+			return HeavyAttackData[NormalAttackSectionIndex];
+		case EAttackVariety::Counter:
+			return CounterAttackData;
+		default:
+			break;
+	}
+	return FAttackData();
 }
 

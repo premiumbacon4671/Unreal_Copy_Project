@@ -50,6 +50,7 @@ void ABaseMonster::HitBy(int DamageAmount)
 	if(StatusComponent->IsDead())
 	{
 		PlayAnimMontage(DeathMontage);
+		CurrentCombatZone->OnMonsterDestroyed(this);
 		GetWorld()->GetTimerManager().SetTimer(DeathTimerHandle, [this]()
 			{
 				Destroy();
@@ -73,6 +74,7 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 	if (StatusComponent->IsDead())
 	{
 		PlayAnimMontage(DeathMontage);
+
 		GetWorld()->GetTimerManager().SetTimer(DeathTimerHandle, [this]()
 			{
 				Destroy();
@@ -144,4 +146,9 @@ void ABaseMonster::InitStat(const FBaseStat& Data)
 void ABaseMonster::AttackTrace(EAttackVariety AttackVariety)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("BaseMonster AttackTrace"));
+}
+
+float ABaseMonster::GetMonsterMaxHP() const
+{
+	return StatusComponent->GetMaxHP();
 }

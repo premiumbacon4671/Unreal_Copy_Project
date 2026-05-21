@@ -7,13 +7,14 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "HUD/PlayerHUD.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
-#include "Kismet/GameplayStatics.h"
-
+#include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 #include "UI/SwordStanceUI.h"
 
 AMiyamotoIoriController::AMiyamotoIoriController()
@@ -63,11 +64,15 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (UIMoveActionFinder.Succeeded())
 		UIMoveAction = UIMoveActionFinder.Object;
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> HikenActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/iA_PCHiken.iA_PCHiken'"));
+	if (HikenActionFinder.Succeeded())
+		HikenAction = HikenActionFinder.Object;
+
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextFinder(
 		TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Blueprint/PlayableCharacter/Input/IMC_PlayableCharacter.IMC_PlayableCharacter'"));
 	if (InputMappingContextFinder.Succeeded())
 		MappingContext = InputMappingContextFinder.Object;
-	
 }
 
 void AMiyamotoIoriController::BeginPlay()
@@ -107,6 +112,7 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::ChangeStanceInput);
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ChangeStanceCompletedInput);
 		input->BindAction(UIMoveAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::UIMoveInput);
+		input->BindAction(HikenAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::HikenInput);
 	}
 }
 
@@ -180,24 +186,42 @@ void AMiyamotoIoriController::JumpInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::NormalAttackInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
+	if (isCombat == false)
+		return;
 	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Normal Attack Input"));
 	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayNormalAttackMontage();
 }
 
 void AMiyamotoIoriController::HeavyAttackInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
+	if (isCombat == false)
+		return;
 	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Heavy Attack Input"));
 	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayHeavyAttackMontage();
 }
 
 void AMiyamotoIoriController::HeavyAttackTriggeredInput(const FInputActionValue& value)
 {
+	if (isUIMode == true)
+		return;
+	if (isCombat == false)
+		return;
 	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Triggered Heavy Attack Input"));
 	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayTriggeredHeavyAttackMontage();
 }
 
 void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue& valuve)
 {
+	
+	if (isCombat == false)
+		return;
+	//UI모드 중 HeavyAttack 입력을 완료할 경우
+	//UI모드가 끝나고 완료 입력을 실행시키기 위해
+	//isUIMode가 true일 때도 입력을 받도록 함
 	GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, TEXT("Completed Heavy Attack Input"));
 	CurPlayableCharacter->GetCurSwordStanceComponent()->PlayCompletedHeavyAttackMontage();
 }
@@ -217,6 +241,8 @@ void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 
 void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue& value)
 {
+	//공격 중에는 형 변경 불가
+	//ui를 켰다 껐을 때 이전 상태 유지
 	if (isUIMode == false)
 		return;
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
@@ -238,6 +264,19 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 	FIntPoint iMoveValue(MoveValue.X, MoveValue.Y);
 	if (CurPlayableCharacter == MiyamotoIori)
 	{
+		//공격 중에는 형 변경 불가
+		if(CurPlayableCharacter->IsPlayingAttackMontage())
+			return;
 		PlayerHUD->SelectSwordStance(iMoveValue);
 	}
+}
+
+void AMiyamotoIoriController::HikenInput(const FInputActionValue& value)
+{
+	if(isUIMode == true)
+		return;
+	if (isCombat == false)
+		return;
+
+	CurPlayableCharacter->GetSkillActionComponent()->ExecuteSkill(-1);
 }

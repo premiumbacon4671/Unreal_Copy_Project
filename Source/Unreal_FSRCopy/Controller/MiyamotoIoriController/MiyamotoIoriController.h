@@ -44,6 +44,9 @@ private:
 	TObjectPtr<class UInputAction> UIMoveAction;
 
 	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> HikenAction;
+
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputMappingContext> MappingContext;
 #pragma endregion
 
@@ -62,13 +65,17 @@ public:
 	void SprintInput(const FInputActionValue& value);
 	void EvadeInput(const FInputActionValue& value);
 	void JumpInput(const FInputActionValue& value);
+	
 	void NormalAttackInput(const FInputActionValue& value);
 	void HeavyAttackInput(const FInputActionValue& value);
 	void HeavyAttackTriggeredInput(const FInputActionValue& value);
 	void HeavyAttackCompletedInput(const FInputActionValue& valuve);
 	void ChangeStanceInput(const FInputActionValue& value);
 	void ChangeStanceCompletedInput(const FInputActionValue& value);
+	
 	void UIMoveInput(const FInputActionValue& value);
+
+	void HikenInput(const FInputActionValue& value);
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }

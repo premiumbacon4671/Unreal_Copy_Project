@@ -21,13 +21,23 @@ public:
 		MaxLinkSkillBall(0),
 		LinkSkillBall(0){
 	}
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiyamotoIoriStat")
+
+	float GetMaxLinkSkill() const { return MaxLinkSkill; }
+	float GetLinkSkill() const { return LinkSkill; }
+	int GetMaxLinkSkillBall() const { return MaxLinkSkillBall; }
+	int GetLinkSkillBall() const { return LinkSkillBall; }
+
+private:
+	//해당 변수들은 ResonanceComponent에서 관리되는 변수들이지만,
+	//Miyamoto_IoriStateComponent에서 초기 값을 설정하기 위해서 선언함.
+	//초기 값 설정 외에는 사용되지 않음.
+	UPROPERTY(EditAnywhere, Category = "MiyamotoIoriStat")
 	float MaxLinkSkill;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiyamotoIoriStat")
+	UPROPERTY(EditAnywhere, Category = "MiyamotoIoriStat")
 	float LinkSkill;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiyamotoIoriStat")
+	UPROPERTY(EditAnywhere, Category = "MiyamotoIoriStat")
 	int MaxLinkSkillBall;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MiyamotoIoriStat")
+	UPROPERTY(EditAnywhere, Category = "MiyamotoIoriStat")
 	int LinkSkillBall;
 };
 
@@ -55,7 +65,4 @@ public:
 	virtual const FMiyamoto_IoriStat& GetMiyamoto_IoriStat() const { return Miyamoto_IoriStat; }
 
 	virtual void InitState(const FBaseStat& InBaseStat) override;
-
-	float GetLinkSkillPercent() const { return static_cast<float>(GetMiyamoto_IoriStat().LinkSkill) / static_cast<float>(GetMiyamoto_IoriStat().MaxLinkSkill); }
-	int GetLinkSkillBall() const { return GetMiyamoto_IoriStat().LinkSkillBall; }
 };

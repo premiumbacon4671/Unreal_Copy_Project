@@ -59,8 +59,12 @@ public:
 	//FBaseStat단계의 스탯을 변경하는 모든 함수는 GetStat 함수를 통해서 접근해야 한다.
 	virtual FBaseStat& GetStat() { return BaseStat; }
 	virtual const FBaseStat& GetStat() const { return BaseStat; }
+	
 	float GetHPPercent() const { return static_cast<float>(GetStat().CurHP) / static_cast<float>(GetStat().MaxHP); }
+	float GetMaxHP() const { return GetStat().MaxHP; }
+
 	int GetAttackPower() const { return GetStat().AttackPower; }
+	
 	void TakeDamage(int DamageAmount);
 	bool IsDead() const { return GetStat().CurHP <= 0; }
 	int GetDefencePower() const { return GetStat().DefencePower; }

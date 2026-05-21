@@ -7,6 +7,7 @@
 
 #include "Interface/AttackTraceNotify.h"
 #include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
+#include "CombatZone/CombatZone.h"
 #include "BaseMonster.generated.h"
 
 struct FBaseStat;
@@ -37,6 +38,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "AttackData")
 	FAttackData MonsterAttackData;
+
+	TObjectPtr<ACombatZone> CurrentCombatZone;
 public:
 	// Sets default values for this character's properties
 	ABaseMonster();
@@ -62,4 +65,9 @@ public:
 	void InitStat(const FBaseStat& Data);
 	void SetIsInitialized(bool bValue) { bIsInitialized = bValue; }
 	virtual void AttackTrace(EAttackVariety AttackVariety) override;
+
+	float GetMonsterMaxHP() const;
+
+	void SetCurrentCombatZone(ACombatZone* CombatZone) { CurrentCombatZone = CombatZone; }
+	ACombatZone* GetCurrentCombatZone() const { return CurrentCombatZone; }
 };

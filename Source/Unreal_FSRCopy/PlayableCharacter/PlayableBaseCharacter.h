@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interface/AttackTraceNotify.h"
+#include "CombatZone/CombatZone.h"
 #include "PlayableBaseCharacter.generated.h"
 
 struct FPlayableStat;
@@ -107,6 +108,14 @@ protected:
 	FTimerHandle CounterInputTimerHandle;
 
 	TObjectPtr<class ACharacter> LastAttacker;
+
+	//스킬
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Skill")
+	TObjectPtr<class USkillActionComponent> SkillActionComponent;
+
+	//현재 전투구역
+	UPROPERTY(VisibleAnywhere, Category = "CombatZone")
+	TObjectPtr<ACombatZone> CurrentCombatZone;
 #pragma endregion
 
 #pragma region UI
@@ -137,12 +146,16 @@ public:
 	void PlayEvade();
 	bool IsEvading() { return BodyComponent->GetAnimInstance()->Montage_IsPlaying(EvadeMontage); }
 	void SetBrakingDecelerationFalling();
+	void Jump() override;
 	bool PlayJumpMontage();
 	void PlayJump();
 	bool PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "", float MontageSpeed = 1.0f);
 	void SetCombatMode();
 	
 	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
+	//FORCEINLINE 강제로 인라인 함수로 만듬
+	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
+	
 	void StopMontage(TObjectPtr<UAnimMontage> Montage);
 
 	void PostInitializeComponents() override;
@@ -153,9 +166,15 @@ public:
 	void DisableCounterAttack() { IsCanGuardConuterAttack = false; }
 	void ResetCounterAttackTimer();
 	UBaseSwordStanceActorComponent* GetCurSwordStanceComponent() const { return CurSwordStanceComponent; }
+	USkillActionComponent* GetSkillActionComponent() const { return SkillActionComponent; }
 	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
 
+	bool IsPlayingAttackMontage() const;
+
 	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+	void SetCurrentCombatZone(ACombatZone* NewCombatZone) { CurrentCombatZone = NewCombatZone; }
+	ACombatZone* GetCurrentCombatZone() const { return CurrentCombatZone; }
 #pragma region EquipMontageTest
 	//Old Version
 	virtual void PlayEquipWeaponMontage();
@@ -169,10 +188,12 @@ private:
 public:
 	virtual void PlayEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(true); };
 	virtual void PlayUnEquipWeaponMontage_New() { PlayEquipWeaponStateMontage_New(false); };
+	void InitializeSwordStance();
 #pragma endregion
 
 #pragma region Stat
 	virtual void InitializeStatus();
+	
 #pragma endregion
 
 #pragma region PerfectDodge
@@ -206,14 +227,14 @@ public:
 	UFUNCTION()
 	virtual void UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
-		// 델리게이트에 등록될 "검사관" 함수 (가상함수 아님, 자식이 건드릴 필요 없음)
-		UFUNCTION()
-		void OnMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted);
+	// 델리게이트에 등록될 "검사관" 함수 (가상함수 아님, 자식이 건드릴 필요 없음)
+	UFUNCTION()
+	void OnMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted);
 
-		UFUNCTION()
-		void AttackMontageStarted(UAnimMontage* Montage);
-		UFUNCTION()
-		void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	UFUNCTION()
+	void AttackMontageStarted(UAnimMontage* Montage);
+	UFUNCTION()
+	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 #pragma endregion
 
 protected:

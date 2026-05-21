@@ -35,6 +35,10 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (AllowPrivateAccess = "true"))
 	TArray<FName> StatDataNames;
 	TObjectPtr<class UDataTable> MonsterDataTable;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn", meta = (AllowPrivateAccess = "true"))
+	TArray<class ABaseMonster*> LiveMonsters;
 public:
 	// Sets default values for this actor's properties
 	ACombatZone();
@@ -51,4 +55,8 @@ public:
 	void CombatZoneEntranceOnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	UFUNCTION()
 	void SpawnMonsters();
+
+	//전투존에 존재하는 몬스터들을 반환하는 함수
+	const TArray<class ABaseMonster*>& GetLiveMonsters() const { return LiveMonsters; }
+	void OnMonsterDestroyed(class ABaseMonster* DestroyedActor);
 };

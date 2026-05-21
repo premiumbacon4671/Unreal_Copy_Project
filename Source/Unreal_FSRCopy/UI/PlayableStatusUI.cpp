@@ -2,11 +2,16 @@
 
 
 #include "UI/PlayableStatusUI.h"
-#include "Components/Image.h"
-#include "Components/ProgressBar.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
+#include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
+#include "PlayerState/FatePlayerState.h"
+
+
+#include "Components/Image.h"
+#include "Components/ProgressBar.h"
+#include "GameFramework/Pawn.h"
 
 void UPlayableStatusUI::NativeConstruct()
 {
@@ -43,21 +48,41 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 		return;
 	SetHPBarPercent(PlayerStatus->GetHPPercent());
 	SetHikenBarPercent(PlayerStatus->GetHikentPercent());
-	UMiyamoto_IoriStateComponent* MiyamotoStatus = Cast<UMiyamoto_IoriStateComponent>(PlayerStatus);
-	if (MiyamotoStatus == nullptr)
-		return;
-	SetLinkBarPercent(MiyamotoStatus->GetLinkSkillPercent());
-	int LinkBallCount = MiyamotoStatus->GetLinkSkillBall();
-	for (int i = 0; i < LinkBallCount; ++i)
-	{
-		SetLinkBallVisibility(i, ESlateVisibility::Visible);
-	}
 
-	MiyamotoStatus->OnTakeDamage.BindLambda([this](float Percent)
+	PlayerStatus->OnTakeDamage.BindLambda([this](float Percent)
 		{
 			SetHPBarPercent(Percent);
 		});
 
+	PlayerStatus->OnCalculateHikenGauge.BindLambda([this](float Percent)
+		{
+			SetHikenBarPercent(Percent);
+		});
+
+	AFatePlayerState* PlayerState = Character->GetPlayerState<AFatePlayerState>();
+	UResonanceComponent* ResonanceComp = PlayerState->ResonanceComponent;
+	if(PlayerState && ResonanceComp && ResonanceComp->GetServantActive())
+	{
+		SetLinkBarPercent(ResonanceComp->GetLinkSkillGaugePercentage());
+		int LinkBallCount = ResonanceComp->GetLinkBall();
+		for (int i = 0; i < LinkBallCount; ++i)
+		{
+			SetLinkBallVisibility(i, ESlateVisibility::Visible);
+		}
+
+		ResonanceComp->OnCalculateLinkSkillGauge.BindLambda([this](float Percent)
+			{
+				SetLinkBarPercent(Percent);
+			});
+
+		ResonanceComp->OnCalculateLinkBall.BindLambda([this](int Count)
+			{
+				for (int i = 0; i < LinkBalls.Num(); ++i)
+				{
+					SetLinkBallVisibility(i, i < Count ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+				}
+			});
+	}
 }
 
 void UPlayableStatusUI::SetHPBarPercent(float Percent)

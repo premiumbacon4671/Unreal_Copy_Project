@@ -61,6 +61,7 @@ void ACombatZone::CombatZoneEntranceOnEndOverlap(UPrimitiveComponent* Overlapped
 	if (nullptr != PC)
 	{
 		PC->SetCombatMode();
+		PC->SetCurrentCombatZone(this);
 		SpawnMonsters();
 	}
 }
@@ -77,6 +78,13 @@ void ACombatZone::SpawnMonsters()
 		if(nullptr == Monster)
 			return;
 		Monster->InitStat(*MonsterStat);
+		Monster->SetCurrentCombatZone(this);
+		LiveMonsters.Add(Monster);
 	}
+}
+
+void ACombatZone::OnMonsterDestroyed(ABaseMonster* DestroyedActor)
+{
+	LiveMonsters.Remove(DestroyedActor);
 }
 

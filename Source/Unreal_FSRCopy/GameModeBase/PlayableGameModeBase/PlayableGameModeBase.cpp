@@ -5,6 +5,7 @@
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "HUD/PlayerHUD.h"
+#include "PlayerState/FatePlayerState.h"
 
 APlayableGameModeBase::APlayableGameModeBase()
 {
@@ -15,4 +16,5 @@ APlayableGameModeBase::APlayableGameModeBase()
 		DefaultPawnClass = PlayerCharacterClass.Class;
 	PlayerControllerClass = AMiyamotoIoriController::StaticClass();
 	HUDClass = APlayerHUD::StaticClass();
+	PlayerStateClass = AFatePlayerState::StaticClass();
 }

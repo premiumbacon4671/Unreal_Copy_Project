@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 
 #include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
+#include "DataAsset/PrimaryDataAsset/SkillDataAsset/SkillDataAsset.h"
 #include "BaseSwordStanceActorComponent.generated.h"
 
 //enum class EAttackVariety;
@@ -39,6 +40,11 @@ protected:
 	TArray<struct FAttackData> NormalAttackData;
 	UPROPERTY(EditAnywhere, Category = "AttackData")
 	TArray<struct FAttackData> HeavyAttackData;
+	UPROPERTY(EditAnywhere, Category = "AttackData")
+	FAttackData CounterAttackData;
+
+	UPROPERTY(EditAnywhere, Category = "AttackData")
+	TObjectPtr<USkillDataAsset> HikenDataAsset;
 
 	//공격 중 연속된 섹션과 다른 공격으로 넘어갈 때, 다음 공격으로 넘어갈 수 있는 섹션 인덱스
 	UPROPERTY(EditAnywhere, Category = "Attack")
@@ -123,4 +129,7 @@ public:
 	int GetSpeicalAttackPower() const { return SpeicalAttackPower; }
 	void ResetSpeicalAttackPower() { SpeicalAttackPower = 0; }
 	float GetDamageMultiplier(EAttackVariety AttackVariety);
+
+	USkillDataAsset* GetHikenDataAsset() const { return HikenDataAsset; }
+	FAttackData GetAttackData(EAttackVariety AttackVariety);
 };

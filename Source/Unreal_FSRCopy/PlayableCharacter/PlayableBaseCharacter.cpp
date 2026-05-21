@@ -21,6 +21,9 @@
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
 #include "Monster/BaseMonster.h"
+#include "PlayerState/FatePlayerState.h"
+#include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
+#include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 
 // Sets default values
 APlayableBaseCharacter::APlayableBaseCharacter()
@@ -185,6 +188,13 @@ void APlayableBaseCharacter::SetBrakingDecelerationFalling()
 	GetCharacterMovement()->BrakingDecelerationFalling = GetCharacterMovement()->MaxWalkSpeed;
 }
 
+void APlayableBaseCharacter::Jump()
+{
+	if (GetIsActionLock())
+		return;
+	Super::Jump();
+}
+
 bool APlayableBaseCharacter::PlayJumpMontage()
 {
 	if (GetMovementComponent()->IsFalling() == false &&
@@ -231,7 +241,7 @@ void APlayableBaseCharacter::SetCombatMode()
 	PlayEquipWeaponStateMontage_New(isCombatMode);
 	FString ModeText = isCombatMode ? TEXT("true") : TEXT("false");
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CombatMode : ") + ModeText);
-	CurSwordStanceComponent->InitSwordStance();
+	InitializeSwordStance();
 }
 
 void APlayableBaseCharacter::PlayEquipWeaponMontage()
@@ -294,6 +304,13 @@ void APlayableBaseCharacter::PlayEquipWeaponStateMontage_New(bool bIsEquip)
 	}
 }
 
+void APlayableBaseCharacter::InitializeSwordStance()
+{
+	CurSwordStanceComponent->InitSwordStance();
+	if(CurSwordStanceComponent->GetHikenDataAsset() != nullptr)
+		SkillActionComponent->SetHikenSkill(CurSwordStanceComponent->GetHikenDataAsset());
+}
+
 void APlayableBaseCharacter::InitializeStatus()
 {
 	//StatusComponent->InitState(NewStat);
@@ -327,6 +344,7 @@ void APlayableBaseCharacter::PostInitializeComponents()
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::OnMontageEndedGeneral);
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
+	
 
 }
 
@@ -367,6 +385,17 @@ void APlayableBaseCharacter::ResetCounterAttackTimer()
 {
 	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHandle);
 	DisableCounterAttack();
+}
+
+bool APlayableBaseCharacter::IsPlayingAttackMontage() const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance == nullptr)
+		return false;
+	if (AnimInstance->Montage_IsPlaying(CurSwordStanceComponent->GetNormalAttackMontage()) ||
+		AnimInstance->Montage_IsPlaying(CurSwordStanceComponent->GetHeavyAttackMontage()))
+		return true;
+	return false;
 }
 
 float APlayableBaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -429,12 +458,21 @@ void APlayableBaseCharacter::EndCounterInputWindow()
 
 void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 {
+	FAttackData AttackData;
+	if (AttackVariety == EAttackVariety::Normal || AttackVariety == EAttackVariety::Heavy || AttackVariety == EAttackVariety::Counter)
+	{
+		AttackData = CurSwordStanceComponent->GetAttackData(AttackVariety);
+	}
+	else if (AttackVariety == EAttackVariety::Special)
+	{
+		AttackData = SkillActionComponent->GetCurrentActiveSkillAttackData();
+	}
 	TArray<FHitResult> HitResults;
 	bool isHit = UKismetSystemLibrary::BoxTraceMulti(
 		this,
 		GetActorLocation(), // 박스의 시작 위치
-		GetActorLocation() + GetActorForwardVector() * 100.0f, // 박스의 끝 위치
-		FVector(50.0f, 50.0f, 50.0f), // 박스의 반지름 (X, Y, Z)
+		GetActorLocation() + GetActorForwardVector() * AttackData.AttackTraceData.ForwardDistance, // 박스의 끝 위치
+		FVector(AttackData.AttackTraceData.BoxHalfSize), // 박스의 반지름 (X, Y, Z)
 		FRotator::ZeroRotator, // 박스의 회전값
 		UEngineTypes::ConvertToTraceType(ECC_GameTraceChannel4), // 트레이스 채널
 		false, // 복잡한 충돌첼 충돌 무시 여부
@@ -456,7 +494,7 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 		int32 FinalDamage = Damage * Rand;
 		//크리티컬 및 강공격 사용 여부 확인 bool 함수 작성 예정
 		//if (CurSwordStanceComponent->GetIsPlayHeavyAttackMontage())
-		FinalDamage *= CurSwordStanceComponent->GetDamageMultiplier(AttackVariety);
+		FinalDamage *= AttackData.DamageMultiplier;
 
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, FString::Printf(TEXT("Damage : %d"), FinalDamage));
 		for(const FHitResult& HitResult : HitResults)
@@ -465,7 +503,17 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 			if(Monster != nullptr)
 			{
 				//Monster->HitBy(FinalDamage);
-				UGameplayStatics::ApplyDamage(Monster, FinalDamage, GetController(), this, UDamageType::StaticClass());
+				float ActualDamage = UGameplayStatics::ApplyDamage(Monster, FinalDamage, GetController(), this, UDamageType::StaticClass());
+				if(ActualDamage > 0.0f)
+				{
+					if (AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(GetPlayerState()))
+					{
+						UResonanceComponent* RC = FatePlayerState->ResonanceComponent;
+						if(RC->GetServantActive() == true)
+							RC->CalculateLinkSkillGauge(ActualDamage, Monster->GetMonsterMaxHP());
+					}
+					StatusComponent->CalculateHikenGauge(ActualDamage, Monster->GetMonsterMaxHP());
+				}
 			}
 		}
 	}

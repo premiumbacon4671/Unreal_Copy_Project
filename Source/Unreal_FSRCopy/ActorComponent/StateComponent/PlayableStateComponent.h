@@ -12,6 +12,7 @@
 
 class APlayableBaseCharacter;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInitializedStat, APlayableBaseCharacter*)
+DECLARE_DELEGATE_OneParam(FOnCalculateHikenGauge, float)
 
 USTRUCT(BlueprintType)
 struct FPlayableStat : public FBaseStat
@@ -32,17 +33,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
 	int Level;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
-	int Experience;
+	float Experience;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
-	int MaxExperience;
+	float MaxExperience;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
 	int Mat;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
 	int Tec;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
-	int Hiken;
+	float Hiken;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
-	int MaxHiken;
+	float MaxHiken;
 	//특성(버프, 디버프, 검의 형)을 통해 얻는 가변 가능한 능력치
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PlayableStat")
 	int ExtraAttackPower;
@@ -58,8 +59,12 @@ class UNREAL_FSRCOPY_API UPlayableStateComponent : public UBaseStateComponent
 protected:
 	UPROPERTY(EditAnywhere, Category = "PlayableStat")
 	FPlayableStat PlayableStat;
+
+	UPROPERTY(EditAnywhere, Category = "GainMultiplier")
+	float HikenGainMultiplier{ 20.0f };
 public:
 	FOnInitializedStat OnInitializedStat;
+	FOnCalculateHikenGauge OnCalculateHikenGauge;
 	// Sets default values for this component's properties
 	UPlayableStateComponent();
 
@@ -88,4 +93,6 @@ public:
 	int GetExtraDefencePower() const { return GetPlayableStat().ExtraDefencePower; }
 	int GetTotalDefencePower() const { return GetPlayableStat().DefencePower + GetPlayableStat().ExtraDefencePower; }
 	virtual void InitState(const FBaseStat& InBaseStat) override;
+
+	void CalculateHikenGauge(float AmountDamage, float TargetMaxHP);
 };
