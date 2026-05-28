@@ -16,5 +16,9 @@ APlayableGameModeBase::APlayableGameModeBase()
 		DefaultPawnClass = PlayerCharacterClass.Class;
 	PlayerControllerClass = AMiyamotoIoriController::StaticClass();
 	HUDClass = APlayerHUD::StaticClass();
-	PlayerStateClass = AFatePlayerState::StaticClass();
+
+	static ConstructorHelpers::FClassFinder<APlayerState> FatePlayerStateClass(
+		TEXT("/Game/Blueprint/PlayerState/BP_FatePlayerState.BP_FatePlayerState_C"));
+	if(FatePlayerStateClass.Succeeded())
+		PlayerStateClass = FatePlayerStateClass.Class;
 }

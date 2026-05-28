@@ -38,6 +38,8 @@ private:
 
 	FOnTimelineFloat CameraProgressDelegate;
 	bool bIsTimelineTrackInitialized{ false };
+
+	TObjectPtr<class APlayableBaseCharacter> OwnerCharacter;
 #pragma endregion
 public:	
 	// Sets default values for this component's properties
@@ -58,6 +60,8 @@ public:
 
 	void GatherEnemies(const FSkillGatherSetting& GatherSetting);
 	void ExecuteSkill(int32 index);
+	void TryExecuteSkill(USkillDataAsset* TargetSkill);
+	
 	void BindMontageEndedDelegate(UAnimInstance* AnimInstance);
 	void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 #pragma region Production

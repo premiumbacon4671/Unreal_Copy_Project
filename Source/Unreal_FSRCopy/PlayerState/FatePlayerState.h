@@ -18,4 +18,7 @@ public:
 	AFatePlayerState();
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Resonance")
 	TObjectPtr<class UResonanceComponent> ResonanceComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<class UInventoryComponent> InventoryComponent;
 };

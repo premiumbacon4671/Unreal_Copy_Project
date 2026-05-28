@@ -2,6 +2,9 @@
 #include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "Monster/BaseMonster.h"
+#include "PlayerState/FatePlayerState.h"
+#include "ActorComponent/InventoryComponent/InventoryComponent.h"
+#include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,7 +17,7 @@ USkillActionComponent::USkillActionComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
+	NormalSkills.SetNum(4);
 	// ...
 }
 
@@ -25,7 +28,7 @@ void USkillActionComponent::BeginPlay()
 	Super::BeginPlay();
 	
 	// ...
-	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+	OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if (OwnerCharacter != nullptr && OwnerCharacter->GetSpringArm() != nullptr)
 	{
 		DefaultCameraArmLength = OwnerCharacter->GetSpringArm()->TargetArmLength;
@@ -43,6 +46,11 @@ void USkillActionComponent::BeginPlay()
 
 		CameraProgressDelegate.BindUFunction(this, FName("UpdateCameraTimeline"));
 	}
+
+	if(NormalSkills.Num() != 4)
+	{
+		NormalSkills.SetNum(4);
+	}
 }
 
 
@@ -58,7 +66,6 @@ void USkillActionComponent::GatherEnemies(const FSkillGatherSetting& GatherSetti
 {
 	if (GatherSetting.bIsGathering == false)
 		return;
-	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if(OwnerCharacter == nullptr || OwnerCharacter->GetCurrentCombatZone() == nullptr)
 		return;
 	const TArray<ABaseMonster*>& Monsters = OwnerCharacter->GetCurrentCombatZone()->GetLiveMonsters();
@@ -86,9 +93,16 @@ void USkillActionComponent::GatherEnemies(const FSkillGatherSetting& GatherSetti
 
 void USkillActionComponent::SetNormalSkill(int32 index, USkillDataAsset* NewSkill)
 {
-	if(NormalSkills.IsValidIndex(index))
+	if(OwnerCharacter != nullptr)
 	{
-		NormalSkills[index] = NewSkill;
+		if (OwnerCharacter->GetIsCombatMode())
+		{
+			return;
+		}
+		if (NormalSkills.IsValidIndex(index))
+		{
+			NormalSkills[index] = NewSkill;
+		}
 	}
 }
 
@@ -103,11 +117,11 @@ void USkillActionComponent::ExecuteSkill(int32 index)
 
 	if(index == -1)
 	{
-		TargetSkill = HikenSkill.Get();
+		TargetSkill = HikenSkill;
 	}
 	else if(NormalSkills.IsValidIndex(index))
 	{
-		TargetSkill = NormalSkills[index].Get();
+		TargetSkill = NormalSkills[index];
 	}
 
 	if(TargetSkill == nullptr)
@@ -116,13 +130,59 @@ void USkillActionComponent::ExecuteSkill(int32 index)
 		return;
 	}
 
-	CurrentActiveSkill = TargetSkill;
 	//스킬 실행 로직
 	//작성예정
 
 	//GatherEnemies(TargetSkill->GatherSetting);
 	//PlaySkillCinematic(TargetSkill);
-	if(APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner()))
+	TryExecuteSkill(TargetSkill);
+}
+
+void USkillActionComponent::TryExecuteSkill(USkillDataAsset* TargetSkill)
+{
+	if(TargetSkill == nullptr)
+		return;
+	AFatePlayerState* PlayerState = Cast<AFatePlayerState>(OwnerCharacter->GetPlayerState());
+	int32 CurrentCost = 0;
+	switch (TargetSkill->CostType)
+	{
+	case ESkillCostType::None:
+		break;
+	case ESkillCostType::Gem:
+	{
+		if (PlayerState != nullptr)
+		{
+			UInventoryComponent* InventoryComp = PlayerState->FindComponentByClass<UInventoryComponent>();
+			if (InventoryComp != nullptr)
+			{
+				CurrentCost = InventoryComp->GetItemQuantity(FName(TEXT("Gem")));
+			}
+		}
+	}
+		break;
+	case ESkillCostType::LinkSkillBall:
+	{
+		if (PlayerState != nullptr)
+		{
+			UResonanceComponent* ResonanceComp = PlayerState->FindComponentByClass<UResonanceComponent>();
+			if (ResonanceComp != nullptr)
+			{
+				CurrentCost = ResonanceComp->GetLinkBall();
+			}
+		}
+	}
+		break;
+	default:
+		break;
+	}
+	if(TargetSkill->CostType != ESkillCostType::None && CurrentCost < TargetSkill->CostAmount)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("Not Enough Resources"));
+		return;
+	}
+
+	CurrentActiveSkill = TargetSkill;
+	if (OwnerCharacter != nullptr)
 	{
 		OwnerCharacter->PlayMontageFullBody(TargetSkill->SkillMontage);
 		OwnerCharacter->SetIsActionLock(true);
@@ -149,7 +209,6 @@ void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 	if(nullptr == TargetSkill)
 		return;
 	CurrentCinematicSkill = TargetSkill;
-	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if(nullptr == OwnerCharacter)
 		return;
 
@@ -193,7 +252,6 @@ void USkillActionComponent::EndSkillCinematic(USkillDataAsset* TargetSkill)
 	if (TargetSkill->bUseTimeDilation)
 	{
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), OriginalTimeDilation);
-		APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 		if (nullptr != OwnerCharacter)
 		{
 			OwnerCharacter->CustomTimeDilation = 1.0f;
@@ -203,7 +261,6 @@ void USkillActionComponent::EndSkillCinematic(USkillDataAsset* TargetSkill)
 
 void USkillActionComponent::UpdateCameraTimeline(float Value)
 {
-	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if(nullptr == OwnerCharacter || nullptr == OwnerCharacter->GetSpringArm())
 		return;
 
@@ -219,7 +276,6 @@ void USkillActionComponent::UpdateCameraTimeline(float Value)
 
 void USkillActionComponent::OnCameraTimelineFinished()
 {
-	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
 	if(nullptr == OwnerCharacter || nullptr == OwnerCharacter->GetSpringArm())
 		return;
 	USpringArmComponent* SpringArm = OwnerCharacter->GetSpringArm();
