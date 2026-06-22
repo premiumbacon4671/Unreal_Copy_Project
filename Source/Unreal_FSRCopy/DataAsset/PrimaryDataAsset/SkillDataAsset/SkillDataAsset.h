@@ -19,6 +19,21 @@ enum class ESkillCostType : uint8
 	LinkSkillBall //서번트 공명스킬
 };
 
+UENUM(BlueprintType)
+enum class ESkillCastType : uint8
+{
+	Instant, //즉시 시전
+	Charge, //차지 시전
+	Continuous //지속 시전
+};
+
+UENUM(BlueprintType)
+enum class ESkillWeaponRequirement : uint8
+{
+	RequireEquipment, //장비 필요
+	RequireNoEquipment, //장비 불필요
+};
+
 //스킬 사용시 몬스터 모으기 설정 구조체
 USTRUCT(BlueprintType)
 struct FSkillGatherSetting
@@ -57,6 +72,16 @@ class UNREAL_FSRCOPY_API USkillDataAsset : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(EditAnywhere, Category = "Name")
+	FName SkillName;
+	UPROPERTY(EditAnywhere, Category = "ID")
+	FName SkillID;
+	UPROPERTY(EditAnywhere, Category = "CastType")
+	ESkillCastType CastType = ESkillCastType::Instant;
+	UPROPERTY(EditAnywhere, Category = "CastType", meta = (EditCondition = "CastType == ESkillCastType::Charge || CastType == ESkillCastType::Continuous", EditConditionHides))
+	float ChargeTime = 0.0f; //차지 시전일 때 필요한 차지 시간
+	UPROPERTY(EditAnywhere, Category = "WeaponRequirement")
+	ESkillWeaponRequirement WeaponRequirement = ESkillWeaponRequirement::RequireEquipment;
 	UPROPERTY(EditAnywhere, Category = "Visual")
 	TObjectPtr<class UAnimMontage> SkillMontage;
 	UPROPERTY(EditAnywhere, Category = "GatherSetting")
@@ -77,4 +102,11 @@ public:
 	//meta = (EditCondition = "bUseTimeDilation") 위의 bUseTimeDilation이 true일 때만 편집 가능
 	UPROPERTY(EditAnywhere, Category = "Cinematic", meta = (EditCondition = "bUseTimeDilation"));
 	float CustomTimeDilationValue{ 0.05f };
+
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<class UNiagaraSystem> StartVFX;
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<class UNiagaraSystem> LoopVFX;
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<class UNiagaraSystem> EndVFX;
 };

@@ -33,6 +33,7 @@ enum class EAttackVariety : uint8
 	Normal,
 	Heavy,
 	Counter,
+	Skill,
 	Special
 };
 

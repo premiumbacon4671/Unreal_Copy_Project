@@ -93,6 +93,19 @@ public:
 	int GetExtraDefencePower() const { return GetPlayableStat().ExtraDefencePower; }
 	int GetTotalDefencePower() const { return GetPlayableStat().DefencePower + GetPlayableStat().ExtraDefencePower; }
 	virtual void InitState(const FBaseStat& InBaseStat) override;
+	int GetMat() const { return GetPlayableStat().Mat; }
 
 	void CalculateHikenGauge(float AmountDamage, float TargetMaxHP);
+
+#pragma region Buff
+public:
+	void ApplyAttackBuff(float BonusMultiplier, float Duration, const TArray<class UNiagaraComponent*>& InBuffVFXs);
+
+private:
+	UFUNCTION()
+	void RemoveAttackBuff(int32 BuffAmount);
+	FTimerHandle BuffTimerHandle;
+	UPROPERTY()
+	TArray<TObjectPtr<class UNiagaraComponent>> ActiveBuffVFXs;
+#pragma endregion
 };

@@ -79,6 +79,8 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/Animation/AM_Evade.AM_Evade'"));
 	if (EvadeMontageFinder.Succeeded())
 		EvadeMontage = EvadeMontageFinder.Object;
+
+	SkillActionComponent = CreateDefaultSubobject<USkillActionComponent>(TEXT("SkillActionComponent"));
 #pragma endregion
 
 	SpringArm->bUsePawnControlRotation = true;
@@ -244,6 +246,15 @@ void APlayableBaseCharacter::SetCombatMode()
 	InitializeSwordStance();
 }
 
+void APlayableBaseCharacter::ResetCameraPosition()
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	FRotator ControlRotation = GetActorRotation();
+	ControlRotation.Pitch = 0.0f;
+	ControlRotation.Roll = 0.0f;
+	PlayerController->SetControlRotation(ControlRotation);
+}
+
 void APlayableBaseCharacter::PlayEquipWeaponMontage()
 {
 	//if (GetMovementComponent()->IsFalling() == true ||
@@ -273,15 +284,21 @@ void APlayableBaseCharacter::PlayEquipWeaponMontage()
 
 void APlayableBaseCharacter::WeaponEquip()
 {
-	FirstWeaponComponent->AttachToComponent(BodyComponent,
+	/*FirstWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+		FName(TEXT("FirstWeaponHand")));*/
+	FirstWeaponComponent->AttachToComponent(BodyComponent,
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		FName(TEXT("FirstWeaponHand")));
 }
 
 void APlayableBaseCharacter::WeaponUnEquip()
 {
-	FirstWeaponComponent->AttachToComponent(BodyComponent,
+	/*FirstWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+		FName(TEXT("FirstWeapon")));*/
+	FirstWeaponComponent->AttachToComponent(BodyComponent,
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		FName(TEXT("FirstWeapon")));
 }
 
@@ -316,6 +333,11 @@ void APlayableBaseCharacter::InitializeStatus()
 	//StatusComponent->InitState(NewStat);
 }
 
+void APlayableBaseCharacter::ExecuteHeal(float RecoverAmount)
+{
+	GetStatusComponent()->RecoverHP(RecoverAmount);
+}
+
 void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
 {
 	/*if(Montage == nullptr)
@@ -345,7 +367,7 @@ void APlayableBaseCharacter::PostInitializeComponents()
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
 	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
 	
-
+	SkillActionComponent->BindSkillMontageDelegate(GetMesh()->GetAnimInstance());
 }
 
 void APlayableBaseCharacter::AttackMontageStarted(UAnimMontage* Montage)
@@ -359,7 +381,6 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 		return;
 
 	//공격 성공 여부와 관계없이 특수 공격력 초기화
-	CurSwordStanceComponent->ResetSpeicalAttackPower();
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("SpeicalAttackPower : %d, Montage : %s, Interrupted : %s"), CurSwordStanceComponent->GetSpeicalAttackPower(), *Montage->GetName(), bInterrupted ? TEXT("true") : TEXT("false")));
 
 	//공격이 중단되었을 때
@@ -396,6 +417,21 @@ bool APlayableBaseCharacter::IsPlayingAttackMontage() const
 		AnimInstance->Montage_IsPlaying(CurSwordStanceComponent->GetHeavyAttackMontage()))
 		return true;
 	return false;
+}
+
+EWeaponVFXTarget APlayableBaseCharacter::GetCurrentWeaponVFXTarget() const
+{
+	return CurSwordStanceComponent->GetWeaponVFXTaraget();
+}
+
+USkeletalMeshComponent* APlayableBaseCharacter::GetFirstWeaponMesh() const
+{
+	return FirstWeaponComponent;
+}
+
+USkeletalMeshComponent* APlayableBaseCharacter::GetSecondWeaponMesh() const
+{
+	return SecondWeaponComponent;
 }
 
 float APlayableBaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -459,11 +495,13 @@ void APlayableBaseCharacter::EndCounterInputWindow()
 void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 {
 	FAttackData AttackData;
+	//통상 공격류는 소드 스탠스 컴포넌트에서 공격 데이터 가져오기
 	if (AttackVariety == EAttackVariety::Normal || AttackVariety == EAttackVariety::Heavy || AttackVariety == EAttackVariety::Counter)
 	{
 		AttackData = CurSwordStanceComponent->GetAttackData(AttackVariety);
 	}
-	else if (AttackVariety == EAttackVariety::Special)
+	//스킬, 비검류는 스킬 액션 컴포넌트에서 공격 데이터 가져오기
+	else if (AttackVariety == EAttackVariety::Special || AttackVariety == EAttackVariety::Skill)
 	{
 		AttackData = SkillActionComponent->GetCurrentActiveSkillAttackData();
 	}
@@ -486,8 +524,13 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 	{
 		//플레이어 스탯, 소드 스탠스 컴포넌트에서 데미지 가져오기
 		//수정 예정
+
 		CurSwordStanceComponent->SwordStanceUpdateAttack();
-		int Damage = StatusComponent->GetTotalAttackPower() + CurSwordStanceComponent->GetSpeicalAttackPower();
+		int Damage;
+		if (AttackVariety == EAttackVariety::Skill)
+			Damage = StatusComponent->GetMat();
+		else
+			Damage = StatusComponent->GetTotalAttackPower() + CurSwordStanceComponent->GetSpeicalAttackPower();
 		
 		//데미지 랜덤화 (0.8~1.2배)
 		const float Rand = FMath::FRandRange(0.8f, 1.2f);

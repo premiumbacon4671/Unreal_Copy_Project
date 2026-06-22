@@ -32,6 +32,16 @@ void UBaseStateComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
+void UBaseStateComponent::RecoverHP(float RecoverAmount)
+{
+	if (RecoverAmount <= 0.0)
+		return;
+	GetStat().CurHP = FMath::Clamp(GetStat().CurHP + RecoverAmount, 0.0f, GetStat().MaxHP);
+
+	if (OnUpdateHp.IsBound())
+		OnUpdateHp.Execute(GetHPPercent());
+}
+
 void UBaseStateComponent::TakeDamage(int DamageAmount)
 {
 	if(DamageAmount <= 0 || GetStat().CurHP <= 0)
@@ -39,8 +49,8 @@ void UBaseStateComponent::TakeDamage(int DamageAmount)
 
 	GetStat().CurHP = FMath::Max(0, (GetStat().CurHP - DamageAmount));
 
-	if(OnTakeDamage.IsBound())
-		OnTakeDamage.Execute(GetHPPercent());
+	if(OnUpdateHp.IsBound())
+		OnUpdateHp.Execute(GetHPPercent());
 }
 
 void UBaseStateComponent::InitState(const FBaseStat& InBaseStat)

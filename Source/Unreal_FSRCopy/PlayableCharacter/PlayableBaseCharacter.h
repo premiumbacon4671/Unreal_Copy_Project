@@ -9,7 +9,7 @@
 #include "PlayableBaseCharacter.generated.h"
 
 struct FPlayableStat;
-
+enum class EWeaponVFXTarget : uint8;
 UCLASS()
 class UNREAL_FSRCOPY_API APlayableBaseCharacter : public ACharacter, public IAttackTraceNotify
 {
@@ -116,6 +116,9 @@ protected:
 	//현재 전투구역
 	UPROPERTY(VisibleAnywhere, Category = "CombatZone")
 	TObjectPtr<ACombatZone> CurrentCombatZone;
+	
+	// 스킬, 피격 등 다양한 이유로 입력이 일시 차단되었는지 확인하는 통합 플래그
+	bool bIsContinuousInputBlocked = false;
 #pragma endregion
 
 #pragma region UI
@@ -151,7 +154,9 @@ public:
 	void PlayJump();
 	bool PlayMontageFullBody(TObjectPtr<UAnimMontage> Montage, FName SectionName = "", float MontageSpeed = 1.0f);
 	void SetCombatMode();
-	
+
+	void ResetCameraPosition();
+
 	USkeletalMeshComponent* GetBodyComponent() const { return BodyComponent; }
 	//FORCEINLINE 강제로 인라인 함수로 만듬
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
@@ -160,7 +165,6 @@ public:
 
 	void PostInitializeComponents() override;
 	
-
 	bool GetIsCombatMode() const { return isCombatMode; }
 	bool GetIsCanGuardConuterAttack() const { return IsCanGuardConuterAttack; }
 	void DisableCounterAttack() { IsCanGuardConuterAttack = false; }
@@ -170,11 +174,22 @@ public:
 	UPlayableStateComponent* GetStatusComponent() const { return StatusComponent; }
 
 	bool IsPlayingAttackMontage() const;
+	EWeaponVFXTarget GetCurrentWeaponVFXTarget() const;
+	FORCEINLINE class USkeletalMeshComponent* GetFirstWeaponMesh() const;
+	FORCEINLINE class USkeletalMeshComponent* GetSecondWeaponMesh() const;
 
 	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	void SetCurrentCombatZone(ACombatZone* NewCombatZone) { CurrentCombatZone = NewCombatZone; }
 	ACombatZone* GetCurrentCombatZone() const { return CurrentCombatZone; }
+
+	// 특정 상황(스킬 종료 등)에서 연속 입력 차단을 요청하는 함수
+	void RequestBlockContinuousInput() { bIsContinuousInputBlocked = true; }
+	void RequestUnblockContinuousInput() { bIsContinuousInputBlocked = false; }
+	// 모든 연속 입력(Triggered) 함수가 통과해야 하는 '검문소' 함수
+	//이 함수가 false를 반환하면 연속 입력이 차단되고, true를 반환하면 입력이 허용됨
+	//현재의 bIsContinuousInputBlocked과 반대값을 반환
+	bool CanProcessContinuousInput() {return !bIsContinuousInputBlocked; }
 #pragma region EquipMontageTest
 	//Old Version
 	virtual void PlayEquipWeaponMontage();
@@ -193,7 +208,7 @@ public:
 
 #pragma region Stat
 	virtual void InitializeStatus();
-	
+	void ExecuteHeal(float RecoverAmount);
 #pragma endregion
 
 #pragma region PerfectDodge

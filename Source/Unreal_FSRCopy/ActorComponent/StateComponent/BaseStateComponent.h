@@ -31,9 +31,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	TObjectPtr<class USkeletalMesh> Mesh;
 };
-DECLARE_DELEGATE_OneParam(FOnTakeDamage, float)
+DECLARE_DELEGATE_OneParam(FOnUpdateHp, float)
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseStateComponent : public UActorComponent
 {
 	GENERATED_BODY()
@@ -42,7 +42,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stat")
 	FBaseStat BaseStat;
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UBaseStateComponent();
 
@@ -51,23 +51,23 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	FOnTakeDamage OnTakeDamage;
-public:	
+	FOnUpdateHp OnUpdateHp;
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	//자식 클래스도 각자의 구조체 변수를 가지기 때문에, 각자의 변수에 접근하기 위해서는 GetStat 함수를 virtual로 선언해야 한다.
 	//FBaseStat단계의 스탯을 변경하는 모든 함수는 GetStat 함수를 통해서 접근해야 한다.
 	virtual FBaseStat& GetStat() { return BaseStat; }
 	virtual const FBaseStat& GetStat() const { return BaseStat; }
-	
+
 	float GetHPPercent() const { return static_cast<float>(GetStat().CurHP) / static_cast<float>(GetStat().MaxHP); }
 	float GetMaxHP() const { return GetStat().MaxHP; }
+	void RecoverHP(float RecoverAmount);
 
 	int GetAttackPower() const { return GetStat().AttackPower; }
-	
+
 	void TakeDamage(int DamageAmount);
 	bool IsDead() const { return GetStat().CurHP <= 0; }
 	int GetDefencePower() const { return GetStat().DefencePower; }
 	virtual void InitState(const FBaseStat& InBaseStat);
-
 };

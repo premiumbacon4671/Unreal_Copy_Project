@@ -10,6 +10,13 @@
 #include "BaseSwordStanceActorComponent.generated.h"
 
 //enum class EAttackVariety;
+UENUM(BlueprintType)
+enum class EWeaponVFXTarget : uint8
+{
+	RightWeapon,
+	LeftWeapon,
+	BothWeapon
+};
 
 UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseSwordStanceActorComponent : public UActorComponent
@@ -86,6 +93,10 @@ protected:
 	float ChargeStartTime{ 0.0f };
 	bool IsCharging{ false };
 
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon Config")
+	EWeaponVFXTarget WeaponVFXTarget{ EWeaponVFXTarget::RightWeapon };
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -132,4 +143,6 @@ public:
 
 	USkillDataAsset* GetHikenDataAsset() const { return HikenDataAsset; }
 	FAttackData GetAttackData(EAttackVariety AttackVariety);
+
+	EWeaponVFXTarget GetWeaponVFXTaraget() const { return WeaponVFXTarget; }
 };

@@ -4,6 +4,8 @@
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 
+#include "NiagaraComponent.h"
+
 UPlayableStateComponent::UPlayableStateComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -40,4 +42,43 @@ void UPlayableStateComponent::CalculateHikenGauge(float AmountDamage, float Targ
 
 	if (OnCalculateHikenGauge.IsBound())
 		OnCalculateHikenGauge.Execute(GetHikentPercent());
+}
+
+void UPlayableStateComponent::ApplyAttackBuff(float BonusMultiplier, float Duration, const TArray<UNiagaraComponent*>& InBuffVFXs)
+{
+	if (!GetWorld())
+		return;
+	int32 BaseAtk = GetPlayableStat().AttackPower;
+	int32 BuffAmount = FMath::RoundToInt32(BaseAtk * BonusMultiplier);
+	if (BuffAmount <= 0)
+		return;
+	AddExtraAttackPower(BuffAmount);
+	for (UNiagaraComponent* VFX : ActiveBuffVFXs)
+	{
+		if (VFX)
+			VFX->Deactivate();
+	}
+	ActiveBuffVFXs.Empty();
+	for (UNiagaraComponent* NewVFX : InBuffVFXs)
+	{
+		if (NewVFX)
+			ActiveBuffVFXs.Add(NewVFX);
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Magenta, FString::Printf(TEXT("버프 발동! 증가량: %d | 현재 총 공격력: %d"), BuffAmount, GetTotalAttackPower()));
+	
+	FTimerDelegate BuffDelegate;
+
+	BuffDelegate.BindUFunction(this, FName("RemoveAttackBuff"), BuffAmount);
+	GetWorld()->GetTimerManager().SetTimer(BuffTimerHandle, BuffDelegate, Duration, false);
+}
+
+void UPlayableStateComponent::RemoveAttackBuff(int32 BuffAmount)
+{
+	SubExtraAttackPower(BuffAmount);
+	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Magenta, FString::Printf(TEXT("버프 종료! 감소량: %d | 현재 총 공격력: %d"), BuffAmount, GetTotalAttackPower()));
+	for (UNiagaraComponent* VFX : ActiveBuffVFXs)
+	{
+		if (VFX) VFX->Deactivate();
+	}
+	ActiveBuffVFXs.Empty();
 }

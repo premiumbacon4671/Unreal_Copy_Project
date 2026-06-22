@@ -14,9 +14,11 @@ class UNREAL_FSRCOPY_API UBuffSkillDataAsset : public USkillDataAsset
 {
 	GENERATED_BODY()
 public:
+	//버프 지속 시간
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill | Buff")
 	float BuffDuration{ 10.0f };
 
+	//능력 상승 비율
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Skill | Buff")
-	float CommonAttackSlowModifier{ 0.5f };
+	float BuffMultiplier{ 0.5f };
 };

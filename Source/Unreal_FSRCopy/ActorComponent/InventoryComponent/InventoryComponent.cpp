@@ -52,6 +52,10 @@ bool UInventoryComponent::AddItem(const FName& ItemID, int32 Quantity)
 	if(MasterInventoryMap.Contains(ItemID))
 	{
 		MasterInventoryMap[ItemID].Quantity += Quantity;
+		if(OnItemUpdated.IsBound())
+		{
+			OnItemUpdated.Broadcast(ItemID, MasterInventoryMap[ItemID].Quantity);
+		}
 		return true;
 	}
 	return false;
@@ -66,6 +70,10 @@ bool UInventoryComponent::ConsumeItem(const FName& ItemID, int32 Quantity)
 		if(MasterInventoryMap[ItemID].Quantity >= Quantity)
 		{
 			MasterInventoryMap[ItemID].Quantity -= Quantity;
+			if (OnItemUpdated.IsBound())
+			{
+				OnItemUpdated.Broadcast(ItemID, MasterInventoryMap[ItemID].Quantity);
+			}
 			return true;
 		}
 	}
@@ -85,4 +93,3 @@ int32 UInventoryComponent::GetItemQuantity(const FName& ItemID) const
 	}
 	return 0;
 }
-

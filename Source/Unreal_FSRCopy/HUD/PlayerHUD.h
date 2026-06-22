@@ -20,6 +20,8 @@ private:
 	TObjectPtr<class USwordStanceUI> SwordStanceUI;
 	TSubclassOf<class UPlayableStatusUI> PlayableStatusWidget;
 	TObjectPtr<class UPlayableStatusUI> PlayableStatusUI;
+	TSubclassOf<class UMiyamotoSkillUI> MiyamotoSkillWidget;
+	TObjectPtr<class UMiyamotoSkillUI> MiyamotoSkillUI;
 public:
 	APlayerHUD();
 	void BeginPlay() override;
@@ -28,4 +30,8 @@ public:
 	void SelectSwordStance(FIntPoint MoveIndex);
 	void StartedSwordStanceUI();
 	void EndedSwordStanceUI(class AMiyamoto_Iori* Miyamoto);
+	void InitializeSkillUI(class AMiyamoto_Iori* Miyamoto);
+	void SetSkillUIVisibility(ESlateVisibility eVisibility);
+	void StartedSkillUI();
+	void EndedSkillUI();
 };

@@ -7,6 +7,7 @@
 #include "DataAsset/PrimaryDataAsset/ItemDataAsset/ItemDataAsset.h"
 #include "InventoryComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemUpdatedSignature, FName, ItemID, int32, NewGemCount);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREAL_FSRCOPY_API UInventoryComponent : public UActorComponent
@@ -23,6 +24,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory | Setup")
 	TArray<TObjectPtr<UItemDataAsset>> AllGameItemDataBase;
 public:	
+	UPROPERTY(BlueprintAssignable, Category = "Inventory | Event")
+	FOnItemUpdatedSignature OnItemUpdated;
+
 	// Sets default values for this component's properties
 	UInventoryComponent();
 
@@ -42,6 +46,7 @@ public:
 	bool ConsumeItem(const FName& ItemID, int32 Quantity);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void GetFilteredItemList(EItemMainType MainType, TArray<FItemStack>& OutItemList) const;
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintPure, Category = "Inventory")
 	int32 GetItemQuantity(const FName& ItemID) const;
+
 };

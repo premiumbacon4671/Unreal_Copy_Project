@@ -49,7 +49,7 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 	SetHPBarPercent(PlayerStatus->GetHPPercent());
 	SetHikenBarPercent(PlayerStatus->GetHikentPercent());
 
-	PlayerStatus->OnTakeDamage.BindLambda([this](float Percent)
+	PlayerStatus->OnUpdateHp.BindLambda([this](float Percent)
 		{
 			SetHPBarPercent(Percent);
 		});

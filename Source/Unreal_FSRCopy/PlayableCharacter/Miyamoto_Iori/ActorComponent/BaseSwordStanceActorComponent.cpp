@@ -42,6 +42,9 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 	if(!IsValid(OwnerCharacter) || !IsValid(NormalAttackMontage))
 		return;
 
+	//특수 공격력 초기화
+	ResetSpeicalAttackPower();
+
 	//응격(퍼펙트 닷지) 몽타주 재생
 	if (OwnerCharacter->GetIsWaitingForCounterInput())
 	{
@@ -142,6 +145,9 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	UAnimInstance* AnimInstance = OwnerCharacter->GetBodyComponent()->GetAnimInstance();
 	if(!IsValid(AnimInstance))
 		return;
+
+	//특수 공격력 초기화
+	ResetSpeicalAttackPower();
 
 	//현재 행동 여부 확인
 	if(OwnerCharacter->GetIsActionLock())
@@ -300,7 +306,7 @@ void UBaseSwordStanceActorComponent::ResetAttackInfo()
 	IsCharging = false;
 	SpeicalAttackPower = 0;
 	CurrentChargeTime = 0.0f;
-	SpeicalAttackPower = 0;
+	ChargeStartTime = 0.0f;
 
 	bIsAttackQueued = false;
 	bCanReceiveInput = false;

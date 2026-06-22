@@ -15,16 +15,30 @@ class UNREAL_FSRCOPY_API AFateProjectile : public AActor
 	GENERATED_BODY()
 	
 private:
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, Category = "Collision")
 	TObjectPtr<class USphereComponent> CollisionComponent;
-	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UPROPERTY(VisibleAnywhere, Category = "Movement")
 	TObjectPtr<class UProjectileMovementComponent> ProjectileMovementComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<class UStaticMeshComponent> ProjectileMeshComponent;
+	TObjectPtr<class UNiagaraComponent> ProjectileVFX;
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	TObjectPtr<class UStaticMeshComponent> ProjectileMesh;
 
-	FAttackData AttackData;
+	UPROPERTY(EditAnywhere, Category = "VFX")
+	TObjectPtr<class UNiagaraSystem> ExplosionVFX;
 
+	float FinalDamage;
+	float DamageMultiplier;
+	float ExplosionRadius;
+	float MaxTravelDistance;
+	float MaxTravelDistanceSq;
 	FVector SpawnLocation;
+	bool bHasExploded;
+
+	ECollisionChannel TargetCollisionChannel;
+	TSubclassOf<ACharacter> AllyClassFilter;
+
+	void Explode();
 public:	
 	// Sets default values for this actor's properties
 	AFateProjectile();
@@ -34,10 +48,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
-	void OnProjectileOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void LaunchProjectile(float Speed, const FAttackData& InAttackData);
+	void LaunchProjectile(float Speed, float Damage, float DamageMult, float InRadius, float MaxDistance, ECollisionChannel InTargetChannel, TSubclassOf<ACharacter> InAllyClass);
 };

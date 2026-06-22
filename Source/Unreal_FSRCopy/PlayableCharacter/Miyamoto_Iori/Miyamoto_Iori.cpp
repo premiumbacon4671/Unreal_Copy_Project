@@ -4,12 +4,14 @@
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/DataTable.h"
-
+#include "GameFramework/PlayerController.h"
 
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/EarthStanceActorComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/FireStanceActorComponent.h"
 #include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 #include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
+
+#include "HUD/PlayerHUD.h"
 
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
@@ -36,7 +38,7 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 
 	StatusComponent = CreateDefaultSubobject<UMiyamoto_IoriStateComponent>(TEXT("Miyamoto_IoriStatusComponent"));
 
-	SkillActionComponent = CreateDefaultSubobject<USkillActionComponent>(TEXT("SkillActionComponent"));
+	
 #pragma endregion
 	static ConstructorHelpers::FObjectFinder<UDataTable> MiyamotoDataTable(TEXT("/Script/Engine.DataTable'/Game/Blueprint/PlayableCharacter/Data/DT_MiyamotoIoriStat.DT_MiyamotoIoriStat'"));
 	if (MiyamotoDataTable.Succeeded())
@@ -50,7 +52,42 @@ void AMiyamoto_Iori::BeginPlay()
 	InitializeSwordStance();
 	eNextSwordStance = eCurSwordStance;
 
+	USkillDataAsset* SkillData = Cast<USkillDataAsset>(StaticLoadObject(
+		USkillDataAsset::StaticClass(),
+		nullptr,
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_Flamethrower.DA_Flamethrower")
+	));
 
+	USkillDataAsset* SkillData2 = Cast<USkillDataAsset>(StaticLoadObject(
+		USkillDataAsset::StaticClass(),
+		nullptr,
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_FireBall.DA_FireBall")
+	));
+
+	USkillDataAsset* SkillData3 = Cast<USkillDataAsset>(StaticLoadObject(
+		USkillDataAsset::StaticClass(),
+		nullptr,
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_AttackPowerBuff.DA_AttackPowerBuff")
+	));
+
+	USkillDataAsset* SkillData4 = Cast<USkillDataAsset>(StaticLoadObject(
+		USkillDataAsset::StaticClass(),
+		nullptr,
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_RecoverHp.DA_RecoverHp")
+	));
+	
+	if (SkillData)
+	{
+		SkillActionComponent->SetNormalSkill(0, SkillData);
+		SkillActionComponent->SetNormalSkill(1, SkillData2);
+		SkillActionComponent->SetNormalSkill(2, SkillData3);
+		SkillActionComponent->SetNormalSkill(3, SkillData4);
+		
+		if(APlayerHUD* PlayerHUD = Cast<APlayerHUD>(Cast<APlayerController>(GetController())->GetHUD()))
+		{
+			PlayerHUD->InitializeSkillUI(this);
+		}
+	}
 
 	//stat 초기화 예정
 	InitializeStatus();
@@ -185,8 +222,11 @@ void AMiyamoto_Iori::WeaponEquip()
 	case ESWORDSTANCE::EST_EARTH:
 		break;
 	case ESWORDSTANCE::EST_FIRE:
-		SecondWeaponComponent->AttachToComponent(BodyComponent,
+		/*SecondWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+		FName(TEXT("SecondWeaponHand")));*/
+		SecondWeaponComponent->AttachToComponent(BodyComponent,
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		FName(TEXT("SecondWeaponHand")));
 		break;
 	default:
@@ -202,8 +242,11 @@ void AMiyamoto_Iori::WeaponUnEquip()
 	case ESWORDSTANCE::EST_EARTH:
 		break;
 	case ESWORDSTANCE::EST_FIRE:
-		SecondWeaponComponent->AttachToComponent(BodyComponent,
+		/*SecondWeaponComponent->AttachToComponent(BodyComponent,
 			FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+			FName(TEXT("SecondWeapon")));*/
+		SecondWeaponComponent->AttachToComponent(BodyComponent,
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 			FName(TEXT("SecondWeapon")));
 		break;
 	default:

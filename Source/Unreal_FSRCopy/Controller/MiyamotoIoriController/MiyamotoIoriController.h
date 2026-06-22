@@ -47,6 +47,15 @@ private:
 	TObjectPtr<class UInputAction> HikenAction;
 
 	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> SkillSelectAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> SkillHoldAction;
+
+	//hp회복, 아이템 수급 등 임시로 사용할 키
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> ZTestKey;
+
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputMappingContext> MappingContext;
 #pragma endregion
 
@@ -76,8 +85,15 @@ public:
 	void UIMoveInput(const FInputActionValue& value);
 
 	void HikenInput(const FInputActionValue& value);
+	
+	void SkillSelectInput(const FInputActionValue& value);
+	void SkillHoldTriggeredInput(const FInputActionValue& value);
+	void SkillHoldCompletedInput(const FInputActionValue& value);
+	bool IsSkillHoldActionPressed() const;
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }
 	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }
+
+	void ZTestKeyInput(const FInputActionValue& value);
 };

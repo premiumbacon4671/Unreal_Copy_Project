@@ -23,7 +23,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkillDataAsset> HikenSkill;
 
-
+	float CurrentChargeTime{ 0.0 };
+	float ChargeStartTime{ 0.0 };
+	bool IsCharging{ false };
 #pragma region Production
 private:
 	float OriginalTimeDilation{ 1.0f };
@@ -54,21 +56,38 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void SetNormalSkill(int32 index, USkillDataAsset* NewSkill);
+	USkillDataAsset* GetNormalSkill(int32 index) const {return NormalSkills.IsValidIndex(index) ? NormalSkills[index] : nullptr; }
 	void SetHikenSkill(USkillDataAsset* NewSkill);
+	USkillDataAsset* GetCurrentSKillData() { return CurrentActiveSkill; }
 	FAttackData GetCurrentActiveSkillAttackData() const { return CurrentActiveSkill ? CurrentActiveSkill->AttackData : FAttackData(); }
 	FSkillGatherSetting GetCurrentActiveSkillGatherSetting() const { return CurrentActiveSkill ? CurrentActiveSkill->GatherSetting : FSkillGatherSetting(); }
 
 	void GatherEnemies(const FSkillGatherSetting& GatherSetting);
-	void ExecuteSkill(int32 index);
-	void TryExecuteSkill(USkillDataAsset* TargetSkill);
+	bool ExecuteSkill(int32 index);
+	bool TryExecuteSkill(USkillDataAsset* TargetSkill);
+	bool HasEnoughResource(USkillDataAsset* TargetSkill) const;
+	void ConsumeResource(USkillDataAsset* TargetSkill);
+
+	UFUNCTION()
+	void FireProjectileSkill(USkillDataAsset* TargetSkill);
+	UFUNCTION()
+	void FireBuffSkill(USkillDataAsset* TargetSkill);
+	UFUNCTION()
+	void FireRecoverSkill(USkillDataAsset* TargetSkill);
+
+	void PlayTriggerSkillMontage();
+	void PlayCompletedSkillMontage();
+	void PlayEndSkillMontage(float ChargeRatio);
 	
-	void BindMontageEndedDelegate(UAnimInstance* AnimInstance);
+	void BindSkillMontageDelegate(UAnimInstance* AnimInstance);
+	UFUNCTION()
 	void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 #pragma region Production
 	void PlaySkillCinematic(USkillDataAsset* TargetSkill);
 	//AnimNotify에서 호출되는 함수로, 슬로우모션이 끝나는 시점에 호출되어야 함
 	void EndSkillCinematic(USkillDataAsset* TargetSkill);
 
+	//BeginPlay()에서 타임라인 컴포넌트를 생성하고, 타임라인이 업데이트될 때 호출되는 함수를 바인딩하는 로직이 필요합니다.
 	UFUNCTION()
 	void UpdateCameraTimeline(float Value);
 	UFUNCTION()

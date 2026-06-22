@@ -27,6 +27,7 @@ UFireStanceActorComponent::UFireStanceActorComponent()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_TwoHandsCounterAttaack.AM_TwoHandsCounterAttaack'"));
 	if (CounterAttackMontageFinder.Succeeded())
 		CounterAttackMontage = CounterAttackMontageFinder.Object;
+	WeaponVFXTarget = EWeaponVFXTarget::BothWeapon;
 }
 
 
@@ -48,7 +49,7 @@ void UFireStanceActorComponent::PlayCompletedHeavyAttackMontage()
 		nullptr == HeavyAttackMontage || OwnerCharacter->GetIsCombatMode() == false)
 		return;
 
-	//루프 몽타주가 안니거나 강공격 몽타주가 이미 끝났으면 린턴
+	//루프 몽타주가 아니거나 강공격 몽타주가 이미 끝났으면 린턴
 	if (OwnerCharacter->GetBodyComponent()->GetAnimInstance()->Montage_IsPlaying(HeavyAttackMontage) == false)
 		return;
 
@@ -109,6 +110,7 @@ void UFireStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	{
 		NormalAttackSectionIndex = ComboAttackIndex;
 		HeavyAttackData[ComboAttackIndex].AttackCount++;
+		bIsNextAttackTransitioning = true;
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("Charge Time : %f"), CurrentChargeTime));
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("ChargeStartTime : %f"), ChargeStartTime));
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("SpeicalAttackPower : %d"), SpeicalAttackPower));

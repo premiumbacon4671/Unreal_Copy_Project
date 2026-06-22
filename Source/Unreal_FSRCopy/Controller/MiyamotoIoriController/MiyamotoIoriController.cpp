@@ -9,6 +9,7 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerState.h"
 
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
@@ -16,6 +17,9 @@
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 #include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 #include "UI/SwordStanceUI.h"
+#include "UI/MiyamotoSkillButtonUI.h"
+#include "ActorComponent/InventoryComponent/InventoryComponent.h"
+#include "PlayerState/FatePlayerState.h"
 
 AMiyamotoIoriController::AMiyamotoIoriController()
 {
@@ -73,6 +77,23 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 		TEXT("/Script/EnhancedInput.InputMappingContext'/Game/Blueprint/PlayableCharacter/Input/IMC_PlayableCharacter.IMC_PlayableCharacter'"));
 	if (InputMappingContextFinder.Succeeded())
 		MappingContext = InputMappingContextFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> SkillUIActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_SKillSelect.IA_SKillSelect'"));
+	if (SkillUIActionFinder.Succeeded())
+		SkillSelectAction = SkillUIActionFinder.Object;
+
+	static ConstructorHelpers::FObjectFinder<UInputAction> SkillHoldActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_SkillHold.IA_SkillHold'"));
+	if (SkillHoldActionFinder.Succeeded())
+		SkillHoldAction = SkillHoldActionFinder.Object;
+
+
+	//테스트용 키
+	static ConstructorHelpers::FObjectFinder<UInputAction> ZTestKeyFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_ZTestKey.IA_ZTestKey'"));
+	if (ZTestKeyFinder.Succeeded())
+		ZTestKey = ZTestKeyFinder.Object;
 }
 
 void AMiyamotoIoriController::BeginPlay()
@@ -113,6 +134,11 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ChangeStanceCompletedInput);
 		input->BindAction(UIMoveAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::UIMoveInput);
 		input->BindAction(HikenAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::HikenInput);
+		input->BindAction(SkillSelectAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SkillSelectInput);
+		input->BindAction(SkillHoldAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SkillHoldTriggeredInput);
+		input->BindAction(SkillHoldAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::SkillHoldCompletedInput);
+
+		input->BindAction(ZTestKey, ETriggerEvent::Started, this, &AMiyamotoIoriController::ZTestKeyInput);
 	}
 }
 
@@ -120,7 +146,7 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 {
 	if (isUIMode == true)
 		return;
-	isMoveInput = true;
+	
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FVector Forward = GetTransformComponent()->GetForwardVector();
 	Forward.Z = 0.0f;
@@ -129,8 +155,11 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 	if (FMath::Abs(MoveValue.X) <= 0.2f)
 		MoveValue.X = 0.0f;
 	if (FMath::Abs(MoveValue.Y) <= 0.2f)
-		MoveValue.Y = 0.0f;
-
+		MoveValue.Y = 0.0f; 
+	if (CurPlayableCharacter->CanProcessContinuousInput() == false)
+		return;
+	isMoveInput = true;
+	GEngine->AddOnScreenDebugMessage(0, 3.0f, FColor::Green, FString::Printf(TEXT("MoveValue: %s"), *MoveValue.ToString()));
 	CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
 	CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
 }
@@ -154,6 +183,8 @@ void AMiyamotoIoriController::LookInput(const FInputActionValue& value)
 		MoveValue.X = 0.0f;
 	if (FMath::Abs(MoveValue.Y) <= 0.2f)
 		MoveValue.Y = 0.0f;
+	if (CurPlayableCharacter->CanProcessContinuousInput() == false)
+		return;
 	AddYawInput(MoveValue.X * CAMERA_SPIN_SPEED * GetWorld()->DeltaTimeSeconds);
 	AddPitchInput(MoveValue.Y * CAMERA_SPIN_SPEED * GetWorld()->DeltaTimeSeconds);
 }
@@ -235,6 +266,9 @@ void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::SelfHitTestInvisible);
 		PlayerHUD->StartedSwordStanceUI();
 		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, TEXT("Pause Start"));
+
+		PlayerHUD->SetSkillUIVisibility(ESlateVisibility::SelfHitTestInvisible);
+		PlayerHUD->StartedSkillUI();
 	}
 
 }
@@ -252,6 +286,8 @@ void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
 		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
 		PlayerHUD->EndedSwordStanceUI(Cast<AMiyamoto_Iori>(CurPlayableCharacter));
+		PlayerHUD->SetSkillUIVisibility(ESlateVisibility::Hidden);
+		PlayerHUD->EndedSkillUI();
 	}
 }
 
@@ -260,8 +296,10 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 	if (isUIMode == false)
 		return;
 	//게임패드에서 입력값 확인
+	//공격 형의 UI의 (0,0)의 위치가 좌상단이므로 X값은 반대로, Y값은 그대로 사용
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FIntPoint iMoveValue(MoveValue.X, MoveValue.Y);
+	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Yellow, FString::Printf(TEXT("UI MoveValue: %s"), *iMoveValue.ToString()));
 	if (CurPlayableCharacter == MiyamotoIori)
 	{
 		//공격 중에는 형 변경 불가
@@ -279,4 +317,85 @@ void AMiyamotoIoriController::HikenInput(const FInputActionValue& value)
 		return;
 
 	CurPlayableCharacter->GetSkillActionComponent()->ExecuteSkill(-1);
+}
+
+void AMiyamotoIoriController::SkillSelectInput(const FInputActionValue& value)
+{
+	if(isUIMode == false)
+		return;
+	if(isCombat == false)
+		return;
+	FVector2D MoveValue = value.Get<FVector2D>();
+	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Magenta, FString::Printf(TEXT("SkillSelect MoveValue: x=%f, y=%f"), MoveValue.X, MoveValue.Y));
+	ESkillButtonDirection SkillButtonDirection;
+	if(MoveValue.X > 0.5f)
+		SkillButtonDirection = ESkillButtonDirection::Top;
+	else if (MoveValue.X < -0.5f)
+		SkillButtonDirection = ESkillButtonDirection::Bottom;
+	else if (MoveValue.Y > 0.5f)
+		SkillButtonDirection = ESkillButtonDirection::Left;
+	else if (MoveValue.Y < -0.5f)
+		SkillButtonDirection = ESkillButtonDirection::Right;
+	else
+		return;
+	if (CurPlayableCharacter->GetSkillActionComponent()->ExecuteSkill(static_cast<int32>(SkillButtonDirection)) == true)
+	{
+		//스킬이 성공적으로 실행된 경우 UI모드 종료
+		isUIMode = false;
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
+		PlayerHUD->SetSkillUIVisibility(ESlateVisibility::Hidden);
+		PlayerHUD->EndedSkillUI();
+		SetIgnoreLookInput(true);
+	}
+}
+
+void AMiyamotoIoriController::SkillHoldTriggeredInput(const FInputActionValue& value)
+{
+	if (isUIMode == true)
+		return;
+	if (isCombat == false)
+		return;
+	FVector2D MoveValue = value.Get<FVector2D>();
+	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Blue, FString::Printf(TEXT("SkillHoldTriggered MoveValue: x=%f, y=%f"), MoveValue.X, MoveValue.Y));
+	CurPlayableCharacter->GetSkillActionComponent()->PlayTriggerSkillMontage();
+}
+
+void AMiyamotoIoriController::SkillHoldCompletedInput(const FInputActionValue& value)
+{
+	if (isUIMode == true)
+		return;
+	if (isCombat == false)
+		return;
+	FVector2D MoveValue = value.Get<FVector2D>();
+	if (CurPlayableCharacter)
+	{
+		CurPlayableCharacter->RequestUnblockContinuousInput();
+	}
+	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Black, FString::Printf(TEXT("SkillHoldCompleted MoveValue: x=%f, y=%f"), MoveValue.X, MoveValue.Y));
+	CurPlayableCharacter->GetSkillActionComponent()->PlayCompletedSkillMontage();
+}
+
+bool AMiyamotoIoriController::IsSkillHoldActionPressed() const
+{
+	if (SkillHoldAction == nullptr)
+		return false;
+	ULocalPlayer* LocalPlayer = GetLocalPlayer();
+	if (LocalPlayer)
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* InputSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer))
+		{
+			// 1, 2, 3, 4번 중 유저가 뭐라도 누르고 있다면 true가 나옵니다.
+			FInputActionValue ActionValue = InputSubsystem->GetPlayerInput()->GetActionValue(SkillHoldAction);
+			return ActionValue.Get<bool>();
+		}
+	}
+	return false;
+}
+
+void AMiyamotoIoriController::ZTestKeyInput(const FInputActionValue& value)
+{
+	AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(CurPlayableCharacter->GetPlayerState());
+	UInventoryComponent* Inventory = FatePlayerState->InventoryComponent;
+	Inventory->AddItem(FName("Gem"), 10);
 }

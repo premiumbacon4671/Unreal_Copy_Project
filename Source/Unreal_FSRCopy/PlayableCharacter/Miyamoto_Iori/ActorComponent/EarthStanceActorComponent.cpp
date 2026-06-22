@@ -26,6 +26,7 @@ UEarthStanceActorComponent::UEarthStanceActorComponent()
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_OneHandCounterAttack.AM_OneHandCounterAttack'"));
 	if (CounterAttackMontageFinder.Succeeded())
 		CounterAttackMontage = CounterAttackMontageFinder.Object;
+	WeaponVFXTarget = EWeaponVFXTarget::RightWeapon;
 }
 
 void UEarthStanceActorComponent::BeginPlay()
@@ -105,7 +106,7 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	}
 	else
 	{
-		SpeicalAttackPower = 0.0f;
+		SpeicalAttackPower = 0;
 	}
 	//콤보 공격 섹션 이름 가져오기
 	FName TargetSectionName = NAME_None;
@@ -124,6 +125,7 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 	if(bPlayed == true)
 	{
 		NormalAttackSectionIndex = ComboAttackIndex;
+		bIsNextAttackTransitioning = true;
 		HeavyAttackData[NormalAttackSectionIndex].AttackCount++;
 	}
 	else

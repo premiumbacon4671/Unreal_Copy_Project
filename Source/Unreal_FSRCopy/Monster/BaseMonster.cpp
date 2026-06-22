@@ -132,7 +132,7 @@ void ABaseMonster::InitStat(const FBaseStat& Data)
 	if (HPBarWidget && StatusComponent)
 	{
 		HPBarWidget->SetHPBarPercent(StatusComponent->GetHPPercent());
-		StatusComponent->OnTakeDamage.BindLambda([this](float Percent)
+		StatusComponent->OnUpdateHp.BindLambda([this](float Percent)
 			{
 				UMonsterHPBarUserWidget* HPBarUI = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
 				if (HPBarUI)
