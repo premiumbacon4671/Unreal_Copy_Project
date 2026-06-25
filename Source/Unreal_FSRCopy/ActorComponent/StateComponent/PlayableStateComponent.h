@@ -84,6 +84,8 @@ public:
 	virtual const FPlayableStat& GetPlayableStat() const { return PlayableStat; }
 
 	float GetHikentPercent() const { return static_cast<float>(GetPlayableStat().Hiken) / static_cast<float>(GetPlayableStat().MaxHiken); }
+	float GetHiken() const { return GetPlayableStat().Hiken; }
+	void ConsumeHike(float AmountHiken);
 	void AddExtraAttackPower(int iExtraAttackPower) { GetPlayableStat().ExtraAttackPower += iExtraAttackPower; }
 	void SubExtraAttackPower(int iExtraAttackPower) { GetPlayableStat().ExtraAttackPower -= iExtraAttackPower; if (GetPlayableStat().ExtraAttackPower <= 0) GetPlayableStat().ExtraAttackPower = 0; }
 	int GetExtraAttackPower() const { return GetPlayableStat().ExtraAttackPower; }

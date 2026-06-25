@@ -87,6 +87,12 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_SkillHold.IA_SkillHold'"));
 	if (SkillHoldActionFinder.Succeeded())
 		SkillHoldAction = SkillHoldActionFinder.Object;
+	
+	static ConstructorHelpers::FObjectFinder<UInputAction> TargetingActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_Targeting.IA_Targeting'"));
+	if (TargetingActionFinder.Succeeded())
+		TargetingAction = TargetingActionFinder.Object;
+
 
 
 	//테스트용 키
@@ -137,6 +143,9 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(SkillSelectAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SkillSelectInput);
 		input->BindAction(SkillHoldAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SkillHoldTriggeredInput);
 		input->BindAction(SkillHoldAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::SkillHoldCompletedInput);
+		input->BindAction(TargetingAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::TargetingInput);
+		input->BindAction(RotationAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SwitchTargetInput);
+		input->BindAction(RotationAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ResetSwitchTargetInput);
 
 		input->BindAction(ZTestKey, ETriggerEvent::Started, this, &AMiyamotoIoriController::ZTestKeyInput);
 	}
@@ -146,22 +155,48 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 {
 	if (isUIMode == true)
 		return;
-	
+
+	if (CurPlayableCharacter->CanProcessContinuousInput() == false)
+		return;
+
+	//FVector2D MoveValue = value.Get<FVector2D>();
+	//FVector Forward = GetTransformComponent()->GetForwardVector();
+	//Forward.Z = 0.0f;
+	//Forward.Normalize();
+	////Gamepad Deadzone
+	//if (FMath::Abs(MoveValue.X) <= 0.2f)
+	//	MoveValue.X = 0.0f;
+	//if (FMath::Abs(MoveValue.Y) <= 0.2f)
+	//	MoveValue.Y = 0.0f; 
+	//isMoveInput = true;
+	//GEngine->AddOnScreenDebugMessage(0, 3.0f, FColor::Green, FString::Printf(TEXT("MoveValue: %s"), *MoveValue.ToString()));
+	//CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
+	//CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
+
 	FVector2D MoveValue = value.Get<FVector2D>();
-	FVector Forward = GetTransformComponent()->GetForwardVector();
-	Forward.Z = 0.0f;
-	Forward.Normalize();
-	//Gamepad Deadzone
+
+	// Gamepad Deadzone
 	if (FMath::Abs(MoveValue.X) <= 0.2f)
 		MoveValue.X = 0.0f;
 	if (FMath::Abs(MoveValue.Y) <= 0.2f)
-		MoveValue.Y = 0.0f; 
-	if (CurPlayableCharacter->CanProcessContinuousInput() == false)
+		MoveValue.Y = 0.0f;
+
+	// 입력값이 0이면 처리하지 않음
+	if (MoveValue.IsNearlyZero())
 		return;
+
 	isMoveInput = true;
+	FRotator ControlRot = GetControlRotation();
+
+	FRotator YawRotation(0.f, ControlRot.Yaw, 0.f);
+
+	FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
 	GEngine->AddOnScreenDebugMessage(0, 3.0f, FColor::Green, FString::Printf(TEXT("MoveValue: %s"), *MoveValue.ToString()));
-	CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
-	CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
+
+	CurPlayableCharacter->AddMovementInput(ForwardDirection, MoveValue.X);
+	CurPlayableCharacter->AddMovementInput(RightDirection, MoveValue.Y);
 }
 
 void AMiyamotoIoriController::MoveEndInput(const FInputActionValue& value)
@@ -177,6 +212,9 @@ void AMiyamotoIoriController::LookInput(const FInputActionValue& value)
 		return;
 	if(CurPlayableCharacter->GetIsWaitingForCounterInput())
 		return;
+	if (CurPlayableCharacter->IsCurrentTarget())
+		return;
+
 	FVector2D MoveValue = value.Get<FVector2D>(); 
 	//Gamepad Deadzone
 	if (FMath::Abs(MoveValue.X) <= 0.2f)
@@ -391,6 +429,46 @@ bool AMiyamotoIoriController::IsSkillHoldActionPressed() const
 		}
 	}
 	return false;
+}
+
+void AMiyamotoIoriController::TargetingInput(const FInputActionValue& value)
+{
+	if (!CurPlayableCharacter)
+		return;
+	CurPlayableCharacter->OnTargetingPressed();
+}
+
+void AMiyamotoIoriController::SwitchTargetInput(const FInputActionValue& value)
+{
+	if (isUIMode == true)
+		return;
+	if (isCombat == false)
+		return;
+	if (!CurPlayableCharacter->IsCurrentTarget())
+		return;
+	if (!bCanSwitchTarget)
+		return;
+
+	FVector2D MoveValue = value.Get<FVector2D>();
+	float FlickThreshold = 0.5f;
+	const float TriggerThreshold = 0.5f;
+
+	if (MoveValue.X > TriggerThreshold)
+	{
+		//오른쪽
+		CurPlayableCharacter->SwitchTarget(true);
+	}
+	else if (MoveValue.X < -TriggerThreshold)
+	{
+		//왼쪽
+		CurPlayableCharacter->SwitchTarget(false);
+	}
+	bCanSwitchTarget = false;
+}
+
+void AMiyamotoIoriController::ResetSwitchTargetInput(const FInputActionValue& value)
+{
+	bCanSwitchTarget = true;
 }
 
 void AMiyamotoIoriController::ZTestKeyInput(const FInputActionValue& value)

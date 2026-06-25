@@ -6,7 +6,9 @@
 
 #include "Controller/MonsterAI/BaseMonsterAIController.h"
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
+#include "ActorComponent/StateComponent/MonsterStateComponent.h"
 #include "Monster/MonsterUI/MonsterHPBarUserWidget.h"
+#include "Monster/MonsterUI/LockOnMarkerUserWidget.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 
 // Sets default values
@@ -14,14 +16,27 @@ ABaseMonster::ABaseMonster()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	StatusComponent = CreateDefaultSubobject<UBaseStateComponent>(TEXT("StatusComponent"));
-	HPBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBarWidgetComponent"));
+	StatusComponent = CreateDefaultSubobject<UMonsterStateComponent>(
+		TEXT("StatusComponent"));
+	
+	HPBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(
+		TEXT("HPBarWidgetComponent"));
 	HPBarWidgetComponent->SetupAttachment(GetRootComponent());
 	static ConstructorHelpers::FClassFinder<UUserWidget> HPBarWidgetClass(
 		TEXT("/Game/Blueprint/Monster/UI/BP_MonsterHPBar.BP_MonsterHPBar_C"));
 	if (HPBarWidgetClass.Succeeded())
 		HPBarWidgetComponent->SetWidgetClass(HPBarWidgetClass.Class);
 	HPBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+
+	LockOnMarkerWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(
+		TEXT("LockOnMarkerWidgetComponent"));
+	LockOnMarkerWidgetComponent->SetupAttachment(GetRootComponent());
+	static ConstructorHelpers::FClassFinder<UUserWidget> LockOnMarkerWidgetClass(
+		TEXT("/Game/Blueprint/Monster/UI/BP_LockOnMarker.BP_LockOnMarker_C"));
+	if (LockOnMarkerWidgetClass.Succeeded())
+		LockOnMarkerWidgetComponent->SetWidgetClass(LockOnMarkerWidgetClass.Class);
+	LockOnMarkerWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+	LockOnMarkerWidgetComponent->SetVisibility(false);
 
 	AIControllerClass = ABaseMonster::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
@@ -122,7 +137,7 @@ void ABaseMonster::OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted
 	}
 }
 
-void ABaseMonster::InitStat(const FBaseStat& Data)
+void ABaseMonster::InitStat(const FMonsterStat& Data)
 {
 	StatusComponent->InitState(Data);
 	bIsInitialized = true;
@@ -151,4 +166,9 @@ void ABaseMonster::AttackTrace(EAttackVariety AttackVariety)
 float ABaseMonster::GetMonsterMaxHP() const
 {
 	return StatusComponent->GetMaxHP();
+}
+
+void ABaseMonster::SetLockOnMarkerVisibility(bool bShow)
+{
+	LockOnMarkerWidgetComponent->SetVisibility(bShow);
 }

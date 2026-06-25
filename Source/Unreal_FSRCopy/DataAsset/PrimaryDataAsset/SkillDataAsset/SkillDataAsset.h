@@ -16,7 +16,8 @@ enum class ESkillCostType : uint8
 {
 	None,
 	Gem, //미야모토 이오리 스킬
-	LinkSkillBall //서번트 공명스킬
+	LinkSkillBall, //서번트 공명스킬
+	Hiken
 };
 
 UENUM(BlueprintType)
@@ -76,6 +77,8 @@ public:
 	FName SkillName;
 	UPROPERTY(EditAnywhere, Category = "ID")
 	FName SkillID;
+	UPROPERTY(EditAnywhere, Category = "Icon")
+	TObjectPtr<class UTexture2D> Icon;
 	UPROPERTY(EditAnywhere, Category = "CastType")
 	ESkillCastType CastType = ESkillCastType::Instant;
 	UPROPERTY(EditAnywhere, Category = "CastType", meta = (EditCondition = "CastType == ESkillCastType::Charge || CastType == ESkillCastType::Continuous", EditConditionHides))

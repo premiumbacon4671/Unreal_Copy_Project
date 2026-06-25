@@ -51,6 +51,9 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> SkillHoldAction;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> TargetingAction;
+
 	//hp회복, 아이템 수급 등 임시로 사용할 키
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> ZTestKey;
@@ -62,7 +65,7 @@ private:
 	bool isMoveInput{ false };
 	bool isCombat{ false };
 	bool isUIMode{ false };
-
+	bool bCanSwitchTarget{ true };
 public:
 	AMiyamotoIoriController();
 	void BeginPlay();
@@ -91,7 +94,13 @@ public:
 	void SkillHoldCompletedInput(const FInputActionValue& value);
 	bool IsSkillHoldActionPressed() const;
 
+	void TargetingInput(const FInputActionValue& value);
+	void SwitchTargetInput(const FInputActionValue& value);
+	void ResetSwitchTargetInput(const FInputActionValue& value);
+	
 	bool GetIsMoveInput() const { return isMoveInput; }
+	
+	
 	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }
 	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }
 

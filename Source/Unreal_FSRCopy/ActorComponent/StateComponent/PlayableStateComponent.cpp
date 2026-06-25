@@ -21,6 +21,13 @@ void UPlayableStateComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 }
 
+void UPlayableStateComponent::ConsumeHike(float AmountHiken)
+{
+	GetPlayableStat().Hiken -= AmountHiken;
+	if (OnCalculateHikenGauge.IsBound())
+		OnCalculateHikenGauge.Execute(GetHikentPercent());
+}
+
 void UPlayableStateComponent::InitState(const FBaseStat& InBaseStat)
 {
 	PlayableStat = static_cast<const FPlayableStat&>(InBaseStat);
@@ -35,7 +42,7 @@ void UPlayableStateComponent::CalculateHikenGauge(float AmountDamage, float Targ
 	float GaugeIncrease = (AmountDamage / TargetMaxHP) * HikenGainMultiplier;
 	GetPlayableStat().Hiken += GaugeIncrease;
 
-	//°ø¸í ±¸½½ È¹µæ
+	//°ø¸í ±¸½½ È¹µæ Á¦ÀÛ ¿¹Á¤
 
 	if (GetPlayableStat().Hiken >= GetPlayableStat().MaxHiken)
 		GetPlayableStat().Hiken = FMath::Clamp(GetPlayableStat().Hiken, 0.0f, GetPlayableStat().MaxHiken);

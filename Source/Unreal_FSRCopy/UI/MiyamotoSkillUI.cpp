@@ -52,20 +52,20 @@ void UMiyamotoSkillUI::Init(AMiyamoto_Iori* MiyamotoIori)
 	USkillDataAsset* Data = MiyamotoIori->GetSkillActionComponent()->GetNormalSkill(0);
 	if(Data == nullptr)
 		return;
-	TopSkillButton->UpdateSkillInfo(nullptr, Data->SkillName.ToString(), Data->CostAmount);
+	TopSkillButton->UpdateSkillInfo(Data->Icon, Data->SkillName.ToString(), Data->CostAmount);
 	Data = MiyamotoIori->GetSkillActionComponent()->GetNormalSkill(1);
 	if (Data == nullptr)
 		return;
-	LeftSkillButton->UpdateSkillInfo(nullptr, Data->SkillName.ToString(), Data->CostAmount);
+	LeftSkillButton->UpdateSkillInfo(Data->Icon, Data->SkillName.ToString(), Data->CostAmount);
 
 	Data = MiyamotoIori->GetSkillActionComponent()->GetNormalSkill(2);
 	if (Data == nullptr)
 		return;
-	RightSkillButton->UpdateSkillInfo(nullptr, Data->SkillName.ToString(), Data->CostAmount);
+	RightSkillButton->UpdateSkillInfo(Data->Icon, Data->SkillName.ToString(), Data->CostAmount);
 	Data = MiyamotoIori->GetSkillActionComponent()->GetNormalSkill(3);
 	if (Data == nullptr)
 		return;
-	BottomSkillButton->UpdateSkillInfo(nullptr, Data->SkillName.ToString(), Data->CostAmount);
+	BottomSkillButton->UpdateSkillInfo(Data->Icon, Data->SkillName.ToString(), Data->CostAmount);
 	//Dummy Data
 	//BottomSkillButton->UpdateSkillInfo(nullptr, TEXT("Dummy"), 999);
 

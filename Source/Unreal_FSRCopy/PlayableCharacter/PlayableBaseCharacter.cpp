@@ -15,11 +15,14 @@
 #include "InputAction.h"
 #include "Blueprint/UserWidget.h"   
 #include "Engine/DamageEvents.h"
+#include "Algo/Sort.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "UI/CounterAttackUI.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
+#include "ActorComponent/StateComponent/MonsterStateComponent.h"
 #include "Monster/BaseMonster.h"
 #include "PlayerState/FatePlayerState.h"
 #include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
@@ -118,6 +121,30 @@ void APlayableBaseCharacter::Tick(float DeltaTime)
 	if(isSprint && GetVelocity().Size2D() < WalkSpeed)
 	{
 		SetWalk();
+	}
+	if (CurrentTarget && !CurrentTarget->IsDead())
+	{
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC && PC->PlayerCameraManager)
+		{
+			FVector CameraLocation = PC->PlayerCameraManager->GetCameraLocation();
+			FVector TargetLocation = CurrentTarget->GetActorLocation() + FVector(0.f, 0.f, 80.0f);
+			FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(CameraLocation, TargetLocation);
+			
+			FRotator CurrentControlRotation = PC->GetControlRotation();
+			FRotator NewControlRotation = UKismetMathLibrary::RInterpTo(
+				CurrentControlRotation,
+				TargetRotation,
+				DeltaTime,
+				CameraTargetingInterpSpeed
+			);
+			NewControlRotation.Roll = 0.f;
+			PC->SetControlRotation(NewControlRotation);
+		}
+	}
+	else if (CurrentTarget && CurrentTarget->IsDead())
+	{
+		LockOnBestTarget();
 	}
 }
 
@@ -402,6 +429,139 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 	}
 }
 
+void APlayableBaseCharacter::LockOnBestTarget()
+{
+	if (CurrentTarget != nullptr)
+	{
+		CurrentTarget->SetLockOnMarkerVisibility(false);
+	}
+	if (nullptr == CurrentCombatZone)
+	{
+		CurrentTarget = nullptr;
+		return;
+	}
+	TArray<ABaseMonster*> TrackedMonsters = CurrentCombatZone->GetLiveMonsters();
+	TrackedMonsters.RemoveAll([](ABaseMonster* Monster) {
+		return nullptr == Monster || Monster->IsDead();
+		});
+
+	if (TrackedMonsters.Num() == 0)
+	{
+		CurrentTarget = nullptr;
+		return;
+	}
+	FVector PlayerLoc = GetActorLocation();
+	Algo::Sort(TrackedMonsters, [PlayerLoc](ABaseMonster* A, ABaseMonster* B)
+		{
+			uint8 TierA = (uint8)A->GetMonsterStateComponent()->GetMonsterTier();
+			uint8 TierB = (uint8)B->GetMonsterStateComponent()->GetMonsterTier();
+
+			if (TierA != TierB)
+			{
+				return TierA > TierB;
+			}
+
+			float DistA = FVector::DistSquared(PlayerLoc, A->GetActorLocation());
+			float DistB = FVector::DistSquared(PlayerLoc, B->GetActorLocation());
+			return DistA < DistB;
+		});
+
+	CurrentTarget = TrackedMonsters[0];
+	CurrentTarget->SetLockOnMarkerVisibility(true);
+}
+
+void APlayableBaseCharacter::SetTargetingMode(bool bEnable)
+{
+	if (!bEnable)
+	{
+		if(CurrentTarget != nullptr)
+		{
+			CurrentTarget->SetLockOnMarkerVisibility(false);
+			CurrentTarget = nullptr;
+		}
+	}
+}
+
+void APlayableBaseCharacter::OnTargetingPressed()
+{
+	if (CurrentTarget != nullptr)
+		SetTargetingMode(false);
+	else
+		LockOnBestTarget();
+}
+
+void APlayableBaseCharacter::SwitchTarget(bool bSwitchRight)
+{
+	if (CurrentTarget == nullptr || CurrentCombatZone == nullptr)
+		return;
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC == nullptr)
+		return;
+
+	FVector2D CurrentScreenPos;
+	if (!PC->ProjectWorldLocationToScreen(CurrentTarget->GetActorLocation(), CurrentScreenPos))
+		return;
+
+	TArray<ABaseMonster*> TrackedMonsters = CurrentCombatZone->GetLiveMonsters();
+	//타겟 변경 방향(현재 타겟 몬스터 기준 왼쪽, 오른쪽)의 몬스터 수집
+	TArray<ABaseMonster*> CandidateMonsters;
+	for (ABaseMonster* Monster : TrackedMonsters)
+	{
+		if (Monster == nullptr || Monster == CurrentTarget || Monster->IsDead())
+			continue;
+		FVector2D CandidateScreenPos;
+		if (PC->ProjectWorldLocationToScreen(Monster->GetActorLocation(), CandidateScreenPos))
+		{
+			//bSwitchRight true면 오른쪽 false면 왼쪽
+			if (bSwitchRight && CandidateScreenPos.X > CurrentScreenPos.X)
+			{
+				CandidateMonsters.Add(Monster);
+			}
+			else if (!bSwitchRight && CandidateScreenPos.X < CurrentScreenPos.X)
+			{
+				CandidateMonsters.Add(Monster);
+			}
+		}
+	}
+	//변경 대상이 없으면 종료
+	if (CandidateMonsters.Num() == 0)
+		return;
+	Algo::Sort(CandidateMonsters, [PC, CurrentScreenPos](ABaseMonster* A, ABaseMonster* B)
+		{
+			uint8 TierA = (uint8)A->GetMonsterStateComponent()->GetMonsterTier();
+			uint8 TierB = (uint8)B->GetMonsterStateComponent()->GetMonsterTier();
+
+			if (TierA != TierB) { return TierA > TierB; }
+
+			FVector2D ScreenPosA, ScreenPosB;
+			PC->ProjectWorldLocationToScreen(A->GetActorLocation(), ScreenPosA);
+			PC->ProjectWorldLocationToScreen(B->GetActorLocation(), ScreenPosB);
+
+			float DistA = FMath::Abs(ScreenPosA.X - CurrentScreenPos.X);
+			float DistB = FMath::Abs(ScreenPosB.X - CurrentScreenPos.X);
+
+			return DistA < DistB;
+		});
+
+	CurrentTarget->SetLockOnMarkerVisibility(false);
+	CurrentTarget = CandidateMonsters[0];
+	CurrentTarget->SetLockOnMarkerVisibility(true);
+}
+
+void APlayableBaseCharacter::SnapToTargetEnemy()
+{
+	if (nullptr == CurrentTarget)
+		return;
+	FVector MyLocation = GetActorLocation();
+	FVector TargetLocation = CurrentTarget->GetActorLocation();
+
+	TargetLocation.Z = MyLocation.Z;
+
+	FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(MyLocation, TargetLocation);
+
+	SetActorRotation(LookAtRotation);
+}
+
 void APlayableBaseCharacter::ResetCounterAttackTimer()
 {
 	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHandle);
@@ -555,7 +715,11 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 						if(RC->GetServantActive() == true)
 							RC->CalculateLinkSkillGauge(ActualDamage, Monster->GetMonsterMaxHP());
 					}
-					StatusComponent->CalculateHikenGauge(ActualDamage, Monster->GetMonsterMaxHP());
+					//비검, 스킬은 게이지 안 채움
+					if (AttackVariety != EAttackVariety::Special && AttackVariety != EAttackVariety::Skill)
+					{
+						StatusComponent->CalculateHikenGauge(ActualDamage, Monster->GetMonsterMaxHP());
+					}
 				}
 			}
 		}

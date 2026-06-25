@@ -116,6 +116,12 @@ protected:
 	//현재 전투구역
 	UPROPERTY(VisibleAnywhere, Category = "CombatZone")
 	TObjectPtr<ACombatZone> CurrentCombatZone;
+
+	UPROPERTY(VisibleAnywhere, Category = "Targeting")
+	TObjectPtr<class ABaseMonster> CurrentTarget;
+	// 타겟팅 시 카메라가 적을 추적하는 회전 보간 속도
+	UPROPERTY(VisibleAnywhere, Category = "Targeting")
+	float CameraTargetingInterpSpeed{ 5.0f };
 	
 	// 스킬, 피격 등 다양한 이유로 입력이 일시 차단되었는지 확인하는 통합 플래그
 	bool bIsContinuousInputBlocked = false;
@@ -250,6 +256,15 @@ public:
 	void AttackMontageStarted(UAnimMontage* Montage);
 	UFUNCTION()
 	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+#pragma endregion
+
+#pragma region Targeting
+	void LockOnBestTarget();
+	void SetTargetingMode(bool bEnable);
+	void OnTargetingPressed();
+	void SwitchTarget(bool bSwitchRight);
+	void SnapToTargetEnemy();
+	bool IsCurrentTarget() { return CurrentTarget != nullptr; }
 #pragma endregion
 
 protected:

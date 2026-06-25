@@ -9,6 +9,7 @@
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "Monster/BaseMonster.h"
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
+#include "ActorComponent/StateComponent/MonsterStateComponent.h"
 
 // Sets default values
 ACombatZone::ACombatZone()
@@ -16,7 +17,7 @@ ACombatZone::ACombatZone()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
-	static ConstructorHelpers::FObjectFinder<UDataTable> MonsterDataTableFinder(TEXT("/Script/Engine.DataTable'/Game/Blueprint/Monster/Data/Werewolf/DT_WerewolfStat.DT_WerewolfStat'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> MonsterDataTableFinder(TEXT("/Script/Engine.DataTable'/Game/Blueprint/Monster/Data/Werewolf/DT_WerewolfStatV2.DT_WerewolfStatV2'"));
 	if(MonsterDataTableFinder.Succeeded())
 		MonsterDataTable = MonsterDataTableFinder.Object;
 }
@@ -42,6 +43,7 @@ void ACombatZone::CreateCombatZoneEntranceComponents()
 		UBoxComponent* EntranceComponent = NewObject<UBoxComponent>(this);
 		if (EntranceComponent)
 		{
+			EntranceComponent->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
 			EntranceComponent->SetWorldLocation(Entrance.EntranceLocation);
 			EntranceComponent->SetWorldRotation(Entrance.EntranceRotation);
 			EntranceComponent->SetBoxExtent(Entrance.EntranceSize);
@@ -70,7 +72,7 @@ void ACombatZone::SpawnMonsters()
 {
 	//몬스터 이름 찾는 코드 수정 예정
 	FName MonsterName = StatDataNames[0];
-	FBaseStat* MonsterStat = MonsterDataTable->FindRow<FBaseStat>(MonsterName, TEXT("MonsterDataTable"));
+	FMonsterStat* MonsterStat = MonsterDataTable->FindRow<FMonsterStat>(MonsterName, TEXT("MonsterDataTable"));
 	if(nullptr != MonsterStat)
 	{
 		ABaseMonster* Monster = GetWorld()->SpawnActor<ABaseMonster>(SpawnMonsterClass, GetActorLocation(), GetActorRotation(), FActorSpawnParameters());

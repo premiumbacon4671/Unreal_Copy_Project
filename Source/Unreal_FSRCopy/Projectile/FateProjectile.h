@@ -14,7 +14,7 @@ class UNREAL_FSRCOPY_API AFateProjectile : public AActor
 {
 	GENERATED_BODY()
 	
-private:
+protected:
 	UPROPERTY(VisibleAnywhere, Category = "Collision")
 	TObjectPtr<class USphereComponent> CollisionComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Movement")
@@ -38,7 +38,7 @@ private:
 	ECollisionChannel TargetCollisionChannel;
 	TSubclassOf<ACharacter> AllyClassFilter;
 
-	void Explode();
+	virtual void Explode();
 public:	
 	// Sets default values for this actor's properties
 	AFateProjectile();
@@ -53,5 +53,5 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void LaunchProjectile(float Speed, float Damage, float DamageMult, float InRadius, float MaxDistance, ECollisionChannel InTargetChannel, TSubclassOf<ACharacter> InAllyClass);
+	virtual void LaunchProjectile(float Speed, float Damage, float DamageMult, float InRadius, float MaxDistance, ECollisionChannel InTargetChannel, TSubclassOf<ACharacter> InAllyClass);
 };

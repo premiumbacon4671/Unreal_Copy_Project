@@ -10,7 +10,7 @@
 #include "CombatZone/CombatZone.h"
 #include "BaseMonster.generated.h"
 
-struct FBaseStat;
+struct FMonsterStat;
 DECLARE_DELEGATE(FOnAttackMontageEndedDelegate);
 UCLASS()
 class UNREAL_FSRCOPY_API ABaseMonster : public ACharacter, public IAttackTraceNotify
@@ -20,6 +20,8 @@ class UNREAL_FSRCOPY_API ABaseMonster : public ACharacter, public IAttackTraceNo
 private:
 	UPROPERTY(VisibleAnywhere, Category = "UI")
 	TObjectPtr<class UWidgetComponent> HPBarWidgetComponent;
+	UPROPERTY(VisibleAnywhere, Category = "UI")
+	TObjectPtr<class UWidgetComponent> LockOnMarkerWidgetComponent;
 
 	FTimerHandle DeathTimerHandle;
 
@@ -27,7 +29,7 @@ private:
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Status")
-	TObjectPtr<class UBaseStateComponent> StatusComponent;
+	TObjectPtr<class UMonsterStateComponent> StatusComponent;
 	//자식 클래스에서 설정
 	UPROPERTY(VisibleAnywhere, Category = "Montage")
 	TObjectPtr<UAnimMontage> HitByMontage;
@@ -62,7 +64,7 @@ public:
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 	FOnAttackMontageEndedDelegate OnAttackMontageEndedDelegate;
 
-	void InitStat(const FBaseStat& Data);
+	void InitStat(const FMonsterStat& Data);
 	void SetIsInitialized(bool bValue) { bIsInitialized = bValue; }
 	virtual void AttackTrace(EAttackVariety AttackVariety) override;
 
@@ -70,4 +72,8 @@ public:
 
 	void SetCurrentCombatZone(ACombatZone* CombatZone) { CurrentCombatZone = CombatZone; }
 	ACombatZone* GetCurrentCombatZone() const { return CurrentCombatZone; }
+
+	UMonsterStateComponent* GetMonsterStateComponent() { return StatusComponent; }
+
+	void SetLockOnMarkerVisibility(bool bShow);
 };

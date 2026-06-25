@@ -165,6 +165,8 @@ bool USkillActionComponent::TryExecuteSkill(USkillDataAsset* TargetSkill)
 		default:
 			break;
 		}
+		if (TargetSkill != HikenSkill)
+			OwnerCharacter->SnapToTargetEnemy();
 		OwnerCharacter->PlayMontageFullBody(TargetSkill->SkillMontage);
 		OwnerCharacter->SetIsActionLock(true);
 	}
@@ -179,7 +181,7 @@ bool USkillActionComponent::HasEnoughResource(USkillDataAsset* TargetSkill) cons
 	switch (TargetSkill->CostType)
 	{
 	case ESkillCostType::None:
-		return false;
+		return true;
 	case ESkillCostType::Gem:
 	{
 		if (PlayerState != nullptr)
@@ -201,6 +203,14 @@ bool USkillActionComponent::HasEnoughResource(USkillDataAsset* TargetSkill) cons
 			{
 				CurrentCost = ResonanceComp->GetLinkBall();
 			}
+		}
+	}
+	case ESkillCostType::Hiken:
+	{
+		UPlayableStateComponent* OwnerStat = OwnerCharacter->GetStatusComponent();
+		if (OwnerStat != nullptr)
+		{
+			CurrentCost = OwnerStat->GetHiken();
 		}
 	}
 	break;
@@ -240,6 +250,15 @@ void USkillActionComponent::ConsumeResource(USkillDataAsset* TargetSkill)
 				}
 			}
 		}
+		break;
+	case ESkillCostType::Hiken:
+	{
+		UPlayableStateComponent* OwnerStat = OwnerCharacter->GetStatusComponent();
+		if (OwnerStat != nullptr)
+		{
+			OwnerStat->ConsumeHike(TargetSkill->CostAmount);
+		}
+	}
 		break;
 	}
 }

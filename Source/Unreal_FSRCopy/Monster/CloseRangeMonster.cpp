@@ -7,6 +7,7 @@
 #include "Engine/DamageEvents.h"
 
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
+#include "ActorComponent/StateComponent/MonsterStateComponent.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 
 ACloseRangeMonster::ACloseRangeMonster()
