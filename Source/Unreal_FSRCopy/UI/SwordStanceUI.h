@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interface/UIInputReceiverInterface.h"
 #include "SwordStanceUI.generated.h"
 
 /**
@@ -13,7 +14,7 @@
 enum class ESWORDSTANCE : uint8;
 
 UCLASS()
-class UNREAL_FSRCOPY_API USwordStanceUI : public UUserWidget
+class UNREAL_FSRCOPY_API USwordStanceUI : public UUserWidget, public IUIInputReceiverInterface
 {
 	GENERATED_BODY()
 
@@ -37,6 +38,8 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UCanvasPanel> CanvasPanel;
 
+	TObjectPtr<class AMiyamoto_Iori> CurPlayableCharacter;
+
 	//X = row Y = Column
 	FIntPoint CurStanceIndex;
 	FIntPoint ChangeStanceIndex;
@@ -44,7 +47,14 @@ public:
 	void Init(class AMiyamoto_Iori* Miyamoto);
 	void NativeConstruct() override;
 	bool Initialize() override;
-	void SelectSwordStance(FIntPoint StanceIndex);
-	void StartedSwordStanceUI();
-	void EndedSwordStanceUI(class AMiyamoto_Iori* Miyamoto);
+
+
+	//void StartedSwordStanceUI();
+	//void EndedSwordStanceUI(class AMiyamoto_Iori* Miyamoto);
+
+	virtual void OnInterfaceOpen() override;
+	virtual void OnInterfaceClose() override;
+
+	//void SelectSwordStance(FIntPoint StanceIndex);
+	virtual void OnInterfaceMove(FIntPoint MoveDirection) override;
 };

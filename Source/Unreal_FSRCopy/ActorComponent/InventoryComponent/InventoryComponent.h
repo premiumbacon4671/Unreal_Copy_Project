@@ -22,7 +22,8 @@ private:
 	//게임 내 존재하는 모든 아이템 데이터베이스, 아이템 생성 시 참조
 	//정렬 순서
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory | Setup")
-	TArray<TObjectPtr<UItemDataAsset>> AllGameItemDataBase;
+	TMap<FName, UItemDataAsset*> AllGameItemDataBase;
+	//TArray<TObjectPtr<UItemDataAsset>> AllGameItemDataBase;
 public:	
 	UPROPERTY(BlueprintAssignable, Category = "Inventory | Event")
 	FOnItemUpdatedSignature OnItemUpdated;
@@ -45,8 +46,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool ConsumeItem(const FName& ItemID, int32 Quantity);
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void GetFilteredItemList(EItemMainType MainType, TArray<FItemStack>& OutItemList) const;
+	void GetMainTypeFilteredItemList(EItemMainType MainType, TArray<FItemStack>& OutItemList) const;
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void GetSubTypeFilteredItemList(EItemSubType InSubType, TArray<FItemStack>& OutItemList) const;
+	
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	int32 GetItemQuantity(const FName& ItemID) const;
 
+	bool CanUseRecoverItem(const FName& InItemID) const;
+	bool UseRecoverItem(const FName& InItemID);
 };

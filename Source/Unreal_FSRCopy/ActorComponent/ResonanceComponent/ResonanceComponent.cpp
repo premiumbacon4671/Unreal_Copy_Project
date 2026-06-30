@@ -32,8 +32,22 @@ void UResonanceComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
-void UResonanceComponent::AddLinkSkillGauge(float Amount)
+void UResonanceComponent::RecoverLinkSkillGauge(float Amount)
 {
+	LinkSkillGauge += Amount;
+	while (LinkSkillGauge >= MaxLinkSkillGauge && LinkBall < MaxLinkBall)
+	{
+		LinkBall++;
+		LinkSkillGauge -= MaxLinkSkillGauge;
+		if (OnCalculateLinkBall.IsBound())
+			OnCalculateLinkBall.Execute(LinkBall);
+	}
+
+	if (LinkSkillGauge >= MaxLinkSkillGauge)
+		LinkSkillGauge = FMath::Clamp(LinkSkillGauge, 0.0f, MaxLinkSkillGauge);
+
+	if (OnCalculateLinkSkillGauge.IsBound())
+		OnCalculateLinkSkillGauge.Execute(GetLinkSkillGaugePercentage());
 }
 
 void UResonanceComponent::CalculateLinkSkillGauge(int AmountDamage, float TargetMaxHP)
@@ -42,22 +56,7 @@ void UResonanceComponent::CalculateLinkSkillGauge(int AmountDamage, float Target
 		return;
 
 	float GaugeIncrease = (AmountDamage / TargetMaxHP) * LinkSkillGaugeGainMultiplier;
-	LinkSkillGauge += GaugeIncrease;
-	
-	//°ø¸í ±¸½½ È¹µæ
-	while(LinkSkillGauge >= MaxLinkSkillGauge && LinkBall < MaxLinkBall)
-	{
-		LinkBall++;
-		LinkSkillGauge -= MaxLinkSkillGauge;
-		if (OnCalculateLinkBall.IsBound())
-			OnCalculateLinkBall.Execute(LinkBall);
-	}
-
-	if(LinkSkillGauge >= MaxLinkSkillGauge)
-		LinkSkillGauge = FMath::Clamp(LinkSkillGauge, 0.0f, MaxLinkSkillGauge);
-
-	if(OnCalculateLinkSkillGauge.IsBound())
-		OnCalculateLinkSkillGauge.Execute(GetLinkSkillGaugePercentage());
+	RecoverLinkSkillGauge(GaugeIncrease);
 }
 
 bool UResonanceComponent::ConsumeLinkBall(int32 Count)

@@ -20,7 +20,7 @@ private:
 	TObjectPtr<class APlayableBaseCharacter> CurPlayableCharacter;
 	TObjectPtr<class APlayableBaseCharacter> MiyamotoIori;
 	TObjectPtr<class APlayerHUD> PlayerHUD;
-
+	TScriptInterface<class IUIInputReceiverInterface> ActiveUIInterface;
 #pragma region InputAction
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> MoveAction;
@@ -54,6 +54,13 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> TargetingAction;
 
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> OpenRecoverItemMenuAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> UIConfirmAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> UICancelAction;
+
 	//hp회복, 아이템 수급 등 임시로 사용할 키
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> ZTestKey;
@@ -71,6 +78,9 @@ public:
 	void BeginPlay();
 	void Tick(float DeltaTime) override;
 	void SetupInputComponent() override;
+
+	APlayableBaseCharacter* GetCurPlayableCharacter() { return CurPlayableCharacter; }
+
 	void MoveInput(const FInputActionValue& value);
 	void MoveEndInput(const FInputActionValue& value);
 	void LookInput(const FInputActionValue& value);
@@ -86,6 +96,8 @@ public:
 	void ChangeStanceCompletedInput(const FInputActionValue& value);
 	
 	void UIMoveInput(const FInputActionValue& value);
+	void UIConfirmInput(const FInputActionValue& value);
+	void UICancelInput(const FInputActionValue& value);
 
 	void HikenInput(const FInputActionValue& value);
 	
@@ -98,6 +110,8 @@ public:
 	void SwitchTargetInput(const FInputActionValue& value);
 	void ResetSwitchTargetInput(const FInputActionValue& value);
 	
+	void OpenRecoverItemMenuInput(const FInputActionValue& value);
+
 	bool GetIsMoveInput() const { return isMoveInput; }
 	
 	

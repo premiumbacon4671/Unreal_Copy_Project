@@ -41,13 +41,15 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void AddLinkSkillGauge(float Amount);
+	void RecoverLinkSkillGauge(float Amount);
 	void CalculateLinkSkillGauge(int AmountDamage, float TargetMaxHP);
 	bool ConsumeLinkBall(int32 Count);
 
 	void InitResonance(float fMaxLinkSkillGauge, float fLinkSkillGauge, int32 iMaxLinkBall, int32 iLinkBall);
 
 	float GetLinkSkillGaugePercentage() const { return MaxLinkSkillGauge > 0 ? LinkSkillGauge / MaxLinkSkillGauge : 0.0f; }
+	float GetLinkSkillGauge() const { return LinkSkillGauge; }
+	float GetMaxLinkSkillGauge() const { return MaxLinkSkillGauge; }
 	int32 GetLinkBall() const { return LinkBall; }
 
 	void SetServantActive(bool bActive) { bIsServantActive = bActive; }

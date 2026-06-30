@@ -28,6 +28,13 @@ void UPlayableStateComponent::ConsumeHike(float AmountHiken)
 		OnCalculateHikenGauge.Execute(GetHikentPercent());
 }
 
+void UPlayableStateComponent::RecoverHiken(float AmountHiken)
+{
+	GetPlayableStat().Hiken = FMath::Clamp(GetPlayableStat().Hiken + AmountHiken, 0.0f, GetPlayableStat().MaxHiken);
+	if (OnCalculateHikenGauge.IsBound())
+		OnCalculateHikenGauge.Execute(GetHikentPercent());
+}
+
 void UPlayableStateComponent::InitState(const FBaseStat& InBaseStat)
 {
 	PlayableStat = static_cast<const FPlayableStat&>(InBaseStat);

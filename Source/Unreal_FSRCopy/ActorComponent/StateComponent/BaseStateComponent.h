@@ -62,6 +62,7 @@ public:
 
 	float GetHPPercent() const { return static_cast<float>(GetStat().CurHP) / static_cast<float>(GetStat().MaxHP); }
 	float GetMaxHP() const { return GetStat().MaxHP; }
+	float GetCurHP() const { return GetStat().CurHP; }
 	void RecoverHP(float RecoverAmount);
 
 	int GetAttackPower() const { return GetStat().AttackPower; }

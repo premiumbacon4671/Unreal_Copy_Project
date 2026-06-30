@@ -10,6 +10,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerState.h"
+#include "Framework/Application/NavigationConfig.h"
+#include "Framework/Application/SlateApplication.h"
 
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
@@ -18,6 +20,8 @@
 #include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 #include "UI/SwordStanceUI.h"
 #include "UI/MiyamotoSkillButtonUI.h"
+#include "UI/RecoverItemMenuUI.h"
+#include "UI/RecoverItemButton.h"
 #include "ActorComponent/InventoryComponent/InventoryComponent.h"
 #include "PlayerState/FatePlayerState.h"
 
@@ -93,6 +97,21 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (TargetingActionFinder.Succeeded())
 		TargetingAction = TargetingActionFinder.Object;
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> OpenRecoverItemMenuActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_RecoverItemUI.IA_RecoverItemUI'"));
+	if (OpenRecoverItemMenuActionFinder.Succeeded())
+		OpenRecoverItemMenuAction = OpenRecoverItemMenuActionFinder.Object;
+	
+	static ConstructorHelpers::FObjectFinder<UInputAction> UIConfirmActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_UIConfim.IA_UIConfim'"));
+	if (UIConfirmActionFinder.Succeeded())
+		UIConfirmAction = UIConfirmActionFinder.Object;
+	
+	static ConstructorHelpers::FObjectFinder<UInputAction> UICancelActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_UICancel.IA_UICancel'"));
+	if (UICancelActionFinder.Succeeded())
+		UICancelAction = UICancelActionFinder.Object;
+
 
 
 	//테스트용 키
@@ -112,6 +131,12 @@ void AMiyamotoIoriController::BeginPlay()
 	CurPlayableCharacter = MiyamotoIori;
 	//CurPlayableCharacter->InitializeIconUI();
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
+
+	TSharedRef<FNavigationConfig> NavConfig = FSlateApplication::Get().GetNavigationConfig();
+	NavConfig->KeyEventRules.Emplace(EKeys::W, EUINavigation::Up);
+	NavConfig->KeyEventRules.Emplace(EKeys::S, EUINavigation::Down);
+	NavConfig->KeyEventRules.Emplace(EKeys::A, EUINavigation::Left);
+	NavConfig->KeyEventRules.Emplace(EKeys::D, EUINavigation::Right);
 }
 
 void AMiyamotoIoriController::Tick(float DeltaTime)
@@ -139,6 +164,8 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::ChangeStanceInput);
 		input->BindAction(ChangeStanceAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ChangeStanceCompletedInput);
 		input->BindAction(UIMoveAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::UIMoveInput);
+		input->BindAction(UIConfirmAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::UIConfirmInput);
+		input->BindAction(UICancelAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::UICancelInput);
 		input->BindAction(HikenAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::HikenInput);
 		input->BindAction(SkillSelectAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SkillSelectInput);
 		input->BindAction(SkillHoldAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SkillHoldTriggeredInput);
@@ -146,6 +173,7 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(TargetingAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::TargetingInput);
 		input->BindAction(RotationAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SwitchTargetInput);
 		input->BindAction(RotationAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ResetSwitchTargetInput);
+		input->BindAction(OpenRecoverItemMenuAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::OpenRecoverItemMenuInput);
 
 		input->BindAction(ZTestKey, ETriggerEvent::Started, this, &AMiyamotoIoriController::ZTestKeyInput);
 	}
@@ -301,8 +329,10 @@ void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 	isUIMode = true;
 	if(CurPlayableCharacter == MiyamotoIori)
 	{
+		ActiveUIInterface = PlayerHUD->GetSwordStanceUI();
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::SelfHitTestInvisible);
-		PlayerHUD->StartedSwordStanceUI();
+		
+		ActiveUIInterface->OnInterfaceOpen();
 		GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, TEXT("Pause Start"));
 
 		PlayerHUD->SetSkillUIVisibility(ESlateVisibility::SelfHitTestInvisible);
@@ -323,10 +353,12 @@ void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue
 	{
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
 		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
-		PlayerHUD->EndedSwordStanceUI(Cast<AMiyamoto_Iori>(CurPlayableCharacter));
+		ActiveUIInterface->OnInterfaceClose();
+
 		PlayerHUD->SetSkillUIVisibility(ESlateVisibility::Hidden);
 		PlayerHUD->EndedSkillUI();
 	}
+	ActiveUIInterface = nullptr;
 }
 
 void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
@@ -338,12 +370,33 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FIntPoint iMoveValue(MoveValue.X, MoveValue.Y);
 	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Yellow, FString::Printf(TEXT("UI MoveValue: %s"), *iMoveValue.ToString()));
-	if (CurPlayableCharacter == MiyamotoIori)
+	//if (CurPlayableCharacter == MiyamotoIori)
+	//{
+	//	//공격 중에는 형 변경 불가
+	//	if(CurPlayableCharacter->IsPlayingAttackMontage())
+	//		return;
+	//	PlayerHUD->SelectSwordStance(iMoveValue);
+	//}
+	ActiveUIInterface->OnInterfaceMove(iMoveValue);
+}
+
+void AMiyamotoIoriController::UIConfirmInput(const FInputActionValue& value)
+{
+	if (isUIMode && ActiveUIInterface)
 	{
-		//공격 중에는 형 변경 불가
-		if(CurPlayableCharacter->IsPlayingAttackMontage())
-			return;
-		PlayerHUD->SelectSwordStance(iMoveValue);
+		ActiveUIInterface->OnInterfaceConfirm();
+	}
+}
+
+void AMiyamotoIoriController::UICancelInput(const FInputActionValue& value)
+{
+	if (isUIMode && ActiveUIInterface)
+	{
+		ActiveUIInterface->OnInterfaceCancel();
+		UGameplayStatics::SetGamePaused(GetWorld(), false);
+
+		ActiveUIInterface = nullptr;
+		isUIMode = false;
 	}
 }
 
@@ -382,6 +435,8 @@ void AMiyamotoIoriController::SkillSelectInput(const FInputActionValue& value)
 		isUIMode = false;
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
+		ActiveUIInterface = nullptr;
+
 		PlayerHUD->SetSkillUIVisibility(ESlateVisibility::Hidden);
 		PlayerHUD->EndedSkillUI();
 		SetIgnoreLookInput(true);
@@ -469,6 +524,36 @@ void AMiyamotoIoriController::SwitchTargetInput(const FInputActionValue& value)
 void AMiyamotoIoriController::ResetSwitchTargetInput(const FInputActionValue& value)
 {
 	bCanSwitchTarget = true;
+}
+
+void AMiyamotoIoriController::OpenRecoverItemMenuInput(const FInputActionValue& value)
+{
+	if (isUIMode)
+		return;
+
+	APlayerHUD* HUD = GetHUD<APlayerHUD>();
+	if (!HUD)
+		return;
+	URecoverItemMenuUI* ItemMenuUI = HUD->GetRecoverItemMenuUI();
+	if (!ItemMenuUI)
+		return;
+	ItemMenuUI->SetVisibility(ESlateVisibility::Visible);
+	//게임 일시정지
+	UGameplayStatics::SetGamePaused(GetWorld(), true);
+	
+	AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(CurPlayableCharacter->GetPlayerState());
+	if (!FatePlayerState)
+		return;
+	UInventoryComponent* Inventory = FatePlayerState->InventoryComponent;
+	if (!Inventory)
+		return;
+	TArray<FItemStack> ItemList;
+	Inventory->GetSubTypeFilteredItemList(EItemSubType::Tool_Food, ItemList);
+
+	ItemMenuUI->RefreshItemList(ItemList);
+	ActiveUIInterface = ItemMenuUI;
+	ActiveUIInterface->OnInterfaceOpen();
+	isUIMode = true;
 }
 
 void AMiyamotoIoriController::ZTestKeyInput(const FInputActionValue& value)

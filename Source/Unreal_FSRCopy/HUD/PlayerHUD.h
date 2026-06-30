@@ -22,16 +22,19 @@ private:
 	TObjectPtr<class UPlayableStatusUI> PlayableStatusUI;
 	TSubclassOf<class UMiyamotoSkillUI> MiyamotoSkillWidget;
 	TObjectPtr<class UMiyamotoSkillUI> MiyamotoSkillUI;
+	TSubclassOf<class URecoverItemMenuUI> RecoverItemMenuWidget;
+	TObjectPtr<class URecoverItemMenuUI> RecoverItemMenuUI;
 public:
 	APlayerHUD();
 	void BeginPlay() override;
 	void PostInitializeComponents() override;
 	void SetSwordStanceUIVisibility(ESlateVisibility eVisibility);
-	void SelectSwordStance(FIntPoint MoveIndex);
-	void StartedSwordStanceUI();
-	void EndedSwordStanceUI(class AMiyamoto_Iori* Miyamoto);
 	void InitializeSkillUI(class AMiyamoto_Iori* Miyamoto);
 	void SetSkillUIVisibility(ESlateVisibility eVisibility);
 	void StartedSkillUI();
 	void EndedSkillUI();
+
+	USwordStanceUI* GetSwordStanceUI() { return SwordStanceUI; }
+	UMiyamotoSkillUI* GetMiyamotoSkillUI() { return MiyamotoSkillUI; }
+	URecoverItemMenuUI* GetRecoverItemMenuUI() { return RecoverItemMenuUI; }
 };

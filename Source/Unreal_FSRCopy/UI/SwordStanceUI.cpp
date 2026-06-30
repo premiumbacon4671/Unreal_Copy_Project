@@ -95,66 +95,19 @@ bool USwordStanceUI::Initialize()
 	return false;
 }
 
-void USwordStanceUI::SelectSwordStance(FIntPoint StanceIndex)
+void USwordStanceUI::OnInterfaceOpen()
 {
-	FIntPoint NextStanceIndex = ChangeStanceIndex + StanceIndex;
-
-	//3X3 배열 범위 밖
-	if (NextStanceIndex.X < 0 || NextStanceIndex.X >= Buttons.Num()
-		|| NextStanceIndex.Y < 0 || NextStanceIndex.Y >= Buttons[NextStanceIndex.X].Num())
-		return;
-
-	//검증 예정
-	//좌상단
-	if (NextStanceIndex == FIntPoint(0, 0))
-	{
-		if (StanceIndex.X < 0)
-			NextStanceIndex.Y -= StanceIndex.X;
-		else if (StanceIndex.Y < 0)
-			NextStanceIndex.X -= StanceIndex.Y;
-	}
-	//우상단
-	else if (NextStanceIndex == FIntPoint(0, 2))
-	{
-		if (StanceIndex.X < 0)
-			NextStanceIndex.Y += StanceIndex.X;
-		else if (StanceIndex.Y > 0)
-			NextStanceIndex.X += StanceIndex.Y;
-	}
-	//좌하단
-	else if (NextStanceIndex == FIntPoint(2, 0))
-	{
-		if (StanceIndex.X > 0)
-			NextStanceIndex.Y += StanceIndex.X;
-		else if (StanceIndex.Y < 0)
-			NextStanceIndex.X += StanceIndex.Y;
-	}
-	//우하단
-	else if (NextStanceIndex == FIntPoint(2, 2))
-	{
-		if (StanceIndex.X > 0)
-			NextStanceIndex.Y -= StanceIndex.X;
-		else if (StanceIndex.Y > 0)
-			NextStanceIndex.X -= StanceIndex.Y;
-	}
-	//좌우 안먹음 확인필요
-	FString DebugString = FString::Printf(TEXT("NextStanceIndex : %d, %d"), NextStanceIndex.X, NextStanceIndex.Y);
-	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, DebugString);
-	FString DebugString2 = FString::Printf(TEXT("CurStanceIndex : %d, %d"), ChangeStanceIndex.X, ChangeStanceIndex.Y);
-	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, DebugString2);
-	Buttons[ChangeStanceIndex.X][ChangeStanceIndex.Y]->SetHighlightVisibility(ESlateVisibility::Hidden);
-	Buttons[NextStanceIndex.X][NextStanceIndex.Y]->SetHighlightVisibility(ESlateVisibility::Visible);
-	ChangeStanceIndex = NextStanceIndex;
-}
-
-void USwordStanceUI::StartedSwordStanceUI()
-{
+	if (APlayerController* PC = GetOwningPlayer())
+		CurPlayableCharacter = Cast<AMiyamoto_Iori>(PC->GetPawn());
 	ChangeStanceIndex = CurStanceIndex;
 	Buttons[CurStanceIndex.X][CurStanceIndex.Y]->SetHighlightVisibility(ESlateVisibility::Visible);
+
 }
 
-void USwordStanceUI::EndedSwordStanceUI(AMiyamoto_Iori* Miyamoto)
+void USwordStanceUI::OnInterfaceClose()
 {
+	if (nullptr == CurPlayableCharacter)
+		return;
 	for (int x = 0; x < Buttons.Num(); x++)
 	{
 		for (int y = 0; y < Buttons[x].Num(); y++)
@@ -166,11 +119,67 @@ void USwordStanceUI::EndedSwordStanceUI(AMiyamoto_Iori* Miyamoto)
 	}
 	ESWORDSTANCE NextStance = Buttons[ChangeStanceIndex.X][ChangeStanceIndex.Y]->GetSwordStanceType();
 	//현재 타입과 바꿀 타입이 같을 때
-	if (Miyamoto->GeteCurSwordStance() == NextStance)
+	if (CurPlayableCharacter->GeteCurSwordStance() == NextStance)
 		return;
 	//바꿀 타입이 해금이 안됐을 때
-	if (Miyamoto->GetIsUnlockSwordStance(NextStance) == false)
+	if (CurPlayableCharacter->GetIsUnlockSwordStance(NextStance) == false)
 		return;
 	CurStanceIndex = ChangeStanceIndex;
-	Miyamoto->ChangeSwordStance(NextStance);
+	CurPlayableCharacter->ChangeSwordStance(NextStance);
+}
+
+void USwordStanceUI::OnInterfaceMove(FIntPoint MoveDirection)
+{
+	if (CurPlayableCharacter && CurPlayableCharacter->IsPlayingAttackMontage())
+		return;
+	FIntPoint NextStanceIndex;
+	NextStanceIndex.X = ChangeStanceIndex.X - MoveDirection.X;
+	NextStanceIndex.Y = ChangeStanceIndex.Y + MoveDirection.Y;
+
+	//3X3 배열 범위 밖
+	if (NextStanceIndex.X < 0 || NextStanceIndex.X >= Buttons.Num()
+		|| NextStanceIndex.Y < 0 || NextStanceIndex.Y >= Buttons[NextStanceIndex.X].Num())
+		return;
+
+	//검증 예정
+	//좌상단
+	if (NextStanceIndex == FIntPoint(0, 0))
+	{
+		if (MoveDirection.X > 0)
+			NextStanceIndex.Y += MoveDirection.X;
+		else if (MoveDirection.Y < 0)
+			NextStanceIndex.X -= MoveDirection.Y;
+	}
+	//우상단
+	else if (NextStanceIndex == FIntPoint(0, 2))
+	{
+		if (MoveDirection.X > 0)
+			NextStanceIndex.Y -= MoveDirection.X;
+		else if (MoveDirection.Y > 0)
+			NextStanceIndex.X += MoveDirection.Y;
+	}
+	//좌하단
+	else if (NextStanceIndex == FIntPoint(2, 0))
+	{
+		if (MoveDirection.X < 0)
+			NextStanceIndex.Y -= MoveDirection.X;
+		else if (MoveDirection.Y < 0)
+			NextStanceIndex.X += MoveDirection.Y;
+	}
+	//우하단
+	else if (NextStanceIndex == FIntPoint(2, 2))
+	{
+		if (MoveDirection.X < 0)
+			NextStanceIndex.Y += MoveDirection.X;
+		else if (MoveDirection.Y > 0)
+			NextStanceIndex.X -= MoveDirection.Y;
+	}
+	//좌우 안먹음 확인필요
+	FString DebugString = FString::Printf(TEXT("NextStanceIndex : %d, %d"), NextStanceIndex.X, NextStanceIndex.Y);
+	GEngine->AddOnScreenDebugMessage(1, 5.0f, FColor::Red, DebugString);
+	FString DebugString2 = FString::Printf(TEXT("CurStanceIndex : %d, %d"), ChangeStanceIndex.X, ChangeStanceIndex.Y);
+	GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, DebugString2);
+	Buttons[ChangeStanceIndex.X][ChangeStanceIndex.Y]->SetHighlightVisibility(ESlateVisibility::Hidden);
+	Buttons[NextStanceIndex.X][NextStanceIndex.Y]->SetHighlightVisibility(ESlateVisibility::Visible);
+	ChangeStanceIndex = NextStanceIndex;
 }
