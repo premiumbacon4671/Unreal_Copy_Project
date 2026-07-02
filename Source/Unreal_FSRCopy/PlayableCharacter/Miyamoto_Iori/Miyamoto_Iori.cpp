@@ -10,7 +10,7 @@
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/FireStanceActorComponent.h"
 #include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 #include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
-
+#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "HUD/PlayerHUD.h"
 
 AMiyamoto_Iori::AMiyamoto_Iori()
@@ -82,15 +82,11 @@ void AMiyamoto_Iori::BeginPlay()
 		SkillActionComponent->SetNormalSkill(1, SkillData2);
 		SkillActionComponent->SetNormalSkill(2, SkillData3);
 		SkillActionComponent->SetNormalSkill(3, SkillData4);
-		
-		if(APlayerHUD* PlayerHUD = Cast<APlayerHUD>(Cast<APlayerController>(GetController())->GetHUD()))
-		{
-			PlayerHUD->InitializeSkillUI(this);
-		}
 	}
 
 	//stat 초기화 예정
 	InitializeStatus();
+	TryInitializeUI();
 }
 
 void AMiyamoto_Iori::Tick(float DeltaTime)
@@ -108,6 +104,12 @@ void AMiyamoto_Iori::Tick(float DeltaTime)
 	}*/
 }
 
+void AMiyamoto_Iori::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+	TryInitializeUI();
+}
+
 
 void AMiyamoto_Iori::InitializeStatus()
 {
@@ -118,6 +120,26 @@ void AMiyamoto_Iori::InitializeStatus()
 	{
 		StatusComponent->InitState(*IoriStat);
 	}
+}
+
+void AMiyamoto_Iori::TryInitializeUI()
+{
+	Super::TryInitializeUI();
+	if (!HasActorBegunPlay())
+		return;
+	AMiyamotoIoriController* PC = Cast<AMiyamotoIoriController>(GetController());
+	if (!PC)
+	{
+		return;
+	}
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	if (!PlayerHUD)
+	{
+		return;
+	}
+	PlayerHUD->InitializeSkillUI(this);
+	PlayerHUD->InitializePlayableStatusUI(this);
+	PlayerHUD->InitializeSwordStanceUI(this);
 }
 
 void AMiyamoto_Iori::PlayEquipWeaponMontage()
@@ -285,9 +307,11 @@ void AMiyamoto_Iori::ChangeSwordStance(ESWORDSTANCE SwordStance)
 	//비전투 상태일 시 검의 형만 변경
 	else
 	{
+		SwordStanceComponents[static_cast<int>(eCurSwordStance)]->ReleaseSwordStance();
 		eCurSwordStance = SwordStance;
 		eNextSwordStance = eCurSwordStance;
 		CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
+		InitializeSwordStance();
 	}
 	//NextMontageSectionName = TEXT("OneHandSwordUnEquip");
 }
@@ -346,6 +370,15 @@ void AMiyamoto_Iori::EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 		SetIsActionLock(false);
 		bRetryEquip = false;
 	}
+}
+
+UEarthStanceActorComponent* AMiyamoto_Iori::GetEarthStance() const
+{
+	if(SwordStanceComponents[static_cast<int>(ESWORDSTANCE::EST_EARTH)] != nullptr)
+	{
+		return Cast<UEarthStanceActorComponent>(SwordStanceComponents[static_cast<int>(ESWORDSTANCE::EST_EARTH)]);
+	}
+	return nullptr;
 }
 
 void AMiyamoto_Iori::ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted)

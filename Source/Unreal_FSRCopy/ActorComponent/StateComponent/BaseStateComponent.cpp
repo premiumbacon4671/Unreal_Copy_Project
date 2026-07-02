@@ -39,7 +39,7 @@ void UBaseStateComponent::RecoverHP(float RecoverAmount)
 	GetStat().CurHP = FMath::Clamp(GetStat().CurHP + RecoverAmount, 0.0f, GetStat().MaxHP);
 
 	if (OnUpdateHp.IsBound())
-		OnUpdateHp.Execute(GetHPPercent());
+		OnUpdateHp.Broadcast(GetHPPercent());
 }
 
 void UBaseStateComponent::TakeDamage(int DamageAmount)
@@ -50,7 +50,7 @@ void UBaseStateComponent::TakeDamage(int DamageAmount)
 	GetStat().CurHP = FMath::Max(0, (GetStat().CurHP - DamageAmount));
 
 	if(OnUpdateHp.IsBound())
-		OnUpdateHp.Execute(GetHPPercent());
+		OnUpdateHp.Broadcast(GetHPPercent());
 }
 
 void UBaseStateComponent::InitState(const FBaseStat& InBaseStat)

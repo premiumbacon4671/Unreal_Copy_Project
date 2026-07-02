@@ -11,8 +11,8 @@
  */
 
 class APlayableBaseCharacter;
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnInitializedStat, APlayableBaseCharacter*)
-DECLARE_DELEGATE_OneParam(FOnCalculateHikenGauge, float)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInitializedStat, APlayableBaseCharacter*, Character);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCalculateHikenGauge, float, Percent);
 
 USTRUCT(BlueprintType)
 struct FPlayableStat : public FBaseStat
@@ -83,7 +83,7 @@ public:
 	virtual FPlayableStat& GetPlayableStat() { return PlayableStat; }
 	virtual const FPlayableStat& GetPlayableStat() const { return PlayableStat; }
 
-	float GetHikentPercent() const { return static_cast<float>(GetPlayableStat().Hiken) / static_cast<float>(GetPlayableStat().MaxHiken); }
+	float GetHikenPercent() const { return static_cast<float>(GetPlayableStat().Hiken) / static_cast<float>(GetPlayableStat().MaxHiken); }
 	float GetHiken() const { return GetPlayableStat().Hiken; }
 	float GetMaxHiken() const { return GetPlayableStat().MaxHiken; }
 	void ConsumeHike(float AmountHiken);

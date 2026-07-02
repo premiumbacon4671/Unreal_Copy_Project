@@ -39,7 +39,7 @@ void APlayerHUD::BeginPlay()
 		if (SwordStanceUI)
 		{
 			SwordStanceUI->AddToViewport();
-			SwordStanceUI->Init(Cast<AMiyamoto_Iori>(GetOwningPlayerController()->GetPawn()));
+			//SwordStanceUI->Init(Cast<AMiyamoto_Iori>(GetOwningPlayerController()->GetPawn()));
 		}
 	}
 	if (PlayableStatusWidget)
@@ -48,7 +48,7 @@ void APlayerHUD::BeginPlay()
 		if (PlayableStatusUI)
 		{
 			PlayableStatusUI->AddToViewport();
-			PlayableStatusUI->Init(Cast<APlayableBaseCharacter>(GetOwningPlayerController()->GetPawn()));
+			//PlayableStatusUI->Init(Cast<APlayableBaseCharacter>(GetOwningPlayerController()->GetPawn()));
 		}
 	}
 	if(MiyamotoSkillWidget)
@@ -76,6 +76,16 @@ void APlayerHUD::PostInitializeComponents()
 void APlayerHUD::SetSwordStanceUIVisibility(ESlateVisibility eVisibility)
 {
 	SwordStanceUI->SetVisibility(eVisibility);
+}
+
+void APlayerHUD::InitializePlayableStatusUI(APlayableBaseCharacter* PlayableCharacter)
+{
+	PlayableStatusUI->Init(PlayableCharacter);
+}
+
+void APlayerHUD::InitializeSwordStanceUI(AMiyamoto_Iori* Miyamoto)
+{
+	SwordStanceUI->Init(Miyamoto);
 }
 
 void APlayerHUD::InitializeSkillUI(AMiyamoto_Iori* Miyamoto)

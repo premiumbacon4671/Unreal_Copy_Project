@@ -42,9 +42,11 @@ public:
 	AMiyamoto_Iori();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+	virtual void PossessedBy(AController* NewController) override;
 	ESWORDSTANCE GeteCurSwordStance() const { return eCurSwordStance; }
 
 	virtual void InitializeStatus() override;
+	virtual void TryInitializeUI() override;
 
 	void PlayEquipWeaponMontage() override;
 	void PlayUnEquipWeaponMontage();
@@ -66,7 +68,8 @@ public:
 	//부모 클래스로 이동 완료
 	void EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted) override;
 
-
+	//쉴드 게이지 퍼센트 확인용
+	class UEarthStanceActorComponent* GetEarthStance() const;
 protected:
 	void ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted) override;
 	virtual void Landed(const FHitResult& Hit) override;

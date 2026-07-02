@@ -137,57 +137,59 @@ void UEarthStanceActorComponent::PlayHeavyAttack0ChargeMontage()
 void UEarthStanceActorComponent::ReleaseSwordStance()
 {
 	Super::ReleaseSwordStance();
-	//방패 재충전 타이머 생성
-	if(GetWorld()->GetTimerManager().IsTimerActive(ShieldRechargeTimer) == false)
-	{
-		GetWorld()->GetTimerManager().SetTimer(
-			ShieldRechargeTimer,
-			this,
-			&UEarthStanceActorComponent::RechargeEarthStanceShield,
-			60.0f, false);
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().UnPauseTimer(ShieldRechargeTimer);
-	}
 	UPlayableStateComponent* OwnerCharacterStatus = Cast<APlayableBaseCharacter>(GetOwner())->GetStatusComponent();
 	if (OwnerCharacterStatus == nullptr)
 		return;
 	OwnerCharacterStatus->SubExtraDefencePower(ExtraDefencePower);
 	ExtraDefencePower = 0;
+	OnStanceStateChanged.Broadcast(false);
 }
 
 void UEarthStanceActorComponent::InitSwordStance()
 {
 	Super::InitSwordStance();
-	//방패 재충전 타이머 정지
-	if (GetWorld()->GetTimerManager().IsTimerActive(ShieldRechargeTimer) == true)
-	{
-		GetWorld()->GetTimerManager().PauseTimer(ShieldRechargeTimer);
-	}
 	UPlayableStateComponent* OwnerCharacterStatus = Cast<APlayableBaseCharacter>(GetOwner())->GetStatusComponent();
 	if(OwnerCharacterStatus == nullptr)
 		return;
 	ExtraDefencePower = OwnerCharacterStatus->GetDefencePower() * ExtraDefencePowerPercent;
 	OwnerCharacterStatus->AddExtraDefencePower(ExtraDefencePower);
+	OnStanceStateChanged.Broadcast(true);
 }
 
 void UEarthStanceActorComponent::RechargeEarthStanceShield()
 {
 	EarthStanceShield = MaxEarthStanceShield;
+	float CurrentShieldPercent = GetShieldPercent();
+	if (OnShieldChanged.IsBound())
+	{
+		OnShieldChanged.Broadcast(CurrentShieldPercent);
+	}
 }
 
 int UEarthStanceActorComponent::SwordStanceBeforeUpdateHp(int Damage)
 {
 	Damage = Super::SwordStanceBeforeUpdateHp(Damage);
+	if(EarthStanceShield <= 0.0f)
+		return Damage;
 	
-	if (EarthStanceShield > 0)
-	{
-		EarthStanceShield -= Damage;
-		if(EarthStanceShield < 0)
-			EarthStanceShield = 0;
+		EarthStanceShield = FMath::Max(0.f, EarthStanceShield - Damage);
+		float CurrentShieldPercent = GetShieldPercent();
+		if (OnShieldChanged.IsBound())
+		{
+			OnShieldChanged.Broadcast(CurrentShieldPercent);
+		}
+		if(EarthStanceShield <= 0.0f)
+		{
+			EarthStanceShield = 0.0f;
+			//쉴드 재충전 타이머 시작
+			GetWorld()->GetTimerManager().SetTimer(
+				ShieldRechargeTimer,
+				this,
+				&UEarthStanceActorComponent::RechargeEarthStanceShield,
+				60.0f, false);
+		}
+		//쉴드의 값이 적어도 데미지를 0으로 처리
 		Damage = 0;
-	}
 	return Damage;
 }
 

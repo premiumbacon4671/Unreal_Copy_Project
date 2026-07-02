@@ -40,14 +40,14 @@ void UResonanceComponent::RecoverLinkSkillGauge(float Amount)
 		LinkBall++;
 		LinkSkillGauge -= MaxLinkSkillGauge;
 		if (OnCalculateLinkBall.IsBound())
-			OnCalculateLinkBall.Execute(LinkBall);
+			OnCalculateLinkBall.Broadcast(LinkBall);
 	}
 
 	if (LinkSkillGauge >= MaxLinkSkillGauge)
 		LinkSkillGauge = FMath::Clamp(LinkSkillGauge, 0.0f, MaxLinkSkillGauge);
 
 	if (OnCalculateLinkSkillGauge.IsBound())
-		OnCalculateLinkSkillGauge.Execute(GetLinkSkillGaugePercentage());
+		OnCalculateLinkSkillGauge.Broadcast(GetLinkSkillGaugePercentage());
 }
 
 void UResonanceComponent::CalculateLinkSkillGauge(int AmountDamage, float TargetMaxHP)

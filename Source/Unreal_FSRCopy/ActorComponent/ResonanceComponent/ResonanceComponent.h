@@ -6,8 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "ResonanceComponent.generated.h"
 
-DECLARE_DELEGATE_OneParam(FOnCalculateLinkSkillGauge, float)
-DECLARE_DELEGATE_OneParam(FOnCalculateLinkBall, int32)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCalculateLinkSkillGauge, float, Percent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCalculateLinkBall, int32, Count);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREAL_FSRCOPY_API UResonanceComponent : public UActorComponent

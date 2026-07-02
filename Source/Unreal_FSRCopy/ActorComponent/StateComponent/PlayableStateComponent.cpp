@@ -25,14 +25,14 @@ void UPlayableStateComponent::ConsumeHike(float AmountHiken)
 {
 	GetPlayableStat().Hiken -= AmountHiken;
 	if (OnCalculateHikenGauge.IsBound())
-		OnCalculateHikenGauge.Execute(GetHikentPercent());
+		OnCalculateHikenGauge.Broadcast(GetHikenPercent());
 }
 
 void UPlayableStateComponent::RecoverHiken(float AmountHiken)
 {
 	GetPlayableStat().Hiken = FMath::Clamp(GetPlayableStat().Hiken + AmountHiken, 0.0f, GetPlayableStat().MaxHiken);
 	if (OnCalculateHikenGauge.IsBound())
-		OnCalculateHikenGauge.Execute(GetHikentPercent());
+		OnCalculateHikenGauge.Broadcast(GetHikenPercent());
 }
 
 void UPlayableStateComponent::InitState(const FBaseStat& InBaseStat)
@@ -55,7 +55,7 @@ void UPlayableStateComponent::CalculateHikenGauge(float AmountDamage, float Targ
 		GetPlayableStat().Hiken = FMath::Clamp(GetPlayableStat().Hiken, 0.0f, GetPlayableStat().MaxHiken);
 
 	if (OnCalculateHikenGauge.IsBound())
-		OnCalculateHikenGauge.Execute(GetHikentPercent());
+		OnCalculateHikenGauge.Broadcast(GetHikenPercent());
 }
 
 void UPlayableStateComponent::ApplyAttackBuff(float BonusMultiplier, float Duration, const TArray<UNiagaraComponent*>& InBuffVFXs)

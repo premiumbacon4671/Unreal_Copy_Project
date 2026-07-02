@@ -31,7 +31,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	TObjectPtr<class USkeletalMesh> Mesh;
 };
-DECLARE_DELEGATE_OneParam(FOnUpdateHp, float)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateHp, float, Percent);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseStateComponent : public UActorComponent

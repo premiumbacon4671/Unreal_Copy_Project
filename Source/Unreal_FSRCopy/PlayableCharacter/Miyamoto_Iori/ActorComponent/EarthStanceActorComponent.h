@@ -9,6 +9,8 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnShieldChangedSignature, float, ShieldPercent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStanceStateChanged, bool, bIsActive);
 UCLASS(Blueprintable, ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UEarthStanceActorComponent : public UBaseSwordStanceActorComponent
 {
@@ -16,9 +18,9 @@ class UNREAL_FSRCOPY_API UEarthStanceActorComponent : public UBaseSwordStanceAct
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Earth Stance")
-	int EarthStanceShield{ 0 };
+	float EarthStanceShield{ 0.0f };
 	UPROPERTY(EditAnywhere, Category = "Earth Stance")
-	int MaxEarthStanceShield{ 300 };
+	float MaxEarthStanceShield{ 300.0f };
 
 	UPROPERTY(EditAnywhere, Category = "Earth Stance")
 	int ExtraDefencePower{ 0 };
@@ -32,6 +34,11 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	UPROPERTY(BlueprintAssignable, Category = "Events | Stance")
+	FOnShieldChangedSignature OnShieldChanged;
+	UPROPERTY(BlueprintAssignable, Category = "Events | Stance")
+	FOnStanceStateChanged OnStanceStateChanged;
+
 	// Called every frame
 	UEarthStanceActorComponent();
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -47,4 +54,6 @@ public:
 	int SwordStanceBeforeUpdateHp(int Damage) override;
 	void SwordStanceAfterUpdateHp(int Damage) override;
 	int SwordStanceUpdateAttack() override;
+
+	float GetShieldPercent() const { return EarthStanceShield / MaxEarthStanceShield; }
 };

@@ -146,7 +146,7 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void PossessedBy(AController* NewController) override;
+	virtual void PossessedBy(AController* NewController) override;
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	void SetMoveSpeed();
@@ -214,6 +214,7 @@ public:
 
 #pragma region Stat
 	virtual void InitializeStatus();
+	virtual void TryInitializeUI();
 	void ExecuteHeal(float RecoverAmount);
 #pragma endregion
 

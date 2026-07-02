@@ -147,14 +147,8 @@ void ABaseMonster::InitStat(const FMonsterStat& Data)
 	if (HPBarWidget && StatusComponent)
 	{
 		HPBarWidget->SetHPBarPercent(StatusComponent->GetHPPercent());
-		StatusComponent->OnUpdateHp.BindLambda([this](float Percent)
-			{
-				UMonsterHPBarUserWidget* HPBarUI = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject());
-				if (HPBarUI)
-				{
-					HPBarUI->SetHPBarPercent(Percent);
-				}
-			});
+		StatusComponent->OnUpdateHp.RemoveAll(this);
+		StatusComponent->OnUpdateHp.AddDynamic(this, &ABaseMonster::UpdateHPBar);
 	}
 }
 
@@ -166,6 +160,17 @@ void ABaseMonster::AttackTrace(EAttackVariety AttackVariety)
 float ABaseMonster::GetMonsterMaxHP() const
 {
 	return StatusComponent->GetMaxHP();
+}
+
+void ABaseMonster::UpdateHPBar(float Percent)
+{
+	if (HPBarWidgetComponent)
+	{
+		if (UMonsterHPBarUserWidget* HPBarUI = Cast<UMonsterHPBarUserWidget>(HPBarWidgetComponent->GetUserWidgetObject()))
+		{
+			HPBarUI->SetHPBarPercent(Percent);
+		}
+	}
 }
 
 void ABaseMonster::SetLockOnMarkerVisibility(bool bShow)

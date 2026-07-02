@@ -4,8 +4,10 @@
 #include "UI/PlayableStatusUI.h"
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
+#include "PlayableCharacter/Miyamoto_Iori/ActorComponent/EarthStanceActorComponent.h"
 #include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
 #include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
+#include "UI/EarthStanceShieldUI.h"
 #include "PlayerState/FatePlayerState.h"
 
 
@@ -23,13 +25,13 @@ void UPlayableStatusUI::NativeConstruct()
 	LinkBalls[3] = LinkBall4;
 	LinkBalls[4] = LinkBall5;
 	LinkBalls[5] = LinkBall6;
-	if(APlayableBaseCharacter* PlayerCharacter = Cast<APlayableBaseCharacter>(GetOwningPlayerPawn()))
+	/*if(APlayableBaseCharacter* PlayerCharacter = Cast<APlayableBaseCharacter>(GetOwningPlayerPawn()))
 	{
 		if(UPlayableStateComponent* PlayerStatus = PlayerCharacter->GetStatusComponent())
 		{
-			PlayerStatus->OnInitializedStat.AddUObject(this, &UPlayableStatusUI::Init);
+			PlayerStatus->OnInitializedStat.AddDynamic(this, &UPlayableStatusUI::Init);
 		}
-	}
+	}*/
 }
 
 void UPlayableStatusUI::SetLinkBallVisibility(int Index, ESlateVisibility InVisibility)
@@ -46,42 +48,37 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 	UPlayableStateComponent* PlayerStatus = Character->GetStatusComponent();
 	if (PlayerStatus == nullptr)
 		return;
-	SetHPBarPercent(PlayerStatus->GetHPPercent());
-	SetHikenBarPercent(PlayerStatus->GetHikentPercent());
+	HandleUpdateHp(PlayerStatus->GetHPPercent());
+	HandleUpdateHiken(PlayerStatus->GetHikenPercent());
 
-	PlayerStatus->OnUpdateHp.BindLambda([this](float Percent)
-		{
-			SetHPBarPercent(Percent);
-		});
+	PlayerStatus->OnUpdateHp.RemoveAll(this);
+	PlayerStatus->OnCalculateHikenGauge.RemoveAll(this);
 
-	PlayerStatus->OnCalculateHikenGauge.BindLambda([this](float Percent)
-		{
-			SetHikenBarPercent(Percent);
-		});
+	PlayerStatus->OnUpdateHp.AddDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
+
+	PlayerStatus->OnCalculateHikenGauge.AddDynamic(this, &UPlayableStatusUI::HandleUpdateHiken);
 
 	AFatePlayerState* PlayerState = Character->GetPlayerState<AFatePlayerState>();
 	UResonanceComponent* ResonanceComp = PlayerState->ResonanceComponent;
 	if(PlayerState && ResonanceComp && ResonanceComp->GetServantActive())
 	{
-		SetLinkBarPercent(ResonanceComp->GetLinkSkillGaugePercentage());
+		HandleUpdateLinkSkillGauge(ResonanceComp->GetLinkSkillGaugePercentage());
 		int LinkBallCount = ResonanceComp->GetLinkBall();
-		for (int i = 0; i < LinkBallCount; ++i)
-		{
-			SetLinkBallVisibility(i, ESlateVisibility::Visible);
-		}
+		HandleUpdateLinkSkillBall(LinkBallCount);
 
-		ResonanceComp->OnCalculateLinkSkillGauge.BindLambda([this](float Percent)
-			{
-				SetLinkBarPercent(Percent);
-			});
+		ResonanceComp->OnCalculateLinkSkillGauge.RemoveAll(this);
+		ResonanceComp->OnCalculateLinkBall.RemoveAll(this);
 
-		ResonanceComp->OnCalculateLinkBall.BindLambda([this](int Count)
-			{
-				for (int i = 0; i < LinkBalls.Num(); ++i)
-				{
-					SetLinkBallVisibility(i, i < Count ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
-				}
-			});
+		ResonanceComp->OnCalculateLinkSkillGauge.AddDynamic(this, &UPlayableStatusUI::HandleUpdateLinkSkillGauge);
+
+		ResonanceComp->OnCalculateLinkBall.AddDynamic(this, &UPlayableStatusUI::HandleUpdateLinkSkillBall);
+	}
+	AMiyamoto_Iori* Miyamoto = Cast<AMiyamoto_Iori>(Character);
+	if (Miyamoto)
+	{
+		UEarthStanceActorComponent* EarthStanceComp = Miyamoto->GetEarthStance();
+		if (EarthStanceComp)
+			EarthStanceShieldBar->InitShieldUI(EarthStanceComp);
 	}
 }
 
@@ -101,4 +98,27 @@ void UPlayableStatusUI::SetLinkBarPercent(float Percent)
 {
 	if (LinkProgressBar)
 		LinkProgressBar->SetPercent(Percent);
+}
+
+void UPlayableStatusUI::HandleUpdateHp(float Percent)
+{
+	SetHPBarPercent(Percent);
+}
+
+void UPlayableStatusUI::HandleUpdateHiken(float Percent)
+{
+	SetHikenBarPercent(Percent);
+}
+
+void UPlayableStatusUI::HandleUpdateLinkSkillGauge(float Percent)
+{
+	SetLinkBarPercent(Percent);
+}
+
+void UPlayableStatusUI::HandleUpdateLinkSkillBall(int Count)
+{
+	for (int i = 0; i < LinkBalls.Num(); ++i)
+	{
+		SetLinkBallVisibility(i, i < Count ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+	}
 }

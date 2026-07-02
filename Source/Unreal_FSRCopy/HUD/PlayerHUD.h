@@ -29,6 +29,8 @@ public:
 	void BeginPlay() override;
 	void PostInitializeComponents() override;
 	void SetSwordStanceUIVisibility(ESlateVisibility eVisibility);
+	void InitializePlayableStatusUI(class APlayableBaseCharacter* PlayableCharacter);
+	void InitializeSwordStanceUI(class AMiyamoto_Iori* Miyamoto);
 	void InitializeSkillUI(class AMiyamoto_Iori* Miyamoto);
 	void SetSkillUIVisibility(ESlateVisibility eVisibility);
 	void StartedSkillUI();

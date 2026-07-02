@@ -360,6 +360,10 @@ void APlayableBaseCharacter::InitializeStatus()
 	//StatusComponent->InitState(NewStat);
 }
 
+void APlayableBaseCharacter::TryInitializeUI()
+{
+}
+
 void APlayableBaseCharacter::ExecuteHeal(float RecoverAmount)
 {
 	GetStatusComponent()->RecoverHP(RecoverAmount);

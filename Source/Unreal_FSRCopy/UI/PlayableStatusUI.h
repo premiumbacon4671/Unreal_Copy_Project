@@ -33,7 +33,8 @@ private:
 	TObjectPtr<class UImage> LinkBall5;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UImage> LinkBall6;
-
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UEarthStanceShieldUI> EarthStanceShieldBar;
 	TArray<TObjectPtr<class UImage>> LinkBalls;
 
 public:
@@ -41,8 +42,18 @@ public:
 
 
 	void SetLinkBallVisibility(int Index, ESlateVisibility InVisibility);
+	UFUNCTION()
 	void Init(class APlayableBaseCharacter* Character);
 	void SetHPBarPercent(float Percent);
 	void SetHikenBarPercent(float Percent);
 	void SetLinkBarPercent(float Percent);
+
+	UFUNCTION()
+	void HandleUpdateHp(float Percent);
+	UFUNCTION()
+	void HandleUpdateHiken(float Percent);
+	UFUNCTION()
+	void HandleUpdateLinkSkillGauge(float Percent);
+	UFUNCTION()
+	void HandleUpdateLinkSkillBall(int Count);
 };
