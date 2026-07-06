@@ -48,6 +48,7 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 	UPlayableStateComponent* PlayerStatus = Character->GetStatusComponent();
 	if (PlayerStatus == nullptr)
 		return;
+	CurrentStateComponent = PlayerStatus;
 	HandleUpdateHp(PlayerStatus->GetHPPercent());
 	HandleUpdateHiken(PlayerStatus->GetHikenPercent());
 
@@ -120,5 +121,23 @@ void UPlayableStatusUI::HandleUpdateLinkSkillBall(int Count)
 	for (int i = 0; i < LinkBalls.Num(); ++i)
 	{
 		SetLinkBallVisibility(i, i < Count ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+	}
+}
+
+void UPlayableStatusUI::SwitchTargetStatusComponent(UPlayableStateComponent* NewStatusComponent)
+{
+	if(CurrentStateComponent)
+	{
+		CurrentStateComponent->OnUpdateHp.RemoveDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
+		CurrentStateComponent->OnCalculateHikenGauge.RemoveDynamic(this, &UPlayableStatusUI::HandleUpdateHiken);
+	}
+
+	CurrentStateComponent = NewStatusComponent;
+	if (CurrentStateComponent)
+	{
+		CurrentStateComponent->OnUpdateHp.AddUniqueDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
+		CurrentStateComponent->OnCalculateHikenGauge.AddUniqueDynamic(this, &UPlayableStatusUI::HandleUpdateHiken);
+		HandleUpdateHp(CurrentStateComponent->GetHPPercent());
+		HandleUpdateHiken(CurrentStateComponent->GetHikenPercent());
 	}
 }

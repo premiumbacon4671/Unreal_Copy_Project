@@ -37,6 +37,7 @@ public:
 	void EndedSkillUI();
 
 	USwordStanceUI* GetSwordStanceUI() { return SwordStanceUI; }
+	UPlayableStatusUI* GetPlayableStatusUI() { return PlayableStatusUI; }
 	UMiyamotoSkillUI* GetMiyamotoSkillUI() { return MiyamotoSkillUI; }
 	URecoverItemMenuUI* GetRecoverItemMenuUI() { return RecoverItemMenuUI; }
 };

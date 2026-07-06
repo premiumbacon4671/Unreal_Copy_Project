@@ -73,3 +73,15 @@ void UResonanceComponent::InitResonance(float fMaxLinkSkillGauge, float fLinkSki
 	LinkBall = iLinkBall;
 }
 
+void UResonanceComponent::AddSaberGauge(float Amount)
+{
+	CurrentSaberGauge = FMath::Clamp(CurrentSaberGauge + Amount, 0.0f, MaxSaberGauge);
+	OnSaberGaugeChanged.Broadcast(GetSaberGaugePercent());
+}
+
+void UResonanceComponent::ConsumeSaberGauge(float Amount)
+{
+	CurrentSaberGauge = FMath::Clamp(CurrentSaberGauge - Amount, 0.0f, MaxSaberGauge);
+	OnSaberGaugeChanged.Broadcast(GetSaberGaugePercent());
+}
+

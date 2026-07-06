@@ -12,17 +12,22 @@
 #include "GameFramework/PlayerState.h"
 #include "Framework/Application/NavigationConfig.h"
 #include "Framework/Application/SlateApplication.h"
+#include "AIController.h"
 
 #include "PlayableCharacter/PlayableBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
-#include "HUD/PlayerHUD.h"
+#include "PlayableCharacter/Servant/ServantBaseCharacter.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 #include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
+#include "ActorComponent/InventoryComponent/InventoryComponent.h"
+#include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
+#include "ActorComponent/StateComponent/PlayableStateComponent.h"
 #include "UI/SwordStanceUI.h"
 #include "UI/MiyamotoSkillButtonUI.h"
 #include "UI/RecoverItemMenuUI.h"
 #include "UI/RecoverItemButton.h"
-#include "ActorComponent/InventoryComponent/InventoryComponent.h"
+#include "UI/PlayableStatusUI.h"
+#include "HUD/PlayerHUD.h"
 #include "PlayerState/FatePlayerState.h"
 
 AMiyamotoIoriController::AMiyamotoIoriController()
@@ -112,13 +117,21 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (UICancelActionFinder.Succeeded())
 		UICancelAction = UICancelActionFinder.Object;
 
-
+	static ConstructorHelpers::FObjectFinder<UInputAction> ServantUIActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_ServantUI.IA_ServantUI'"));
+	if (ServantUIActionFinder.Succeeded())
+		ServantUIAction = ServantUIActionFinder.Object;
 
 	//테스트용 키
 	static ConstructorHelpers::FObjectFinder<UInputAction> ZTestKeyFinder(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_ZTestKey.IA_ZTestKey'"));
 	if (ZTestKeyFinder.Succeeded())
 		ZTestKey = ZTestKeyFinder.Object;
+
+	static ConstructorHelpers::FClassFinder<AServantBaseCharacter> SaberClassFinder(
+		TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber.BP_Saber_C"));
+	if (SaberClassFinder.Succeeded())
+		SaberCharacterClass = SaberClassFinder.Class;
 }
 
 void AMiyamotoIoriController::BeginPlay()
@@ -132,11 +145,23 @@ void AMiyamotoIoriController::BeginPlay()
 	//CurPlayableCharacter->InitializeIconUI();
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
 
-	TSharedRef<FNavigationConfig> NavConfig = FSlateApplication::Get().GetNavigationConfig();
-	NavConfig->KeyEventRules.Emplace(EKeys::W, EUINavigation::Up);
-	NavConfig->KeyEventRules.Emplace(EKeys::S, EUINavigation::Down);
-	NavConfig->KeyEventRules.Emplace(EKeys::A, EUINavigation::Left);
-	NavConfig->KeyEventRules.Emplace(EKeys::D, EUINavigation::Right);
+	if (MiyamotoIori && SaberCharacterClass)
+	{
+		FVector ForwardVector = MiyamotoIori->GetActorForwardVector();
+		ForwardVector.Z = 0.0f;
+		ForwardVector.X += 100.0f;
+		ForwardVector.Y -= 100.0f;
+		FVector NewSpawnLocation = MiyamotoIori->GetActorLocation() - ForwardVector;
+		FRotator SpawnRotation = MiyamotoIori->GetActorRotation();
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+		SaberCharacter = GetWorld()->SpawnActor<AServantBaseCharacter>(SaberCharacterClass, NewSpawnLocation, SpawnRotation, SpawnParams);
+		if(SaberCharacter)
+		{
+			SaberCharacter->SpawnDefaultController();
+		}
+
+	}
 }
 
 void AMiyamotoIoriController::Tick(float DeltaTime)
@@ -174,6 +199,7 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(RotationAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SwitchTargetInput);
 		input->BindAction(RotationAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ResetSwitchTargetInput);
 		input->BindAction(OpenRecoverItemMenuAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::OpenRecoverItemMenuInput);
+		input->BindAction(ServantUIAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SwapWithServantInput);
 
 		input->BindAction(ZTestKey, ETriggerEvent::Started, this, &AMiyamotoIoriController::ZTestKeyInput);
 	}
@@ -554,6 +580,61 @@ void AMiyamotoIoriController::OpenRecoverItemMenuInput(const FInputActionValue& 
 	ActiveUIInterface = ItemMenuUI;
 	ActiveUIInterface->OnInterfaceOpen();
 	isUIMode = true;
+}
+
+void AMiyamotoIoriController::SwapWithServantInput(const FInputActionValue& value)
+{
+	if(isUIMode)
+		return;
+	if(!MiyamotoIori || !SaberCharacter)
+		return;
+	if (!CurPlayableCharacter)
+		return;
+	UResonanceComponent* ResonanceComp = nullptr;
+	if(AFatePlayerState* PS = GetPlayerState<AFatePlayerState>())
+	{
+		ResonanceComp = PS->ResonanceComponent;
+	}
+
+	if (CurPlayableCharacter == MiyamotoIori)
+	{
+		AAIController* SaberAI = Cast<AAIController>(SaberCharacter->GetController());
+		Possess(SaberCharacter);
+		CurPlayableCharacter = SaberCharacter;
+		if(SaberAI)
+		{
+			SaberAI->Possess(MiyamotoIori);
+		}
+		if (ResonanceComp)
+		{
+			ResonanceComp->SetSaberActive(true);
+		}
+	}
+	else if (CurPlayableCharacter == SaberCharacter)
+	{
+		AAIController* IoriAI = Cast<AAIController>(MiyamotoIori->GetController());
+		Possess(MiyamotoIori);
+		CurPlayableCharacter = MiyamotoIori;
+		if(IoriAI)
+		{
+			IoriAI->Possess(SaberCharacter);
+		}
+		if (ResonanceComp)
+		{
+			ResonanceComp->SetSaberActive(false);
+		}
+	}
+	if (CurPlayableCharacter)
+	{
+		// GetComponentByClass를 쓰거나, 캐릭터에 만들어둔 Getter 함수를 사용해 컴포넌트를 가져옵니다.
+		UPlayableStateComponent* NewStateComp = CurPlayableCharacter->FindComponentByClass<UPlayableStateComponent>();
+		UPlayableStatusUI* StatusUI = PlayerHUD->GetPlayableStatusUI();
+		// 들고 계신 UI 위젯 포인터를 통해 새 컴포넌트를 넘겨줍니다.
+		if (StatusUI && NewStateComp)
+		{
+			StatusUI->SwitchTargetStatusComponent(NewStateComp);
+		}
+	}
 }
 
 void AMiyamotoIoriController::ZTestKeyInput(const FInputActionValue& value)

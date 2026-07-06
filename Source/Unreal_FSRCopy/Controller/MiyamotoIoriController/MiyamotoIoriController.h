@@ -15,10 +15,14 @@ UCLASS()
 class UNREAL_FSRCOPY_API AMiyamotoIoriController : public APlayerController
 {
 	GENERATED_BODY()
-	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Servant | Setup")
+	TSubclassOf<class AServantBaseCharacter> SaberCharacterClass;
+
 private:
 	TObjectPtr<class APlayableBaseCharacter> CurPlayableCharacter;
 	TObjectPtr<class APlayableBaseCharacter> MiyamotoIori;
+	TObjectPtr<class AServantBaseCharacter> SaberCharacter;
 	TObjectPtr<class APlayerHUD> PlayerHUD;
 	TScriptInterface<class IUIInputReceiverInterface> ActiveUIInterface;
 #pragma region InputAction
@@ -60,6 +64,8 @@ private:
 	TObjectPtr<class UInputAction> UIConfirmAction;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> UICancelAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> ServantUIAction;
 
 	//hp회복, 아이템 수급 등 임시로 사용할 키
 	UPROPERTY(VisibleAnywhere)
@@ -114,6 +120,7 @@ public:
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 	
+	void SwapWithServantInput(const FInputActionValue& value);
 	
 	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }
 	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }

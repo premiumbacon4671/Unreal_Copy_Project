@@ -8,6 +8,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCalculateLinkSkillGauge, float, Percent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCalculateLinkBall, int32, Count);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSaberGaugeChanged, float, CurrentPercent);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREAL_FSRCOPY_API UResonanceComponent : public UActorComponent
@@ -24,6 +25,12 @@ private:
 	//현재 서번트 미구현 상태이므로, 일단 true로 초기화해둠
 	bool bIsServantActive{ true };
 
+
+	UPROPERTY(EditAnywhere, Category = "Resonance | Gauge")
+	float MaxSaberGauge = { 100.0f };
+	float CurrentSaberGauge = { 0.0f };
+	//세이버 조종 여부
+	bool bIsSaberActive{ false };
 protected:
 	UPROPERTY(EditAnywhere, Category = "GainMultiplier")
 	float LinkSkillGaugeGainMultiplier{ 10.0f };
@@ -33,6 +40,7 @@ public:
 	UResonanceComponent();
 	FOnCalculateLinkSkillGauge OnCalculateLinkSkillGauge;
 	FOnCalculateLinkBall OnCalculateLinkBall;
+	FSaberGaugeChanged OnSaberGaugeChanged;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -54,4 +62,11 @@ public:
 
 	void SetServantActive(bool bActive) { bIsServantActive = bActive; }
 	bool GetServantActive() const { return bIsServantActive; }
+
+#pragma region Saber
+	void AddSaberGauge(float Amount);
+	void ConsumeSaberGauge(float Amount);
+	float GetSaberGaugePercent() const { return MaxSaberGauge > 0 ? CurrentSaberGauge / MaxSaberGauge : 0.0f; }
+	bool GetSaberActive() const { return bIsSaberActive; }
+	void SetSaberActive(bool bActive) { bIsSaberActive = bActive; }
 };

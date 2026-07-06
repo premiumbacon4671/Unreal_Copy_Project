@@ -71,7 +71,7 @@ void UMiyamotoSkillUI::Init(AMiyamoto_Iori* MiyamotoIori)
 
 	AFatePlayerState* PlayerState = Cast<AFatePlayerState>(MiyamotoIori->GetPlayerState());
 	UInventoryComponent* Inventory = PlayerState->InventoryComponent;
-	Inventory->OnItemUpdated.AddDynamic(this, &UMiyamotoSkillUI::UpdateGemCount);
+	Inventory->OnItemUpdated.AddUniqueDynamic(this, &UMiyamotoSkillUI::UpdateGemCount);
 	int32 CurrentGemCount = Inventory->GetItemQuantity(FName(TEXT("Gem")));
 	UpdateAllSkillsAvailability(CurrentGemCount);
 	

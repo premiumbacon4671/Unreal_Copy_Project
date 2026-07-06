@@ -54,15 +54,15 @@ public:
 	void SetIsActionLock(bool Lock);
 #pragma endregion
 
-private:
+
+protected:
 #pragma region Moveing
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> JumpMontage;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> EvadeMontage;
 #pragma endregion
 
-protected:
 #pragma region protected Component
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USkeletalMeshComponent> BodyComponent;
@@ -85,9 +85,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Sword Stance")
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> EquipMontage;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> UnEquipMontage;
 
 	//저스트 가드

@@ -37,6 +37,9 @@ private:
 	TObjectPtr<class UEarthStanceShieldUI> EarthStanceShieldBar;
 	TArray<TObjectPtr<class UImage>> LinkBalls;
 
+	UPROPERTY()
+	TObjectPtr<class UPlayableStateComponent> CurrentStateComponent;
+
 public:
 	void NativeConstruct() override;
 
@@ -56,4 +59,6 @@ public:
 	void HandleUpdateLinkSkillGauge(float Percent);
 	UFUNCTION()
 	void HandleUpdateLinkSkillBall(int Count);
+
+	void SwitchTargetStatusComponent(class UPlayableStateComponent* NewStatusComponent);
 };

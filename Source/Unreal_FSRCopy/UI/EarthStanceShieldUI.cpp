@@ -40,7 +40,7 @@ void UEarthStanceShieldUI::InitShieldUI(UEarthStanceActorComponent* InEarthStanc
 	}
 	EarthStanceActorComponent = InEarthStanceActorComponent;
 	EarthStanceActorComponent->OnShieldChanged.AddDynamic(this, &UEarthStanceShieldUI::HandleShieldChanged);
-	EarthStanceActorComponent->OnStanceStateChanged.AddDynamic(this, &UEarthStanceShieldUI::HandleStanceStateChanged);
+	EarthStanceActorComponent->OnStanceStateChanged.AddUniqueDynamic(this, &UEarthStanceShieldUI::HandleStanceStateChanged);
 	float InitialShieldPercent = EarthStanceActorComponent->GetShieldPercent();
 	HandleShieldChanged(InitialShieldPercent);
 }

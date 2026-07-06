@@ -60,10 +60,12 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	SecondWeaponComponent->SetupAttachment(BodyComponent, FName(TEXT("SecondWeapon")));
 	SecondWeaponCoverComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SecondWeaponCover"));
 	SecondWeaponCoverComponent->SetupAttachment(BodyComponent, FName(TEXT("SecondWeapon")));
+
+	SkillActionComponent = CreateDefaultSubobject<USkillActionComponent>(TEXT("SkillActionComponent"));
 #pragma endregion
 
 #pragma region Montage
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> JumpMontageFinder(
+	/*static ConstructorHelpers::FObjectFinder<UAnimMontage> JumpMontageFinder(
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_Jump.AM_Jump'"));
 	if (JumpMontageFinder.Succeeded())
 		JumpMontage = JumpMontageFinder.Object;
@@ -81,9 +83,8 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> EvadeMontageFinder(
 		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/Animation/AM_Evade.AM_Evade'"));
 	if (EvadeMontageFinder.Succeeded())
-		EvadeMontage = EvadeMontageFinder.Object;
+		EvadeMontage = EvadeMontageFinder.Object;*/
 
-	SkillActionComponent = CreateDefaultSubobject<USkillActionComponent>(TEXT("SkillActionComponent"));
 #pragma endregion
 
 	SpringArm->bUsePawnControlRotation = true;
@@ -393,10 +394,16 @@ void APlayableBaseCharacter::PostInitializeComponents()
 	FootComponent->SetMasterPoseComponent(GetMesh());
 
 	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::AttackMontageStarted);
-	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
-	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::OnMontageEndedGeneral);
-	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
-	GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
+	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
+	{
+		if (UAnimInstance* AnimInstance = CharacterMesh->GetAnimInstance())
+		{
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::OnMontageEndedGeneral);
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
+		}
+	}
 	
 	SkillActionComponent->BindSkillMontageDelegate(GetMesh()->GetAnimInstance());
 }
@@ -408,6 +415,8 @@ void APlayableBaseCharacter::AttackMontageStarted(UAnimMontage* Montage)
 
 void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted)
 {
+	if (CurSwordStanceComponent == nullptr)
+		return;
 	if (Montage != CurSwordStanceComponent->GetHeavyAttackMontage() && Montage != CurSwordStanceComponent->GetNormalAttackMontage())
 		return;
 
