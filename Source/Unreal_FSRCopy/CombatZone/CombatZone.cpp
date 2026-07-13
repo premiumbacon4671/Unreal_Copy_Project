@@ -64,6 +64,9 @@ void ACombatZone::CombatZoneEntranceOnEndOverlap(UPrimitiveComponent* Overlapped
 	{
 		PC->SetCombatMode();
 		PC->SetCurrentCombatZone(this);
+		//TestCode
+		//이오리가 출입시 세이버도 자동으로 전투모드 전환
+
 		SpawnMonsters();
 	}
 }

@@ -351,10 +351,10 @@ void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue&
 
 void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 {
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
-	isUIMode = true;
 	if(CurPlayableCharacter == MiyamotoIori)
 	{
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
+		isUIMode = true;
 		ActiveUIInterface = PlayerHUD->GetSwordStanceUI();
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::SelfHitTestInvisible);
 		
@@ -373,10 +373,10 @@ void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue
 	//ui를 켰다 껐을 때 이전 상태 유지
 	if (isUIMode == false)
 		return;
-	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
-	isUIMode = false;
 	if (CurPlayableCharacter == MiyamotoIori)
 	{
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+		isUIMode = false;
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
 		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
 		ActiveUIInterface->OnInterfaceClose();
@@ -590,40 +590,92 @@ void AMiyamotoIoriController::SwapWithServantInput(const FInputActionValue& valu
 		return;
 	if (!CurPlayableCharacter)
 		return;
+
+	APlayableBaseCharacter* OldCharacter = CurPlayableCharacter;
+	APlayableBaseCharacter* NewCharacter = nullptr;
+	bool bIsNowSaber = false;
+
+	if(CurPlayableCharacter == MiyamotoIori)
+	{
+		NewCharacter = SaberCharacter;
+		bIsNowSaber = true;
+	}
+	else if(CurPlayableCharacter != MiyamotoIori)
+	{
+		NewCharacter = MiyamotoIori;
+		bIsNowSaber = false;
+	}
+
+	FRotator CurrentControlRot = GetControlRotation();
+
+	AAIController* OldAI = Cast<AAIController>(NewCharacter->GetController());
+
+	Possess(NewCharacter);
+	CurPlayableCharacter = NewCharacter;
+
+	if (OldAI)
+	{
+		OldAI->Possess(OldCharacter);
+	}
+	//이전 캐릭터의 카메라 방향 유지
+	SetControlRotation(CurrentControlRot);
+	SetViewTarget(OldCharacter);
+	//카메라 이동시간 0.5초
+	float BlendTimeRealTime = 0.5f;
+	SetViewTargetWithBlend(NewCharacter, BlendTimeRealTime, EViewTargetBlendFunction::VTBlend_Cubic, 2.0f, true);
+	float TimeDilation = 0.01f;
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), TimeDilation);
+	//느려진 시간에 맞춰 카메라 속도 조정
+	if(PlayerCameraManager)
+	{
+		PlayerCameraManager->CustomTimeDilation = 1.0f / TimeDilation;
+	}
+	float BlendTimeGameTime = BlendTimeRealTime * TimeDilation;
+	GetWorld()->GetTimerManager().SetTimer(
+		SwitchTargetTimeRestoreHandle,
+		this,
+		&AMiyamotoIoriController::RestoreTime,
+		BlendTimeGameTime,
+		false
+	);
 	UResonanceComponent* ResonanceComp = nullptr;
 	if(AFatePlayerState* PS = GetPlayerState<AFatePlayerState>())
 	{
 		ResonanceComp = PS->ResonanceComponent;
+		if(ResonanceComp)
+		{
+			ResonanceComp->SetSaberActive(bIsNowSaber);
+		}
 	}
 
-	if (CurPlayableCharacter == MiyamotoIori)
-	{
-		AAIController* SaberAI = Cast<AAIController>(SaberCharacter->GetController());
-		Possess(SaberCharacter);
-		CurPlayableCharacter = SaberCharacter;
-		if(SaberAI)
-		{
-			SaberAI->Possess(MiyamotoIori);
-		}
-		if (ResonanceComp)
-		{
-			ResonanceComp->SetSaberActive(true);
-		}
-	}
-	else if (CurPlayableCharacter == SaberCharacter)
-	{
-		AAIController* IoriAI = Cast<AAIController>(MiyamotoIori->GetController());
-		Possess(MiyamotoIori);
-		CurPlayableCharacter = MiyamotoIori;
-		if(IoriAI)
-		{
-			IoriAI->Possess(SaberCharacter);
-		}
-		if (ResonanceComp)
-		{
-			ResonanceComp->SetSaberActive(false);
-		}
-	}
+	//if (CurPlayableCharacter == MiyamotoIori)
+	//{
+	//	AAIController* SaberAI = Cast<AAIController>(SaberCharacter->GetController());
+	//	Possess(SaberCharacter);
+	//	CurPlayableCharacter = SaberCharacter;
+	//	if(SaberAI)
+	//	{
+	//		SaberAI->Possess(MiyamotoIori);
+	//	}
+	//	if (ResonanceComp)
+	//	{
+	//		ResonanceComp->SetSaberActive(true);
+	//	}
+	//}
+	//else if (CurPlayableCharacter == SaberCharacter)
+	//{
+	//	AAIController* IoriAI = Cast<AAIController>(MiyamotoIori->GetController());
+	//	Possess(MiyamotoIori);
+	//	CurPlayableCharacter = MiyamotoIori;
+	//	if(IoriAI)
+	//	{
+	//		IoriAI->Possess(SaberCharacter);
+	//	}
+	//	if (ResonanceComp)
+	//	{
+	//		ResonanceComp->SetSaberActive(false);
+	//	}
+	//}
 	if (CurPlayableCharacter)
 	{
 		// GetComponentByClass를 쓰거나, 캐릭터에 만들어둔 Getter 함수를 사용해 컴포넌트를 가져옵니다.
@@ -642,4 +694,13 @@ void AMiyamotoIoriController::ZTestKeyInput(const FInputActionValue& value)
 	AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(CurPlayableCharacter->GetPlayerState());
 	UInventoryComponent* Inventory = FatePlayerState->InventoryComponent;
 	Inventory->AddItem(FName("Gem"), 10);
+}
+
+void AMiyamotoIoriController::RestoreTime()
+{
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+	if(PlayerCameraManager)
+	{
+		PlayerCameraManager->CustomTimeDilation = 1.0f;
+	}
 }

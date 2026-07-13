@@ -37,6 +37,7 @@ private:
 #pragma region Status
 protected:
 	//향후 서번트 스탯 필요 변수 작성예정
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	TObjectPtr<class UDataTable> PlayableDataTable;
 #pragma endregion
 
@@ -82,7 +83,7 @@ protected:
 #pragma region CombatMode
 	bool isCombatMode{ false };
 
-	UPROPERTY(EditAnywhere, Category = "Sword Stance")
+	UPROPERTY(VisibleAnywhere, Category = "Sword Stance")
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))

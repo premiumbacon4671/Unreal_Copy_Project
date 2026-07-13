@@ -351,6 +351,8 @@ void APlayableBaseCharacter::PlayEquipWeaponStateMontage_New(bool bIsEquip)
 
 void APlayableBaseCharacter::InitializeSwordStance()
 {
+	if (CurSwordStanceComponent == nullptr)
+		return;
 	CurSwordStanceComponent->InitSwordStance();
 	if(CurSwordStanceComponent->GetHikenDataAsset() != nullptr)
 		SkillActionComponent->SetHikenSkill(CurSwordStanceComponent->GetHikenDataAsset());

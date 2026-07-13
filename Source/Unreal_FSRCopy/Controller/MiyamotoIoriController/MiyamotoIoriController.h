@@ -18,7 +18,7 @@ class UNREAL_FSRCOPY_API AMiyamotoIoriController : public APlayerController
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Servant | Setup")
 	TSubclassOf<class AServantBaseCharacter> SaberCharacterClass;
-
+	FTimerHandle SwitchTargetTimeRestoreHandle;
 private:
 	TObjectPtr<class APlayableBaseCharacter> CurPlayableCharacter;
 	TObjectPtr<class APlayableBaseCharacter> MiyamotoIori;
@@ -126,4 +126,7 @@ public:
 	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }
 
 	void ZTestKeyInput(const FInputActionValue& value);
+protected:
+	UFUNCTION()
+	void RestoreTime();
 };
