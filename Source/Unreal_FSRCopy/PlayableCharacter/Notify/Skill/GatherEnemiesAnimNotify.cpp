@@ -13,6 +13,6 @@ void UGatherEnemiesAnimNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSeq
 	if (nullptr != Owner)
 	{
 		if(Owner->GetSkillActionComponent() != nullptr)
-			Owner->GetSkillActionComponent()->GatherEnemies(Owner->GetSkillActionComponent()->GetCurrentActiveSkillGatherSetting());
+			Owner->GetSkillActionComponent()->GatherEnemies();
 	}
 }

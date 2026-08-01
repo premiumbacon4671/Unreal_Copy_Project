@@ -155,6 +155,24 @@ void APlayableBaseCharacter::PossessedBy(AController* NewController)
 	//CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
 }
 
+void APlayableBaseCharacter::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	if (BodyComponent)
+	{
+		if (HeadComponent)
+			HeadComponent->SetLeaderPoseComponent(BodyComponent);
+		if (ArmComponent)
+			ArmComponent->SetLeaderPoseComponent(BodyComponent);
+		if (LegComponent)
+			LegComponent->SetLeaderPoseComponent(BodyComponent);
+		if (FootComponent)
+			FootComponent->SetLeaderPoseComponent(BodyComponent);
+		if (HairComponent)
+			HairComponent->SetLeaderPoseComponent(BodyComponent);
+	}
+}
+
 // Called to bind functionality to input
 void APlayableBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -679,6 +697,8 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 	else if (AttackVariety == EAttackVariety::Special || AttackVariety == EAttackVariety::Skill)
 	{
 		AttackData = SkillActionComponent->GetCurrentActiveSkillAttackData();
+		//적 모으기 종료
+		SkillActionComponent->EndGathering();
 	}
 	TArray<FHitResult> HitResults;
 	bool isHit = UKismetSystemLibrary::BoxTraceMulti(

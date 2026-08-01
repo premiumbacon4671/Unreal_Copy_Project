@@ -9,7 +9,12 @@
 #include "DataAsset/PrimaryDataAsset/SkillDataAsset/SkillDataAsset.h"
 #include "SkillActionComponent.generated.h"
 
-
+// 몬스터 오프셋 고정용 구조체
+struct FGatherTargetInfo
+{
+	TWeakObjectPtr<class ABaseMonster> TargetMonster;
+	FVector RelativeOffset;
+};
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREAL_FSRCOPY_API USkillActionComponent : public UActorComponent
 {
@@ -17,15 +22,18 @@ class UNREAL_FSRCOPY_API USkillActionComponent : public UActorComponent
 
 protected:
 	//이오리 마술, 서번트 공명스킬
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	TArray<TObjectPtr<USkillDataAsset>> NormalSkills;
 	//이오리 비검, 서번트 보구
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere)
 	TObjectPtr<USkillDataAsset> HikenSkill;
 
 	float CurrentChargeTime{ 0.0 };
 	float ChargeStartTime{ 0.0 };
 	bool IsCharging{ false };
+
+	FTimerHandle GatherTimerHandle;
+	TArray<FGatherTargetInfo> ActiveGatherTargets;
 #pragma region Production
 private:
 	float OriginalTimeDilation{ 1.0f };
@@ -41,7 +49,10 @@ private:
 	FOnTimelineFloat CameraProgressDelegate;
 	bool bIsTimelineTrackInitialized{ false };
 
+	UPROPERTY()
+	TObjectPtr<class ULevelSequencePlayer> ActiveSequencePlayer;
 	TObjectPtr<class APlayableBaseCharacter> OwnerCharacter;
+
 #pragma endregion
 public:	
 	// Sets default values for this component's properties
@@ -62,7 +73,12 @@ public:
 	FAttackData GetCurrentActiveSkillAttackData() const { return CurrentActiveSkill ? CurrentActiveSkill->AttackData : FAttackData(); }
 	FSkillGatherSetting GetCurrentActiveSkillGatherSetting() const { return CurrentActiveSkill ? CurrentActiveSkill->GatherSetting : FSkillGatherSetting(); }
 
-	void GatherEnemies(const FSkillGatherSetting& GatherSetting);
+	//Skill 시퀀서에세 사용하기 위해 선언
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	void GatherEnemies();
+	void UpdateGathering();
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	void EndGathering();
 	bool ExecuteSkill(int32 index);
 	bool TryExecuteSkill(USkillDataAsset* TargetSkill);
 	bool HasEnoughResource(USkillDataAsset* TargetSkill) const;
@@ -85,7 +101,9 @@ public:
 #pragma region Production
 	void PlaySkillCinematic(USkillDataAsset* TargetSkill);
 	//AnimNotify에서 호출되는 함수로, 슬로우모션이 끝나는 시점에 호출되어야 함
-	void EndSkillCinematic(USkillDataAsset* TargetSkill);
+	//시퀀서에서 사용하기 위해 UFUNCTION 선언
+	UFUNCTION(BlueprintCallable, Category = "Skill")
+	void EndSkillCinematic(USkillDataAsset* TargetSkill = nullptr);
 
 	//BeginPlay()에서 타임라인 컴포넌트를 생성하고, 타임라인이 업데이트될 때 호출되는 함수를 바인딩하는 로직이 필요합니다.
 	UFUNCTION()

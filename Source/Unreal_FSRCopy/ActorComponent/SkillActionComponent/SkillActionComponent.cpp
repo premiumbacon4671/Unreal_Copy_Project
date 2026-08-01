@@ -10,6 +10,7 @@
 #include "Projectile/FateProjectile.h"
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
 #include "DataAsset/PrimaryDataAsset/SkillDataAsset/BuffSkillDataAsset.h"
+#include "DataAsset/PrimaryDataAsset/SkillDataAsset/HikenSkillDataAsset.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
@@ -20,6 +21,9 @@
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "LevelSequence.h"
+#include "LevelSequencePlayer.h"
+#include "LevelSequenceActor.h"
 
 
 // Sets default values for this component's properties
@@ -73,12 +77,16 @@ void USkillActionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 	// ...
 }
 
-void USkillActionComponent::GatherEnemies(const FSkillGatherSetting& GatherSetting)
+void USkillActionComponent::GatherEnemies()
 {
+	if (nullptr == CurrentActiveSkill)
+		return;
+	const FSkillGatherSetting GatherSetting = CurrentActiveSkill->GatherSetting;
 	if (GatherSetting.bIsGathering == false)
 		return;
 	if(OwnerCharacter == nullptr || OwnerCharacter->GetCurrentCombatZone() == nullptr)
 		return;
+	EndGathering();
 	const TArray<ABaseMonster*>& Monsters = OwnerCharacter->GetCurrentCombatZone()->GetLiveMonsters();
 	//모을 중심점
 	FVector GatherCenter = OwnerCharacter->GetActorLocation() + (OwnerCharacter->GetActorForwardVector() * GatherSetting.ForwardOffset);
@@ -86,20 +94,76 @@ void USkillActionComponent::GatherEnemies(const FSkillGatherSetting& GatherSetti
 	{
 		if(nullptr == Monster || Monster->IsDead())
 			continue;
-		FVector RandamCircle = FVector(FMath::RandPointInCircle(GatherSetting.GatherRadius), 0.f);
-		//몬스터의 위치를 모을 중심점에서 랜덤한 원 안으로 이동
-		FVector FinalLocation = GatherCenter + RandamCircle;
-		FinalLocation.Z = Monster->GetActorLocation().Z;
-		//강제이동을 통한 물리 방지
-		Monster->SetActorLocation(FinalLocation, false, nullptr, ETeleportType::TeleportPhysics);
+		FGatherTargetInfo Info;
+		Info.TargetMonster = Monster;
+		Info.RelativeOffset = FVector(FMath::RandPointInCircle(GatherSetting.GatherRadius), 0.f);
 
-		if(auto* MoveComp = Monster->GetCharacterMovement())
+		ActiveGatherTargets.Add(Info);
+	}
+
+	if (ActiveGatherTargets.Num() == 0)
+		return;
+	GetWorld()->GetTimerManager().SetTimer(
+		GatherTimerHandle,
+		this,
+		&USkillActionComponent::UpdateGathering,
+		0.016f,
+		true
+	);
+}
+
+void USkillActionComponent::UpdateGathering()
+{
+	if (nullptr == CurrentActiveSkill || nullptr == OwnerCharacter)
+	{
+		EndGathering();
+		return;
+	}
+	const FSkillGatherSetting& GatherSetting = CurrentActiveSkill->GatherSetting;
+	FVector GatherCenter = OwnerCharacter->GetActorLocation() + (OwnerCharacter->GetActorForwardVector() * GatherSetting.ForwardOffset);
+
+	for (int32 i = ActiveGatherTargets.Num() - 1; i >= 0; --i)
+	{
+		ABaseMonster* Monster = ActiveGatherTargets[i].TargetMonster.Get();
+
+		if (nullptr == Monster || Monster->IsDead())
+		{
+			ActiveGatherTargets.RemoveAt(i);
+			continue;
+		}
+
+		// 최종 도달 목표 위치 (중심점 + 고정된 오프셋)
+		FVector FinalLocation = GatherCenter + ActiveGatherTargets[i].RelativeOffset;
+		FinalLocation.Z = Monster->GetActorLocation().Z;
+
+		// VInterpTo를 사용해 매끄럽게 끌어당김
+		FVector SmoothLocation = FMath::VInterpTo(
+			Monster->GetActorLocation(),
+			FinalLocation,
+			0.016f,
+			12.0f
+		);
+
+		Monster->SetActorLocation(SmoothLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+		if (auto* MoveComp = Monster->GetCharacterMovement())
 		{
 			MoveComp->StopMovementImmediately();
 		}
-		FVector LookDir = (OwnerCharacter->GetActorLocation() - FinalLocation).GetSafeNormal();
+
+		// 플레이어 바라보도록 회전
+		FVector LookDir = (OwnerCharacter->GetActorLocation() - SmoothLocation).GetSafeNormal();
 		Monster->SetActorRotation(FRotator(0.f, LookDir.Rotation().Yaw, 0.f));
 	}
+}
+
+void USkillActionComponent::EndGathering()
+{
+	if (GetWorld())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(GatherTimerHandle);
+	}
+	ActiveGatherTargets.Empty();
 }
 
 void USkillActionComponent::SetNormalSkill(int32 index, USkillDataAsset* NewSkill)
@@ -165,9 +229,18 @@ bool USkillActionComponent::TryExecuteSkill(USkillDataAsset* TargetSkill)
 		default:
 			break;
 		}
-		if (TargetSkill != HikenSkill)
+		UHikenSkillDataAsset* HikenData = Cast<UHikenSkillDataAsset>(TargetSkill);	
+		//비검, 보구일 경우 시네마틱 재생
+		if (HikenData)
+		{
+			PlaySkillCinematic(HikenData);
+		}
+		//일반 스킬일 경우 몽타주 실행
+		else
+		{
 			OwnerCharacter->SnapToTargetEnemy();
-		OwnerCharacter->PlayMontageFullBody(TargetSkill->SkillMontage);
+			OwnerCharacter->PlayMontageFullBody(TargetSkill->SkillMontage);
+		}
 		OwnerCharacter->SetIsActionLock(true);
 	}
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("Executed Skill: %s"), *TargetSkill->GetName()));
@@ -485,13 +558,8 @@ void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 		return;
 	if(nullptr == OwnerCharacter)
 		return;
-
-	if (TargetSkill->CameraSetting.bIsCameraEffect == false)
-	{
-		OwnerCharacter->ResetCameraPosition();
-	}
-
 	CurrentCinematicSkill = TargetSkill;
+
 	//시간 조작
 	if (TargetSkill->bUseTimeDilation)
 	{
@@ -500,8 +568,42 @@ void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 		//조종중인 캐릭터만 정상 속도
 		OwnerCharacter->CustomTimeDilation = 1.0f / TargetSkill->CustomTimeDilationValue;
 	}
+
+	//1. 시퀀서를 이용한 스킬 연출 시스템
+	//비검, 보구만 시퀀서를 사용
+	UHikenSkillDataAsset* TargetHiken = Cast<UHikenSkillDataAsset>(TargetSkill);
+	if (TargetHiken && TargetHiken->CinematicSequence)
+	{
+		ALevelSequenceActor* SequenceActor = nullptr;
+		FMovieSceneSequencePlaybackSettings PlaybackSettings;
+		ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
+			GetWorld(),
+			TargetHiken->CinematicSequence,
+			PlaybackSettings,
+			SequenceActor
+		);
+		if (SequenceActor && SequencePlayer)
+		{
+			TArray<AActor*> BindActors;
+			BindActors.Add(OwnerCharacter);
+			SequenceActor->SetBindingByTag(TargetHiken->CharacterBindingTag, BindActors, true);
+			if (TargetSkill->bUseTimeDilation && TargetSkill->CustomTimeDilationValue > 0.0f)
+			{
+				SequencePlayer->SetPlayRate(1.0f / TargetSkill->CustomTimeDilationValue);
+			}
+			ActiveSequencePlayer = SequencePlayer;
+			SequencePlayer->Play();
+			return;
+		}
+	}
+
+	//2. 타임라인을 통한 스킬연출 시스템
 	//카메라 연출
-	
+	//몇몇 일반 스킬은 타임라인을 통한 간단한 카메라 무빙을 이용
+	if (TargetSkill->CameraSetting.bIsCameraEffect == false)
+	{
+		OwnerCharacter->ResetCameraPosition();
+	}
 	if(TargetSkill->CameraSetting.CameraCurve)
 	{
 		if (OwnerCharacter->GetSpringArm())
@@ -524,16 +626,31 @@ void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 
 void USkillActionComponent::EndSkillCinematic(USkillDataAsset* TargetSkill)
 {
+	if (nullptr == TargetSkill)
+	{
+		TargetSkill = CurrentCinematicSkill;
+	}
 	if(nullptr == TargetSkill)
 		return;
 	//시간 조작 복구
+	ULevelSequencePlayer* SequencePlayer = nullptr;
+
 	if (TargetSkill->bUseTimeDilation)
 	{
-		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), OriginalTimeDilation);
-		if (nullptr != OwnerCharacter)
+		if(OriginalTimeDilation > 0.0f)
 		{
-			OwnerCharacter->CustomTimeDilation = 1.0f;
+			UGameplayStatics::SetGlobalTimeDilation(GetWorld(), OriginalTimeDilation);
+			if (nullptr != OwnerCharacter)
+			{
+				OwnerCharacter->CustomTimeDilation = 1.0f;
+			}
+			OriginalTimeDilation = 0.0f;
 		}
+	}
+	if(ActiveSequencePlayer)
+	{
+		ActiveSequencePlayer->SetPlayRate(1.0f);
+		ActiveSequencePlayer = nullptr;
 	}
 }
 

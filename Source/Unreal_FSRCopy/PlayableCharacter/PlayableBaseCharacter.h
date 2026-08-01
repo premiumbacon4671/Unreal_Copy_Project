@@ -148,6 +148,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnConstruction(const FTransform& Transform) override;
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	void SetMoveSpeed();
@@ -234,6 +235,8 @@ public:
 
 #pragma region AttackTraceNotify
 public:
+	//스킬의 시퀀서를 위한 UFUNCTION 선언
+	UFUNCTION(BlueprintCallable)
 	void AttackTrace(EAttackVariety AttackVariety) override;
 #pragma endregion
 
