@@ -29,6 +29,8 @@ void AServantBaseCharacter::BeginPlay()
 void AServantBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Yellow, FString::Printf(TEXT("Saber ActionLock : %s"), GetIsActionLock() ? TEXT("true") : TEXT("false")));
 }
 
 void AServantBaseCharacter::InitializeStatus()

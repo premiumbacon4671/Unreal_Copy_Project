@@ -98,6 +98,7 @@ public:
 	void BindSkillMontageDelegate(UAnimInstance* AnimInstance);
 	UFUNCTION()
 	void OnSkillMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	bool IsPlayingCinematic() const;
 #pragma region Production
 	void PlaySkillCinematic(USkillDataAsset* TargetSkill);
 	//AnimNotify에서 호출되는 함수로, 슬로우모션이 끝나는 시점에 호출되어야 함
@@ -111,5 +112,7 @@ public:
 	UFUNCTION()
 	//카메라 타임라인이 끝나는 시점에 호출되는 함수로, 카메라를 원래 위치로 되돌리는 역할을 함
 	void OnCameraTimelineFinished();
+	UFUNCTION()
+	void OnSkillCinematicFinished();
 #pragma endregion
 };

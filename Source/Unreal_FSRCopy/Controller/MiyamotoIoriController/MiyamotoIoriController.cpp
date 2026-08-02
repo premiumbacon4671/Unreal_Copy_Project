@@ -128,10 +128,10 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (ZTestKeyFinder.Succeeded())
 		ZTestKey = ZTestKeyFinder.Object;
 
-	static ConstructorHelpers::FClassFinder<AServantBaseCharacter> SaberClassFinder(
-		TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber.BP_Saber_C"));
+	/*static ConstructorHelpers::FClassFinder<AServantBaseCharacter> SaberClassFinder(
+		TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber"));
 	if (SaberClassFinder.Succeeded())
-		SaberCharacterClass = SaberClassFinder.Class;
+		SaberCharacterClass = SaberClassFinder.Class;*/
 }
 
 void AMiyamotoIoriController::BeginPlay()
@@ -144,6 +144,11 @@ void AMiyamotoIoriController::BeginPlay()
 	CurPlayableCharacter = MiyamotoIori;
 	//CurPlayableCharacter->InitializeIconUI();
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
+
+	SaberCharacterClass =
+		LoadClass<AServantBaseCharacter>(
+			nullptr,
+			TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber.BP_Saber_C"));
 
 	if (MiyamotoIori && SaberCharacterClass)
 	{

@@ -103,6 +103,7 @@ void USkillActionComponent::GatherEnemies()
 
 	if (ActiveGatherTargets.Num() == 0)
 		return;
+	UpdateGathering();
 	GetWorld()->GetTimerManager().SetTimer(
 		GatherTimerHandle,
 		this,
@@ -230,9 +231,14 @@ bool USkillActionComponent::TryExecuteSkill(USkillDataAsset* TargetSkill)
 			break;
 		}
 		UHikenSkillDataAsset* HikenData = Cast<UHikenSkillDataAsset>(TargetSkill);	
+
+		OwnerCharacter->SetIsActionLock(true);
 		//비검, 보구일 경우 시네마틱 재생
 		if (HikenData)
 		{
+			FString MontageName = GetNameSafe(OwnerCharacter->GetMesh()->GetAnimInstance()->GetCurrentActiveMontage());
+
+			UE_LOG(LogTemp, Warning, TEXT("Current Montage : %s"), *MontageName);
 			PlaySkillCinematic(HikenData);
 		}
 		//일반 스킬일 경우 몽타주 실행
@@ -241,7 +247,6 @@ bool USkillActionComponent::TryExecuteSkill(USkillDataAsset* TargetSkill)
 			OwnerCharacter->SnapToTargetEnemy();
 			OwnerCharacter->PlayMontageFullBody(TargetSkill->SkillMontage);
 		}
-		OwnerCharacter->SetIsActionLock(true);
 	}
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("Executed Skill: %s"), *TargetSkill->GetName()));
 	return true;
@@ -552,6 +557,12 @@ void USkillActionComponent::OnSkillMontageEnded(UAnimMontage* Montage, bool bInt
 	CurrentChargeTime = 0.0f;
 }
 
+bool USkillActionComponent::IsPlayingCinematic() const
+{
+	return ActiveSequencePlayer &&
+		ActiveSequencePlayer->IsPlaying();
+}
+
 void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 {
 	if(nullptr == TargetSkill)
@@ -591,7 +602,15 @@ void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 			{
 				SequencePlayer->SetPlayRate(1.0f / TargetSkill->CustomTimeDilationValue);
 			}
+			APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
+			if (PC)
+			{
+				PC->SetIgnoreLookInput(true);
+			}
 			ActiveSequencePlayer = SequencePlayer;
+			ActiveSequencePlayer->OnFinished.AddUniqueDynamic(
+				this,
+				&USkillActionComponent::OnSkillCinematicFinished);
 			SequencePlayer->Play();
 			return;
 		}
@@ -679,4 +698,16 @@ void USkillActionComponent::OnCameraTimelineFinished()
 	SpringArm->SetRelativeRotation(DefaultCameraRotation);
 
 	CurrentCinematicSkill = nullptr;
+}
+
+void USkillActionComponent::OnSkillCinematicFinished()
+{
+	OwnerCharacter->SetIsActionLock(false);
+	APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
+	if (PC)
+	{
+		PC->SetIgnoreLookInput(false);
+	}
+	CurrentCinematicSkill = nullptr;
+	ActiveSequencePlayer = nullptr;
 }

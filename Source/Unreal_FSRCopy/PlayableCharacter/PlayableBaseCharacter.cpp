@@ -118,7 +118,6 @@ void APlayableBaseCharacter::BeginPlay()
 void APlayableBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Yellow, FString::Printf(TEXT("ActionLock : %s"), bIsActionLock ? TEXT("true") : TEXT("false")));
 	if(isSprint && GetVelocity().Size2D() < WalkSpeed)
 	{
 		SetWalk();
@@ -783,6 +782,15 @@ void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, b
 {
 	if (bInterrupted)
 		return;
+	if (SkillActionComponent &&
+		SkillActionComponent->IsPlayingCinematic())
+	{
+		return;
+	}
+	UE_LOG(LogTemp, Warning,
+		TEXT("Montage End : %s Interrupted=%d"),
+		*GetNameSafe(Montage),
+		bInterrupted);
 
 	if(bInterrupted == false && GetCharacterMovement()->IsFalling() == false)
 	{
