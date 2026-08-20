@@ -27,6 +27,8 @@
 #include "UI/RecoverItemMenuUI.h"
 #include "UI/RecoverItemButton.h"
 #include "UI/PlayableStatusUI.h"
+#include "UI/LinkSkillUI.h"
+#include "UI/LinkSkillButtonUI.h"
 #include "HUD/PlayerHUD.h"
 #include "PlayerState/FatePlayerState.h"
 
@@ -122,6 +124,11 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (ServantUIActionFinder.Succeeded())
 		ServantUIAction = ServantUIActionFinder.Object;
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> ServantChangeActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_ServantChange.IA_ServantChange'"));
+	if (ServantChangeActionFinder.Succeeded())
+		ServantChangeAction = ServantChangeActionFinder.Object;
+
 	//테스트용 키
 	static ConstructorHelpers::FObjectFinder<UInputAction> ZTestKeyFinder(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_ZTestKey.IA_ZTestKey'"));
@@ -165,7 +172,7 @@ void AMiyamotoIoriController::BeginPlay()
 		{
 			SaberCharacter->SpawnDefaultController();
 		}
-
+		//PlayerHUD->InitializeLinkSkillUI(SaberCharacter);
 	}
 }
 
@@ -173,6 +180,17 @@ void AMiyamotoIoriController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	isCombat = CurPlayableCharacter->GetIsCombatMode();
+
+	if (bIsPendingAutoSwap && CurPlayableCharacter != MiyamotoIori)
+	{
+		AServantBaseCharacter* CurrentServant = Cast<AServantBaseCharacter>(CurPlayableCharacter);
+		//서번트가 교체 가능한 상태인지 확인
+		if (CurPlayableCharacter && CurrentServant->CanForceSwap())
+		{
+			bIsPendingAutoSwap = false;
+			SwapWithServant();
+		}
+	}
 }
 
 void AMiyamotoIoriController::SetupInputComponent()
@@ -204,9 +222,25 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(RotationAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SwitchTargetInput);
 		input->BindAction(RotationAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ResetSwitchTargetInput);
 		input->BindAction(OpenRecoverItemMenuAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::OpenRecoverItemMenuInput);
-		input->BindAction(ServantUIAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SwapWithServantInput);
+		//input->BindAction(ServantUIAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SwapWithServantInput);
+		input->BindAction(ServantUIAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::ServantUIStartedInput);
+		input->BindAction(ServantUIAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ServantUICompletedInput);
+		input->BindAction(ServantChangeAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SwapWithServantInput);
 
 		input->BindAction(ZTestKey, ETriggerEvent::Started, this, &AMiyamotoIoriController::ZTestKeyInput);
+	}
+}
+
+void AMiyamotoIoriController::SetupResonanceSystem(UResonanceComponent* ReadyResonanceComp)
+{
+	if (!ReadyResonanceComp)
+		return;
+	if (SaberCharacter)
+	{
+		FName SaberName = SaberCharacter->GetServantName();
+		ReadyResonanceComp->RegisterServantToParty(SaberName);
+		ReadyResonanceComp->SetSecondaryPartyServant(SaberName);
+		ReadyResonanceComp->OnServantGaugeDepleted.AddDynamic(this, &AMiyamotoIoriController::HandleGaugeDepleted);
 	}
 }
 
@@ -356,10 +390,13 @@ void AMiyamotoIoriController::HeavyAttackCompletedInput(const FInputActionValue&
 
 void AMiyamotoIoriController::ChangeStanceInput(const FInputActionValue& value)
 {
+	if (isUIMode || UIMode != UIMODE::NONE)
+		return;
 	if(CurPlayableCharacter == MiyamotoIori)
 	{
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
 		isUIMode = true;
+		UIMode = UIMODE::SWORDSTANCE;
 		ActiveUIInterface = PlayerHUD->GetSwordStanceUI();
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::SelfHitTestInvisible);
 		
@@ -376,12 +413,13 @@ void AMiyamotoIoriController::ChangeStanceCompletedInput(const FInputActionValue
 {
 	//공격 중에는 형 변경 불가
 	//ui를 켰다 껐을 때 이전 상태 유지
-	if (isUIMode == false)
+	if (isUIMode == false || UIMode != UIMODE::SWORDSTANCE)
 		return;
 	if (CurPlayableCharacter == MiyamotoIori)
 	{
 		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 		isUIMode = false;
+		UIMode = UIMODE::NONE;
 		PlayerHUD->SetSwordStanceUIVisibility(ESlateVisibility::Hidden);
 		GEngine->AddOnScreenDebugMessage(2, 5.0f, FColor::Blue, TEXT("Pause End"));
 		ActiveUIInterface->OnInterfaceClose();
@@ -587,30 +625,111 @@ void AMiyamotoIoriController::OpenRecoverItemMenuInput(const FInputActionValue& 
 	isUIMode = true;
 }
 
-void AMiyamotoIoriController::SwapWithServantInput(const FInputActionValue& value)
+void AMiyamotoIoriController::ServantUIStartedInput(const FInputActionValue& value)
 {
-	if(isUIMode)
+	if (isCombat == false)
 		return;
-	if(!MiyamotoIori || !SaberCharacter)
+	if(isUIMode == true || UIMode != UIMODE::NONE)
+		return;
+	if (!SaberCharacter)
 		return;
 	if (!CurPlayableCharacter)
 		return;
+	APlayerHUD* HUD = GetHUD<APlayerHUD>();
+	if (!HUD)
+		return;
+	ULinkSkillUI* LinkSkillUI = HUD->GetLinkSkillUI();
+	if (!LinkSkillUI)
+		return;
 
+	isUIMode = true;
+	UIMode = UIMODE::SERVANT;
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.0f);
+	ActiveUIInterface = LinkSkillUI;
+	LinkSkillUI->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	ActiveUIInterface->OnInterfaceOpen();
+}
+
+void AMiyamotoIoriController::ServantUICompletedInput(const FInputActionValue& value)
+{
+	if (isCombat == false)
+		return;
+	if (isUIMode == false || UIMode != UIMODE::SERVANT)
+		return;
+	if (!SaberCharacter)
+		return;
+	if (!CurPlayableCharacter)
+		return;
+	APlayerHUD* HUD = GetHUD<APlayerHUD>();
+	if (!HUD)
+		return;
+	ULinkSkillUI* LinkSkillUI = HUD->GetLinkSkillUI();
+	if (!LinkSkillUI)
+		return;
+
+	isUIMode = false;
+	UIMode = UIMODE::NONE;
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+	LinkSkillUI->SetVisibility(ESlateVisibility::Hidden);
+	if(nullptr != ActiveUIInterface)
+	{
+		ActiveUIInterface->OnInterfaceClose();
+	}
+	ActiveUIInterface = nullptr;
+}
+
+void AMiyamotoIoriController::SwapWithServantInput(const FInputActionValue& value)
+{
+	if (isUIMode == false || isCombat == false)
+		return;
+	if (UIMode != UIMODE::SERVANT)
+		return;
+
+	if (!CurPlayableCharacter || !SaberCharacter) return;
+
+	AFatePlayerState* PS = GetPlayerState<AFatePlayerState>();
+	if (!PS || !PS->ResonanceComponent) return;
+
+	UResonanceComponent* ResonanceComp = PS->ResonanceComponent;
+	FName SaberName = SaberCharacter->GetServantName();
+	if (CurPlayableCharacter == MiyamotoIori)
+	{
+		if (ResonanceComp->IsSwapAvailable(SaberName))
+		{
+			SwapWithServant();
+			PlayerHUD->SetLinkSkillUIVisibility(ESlateVisibility::Hidden);
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Yellow, TEXT("Not Enough Gauge"));
+		}
+	}
+	else
+	{
+		SwapWithServant();
+		PlayerHUD->SetLinkSkillUIVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void AMiyamotoIoriController::SwapWithServant()
+{
+	if (!MiyamotoIori || !SaberCharacter)
+		return;
 	APlayableBaseCharacter* OldCharacter = CurPlayableCharacter;
 	APlayableBaseCharacter* NewCharacter = nullptr;
 	bool bIsNowSaber = false;
 
-	if(CurPlayableCharacter == MiyamotoIori)
+	if (CurPlayableCharacter == MiyamotoIori)
 	{
 		NewCharacter = SaberCharacter;
 		bIsNowSaber = true;
 	}
-	else if(CurPlayableCharacter != MiyamotoIori)
+	else if (CurPlayableCharacter != MiyamotoIori)
 	{
 		NewCharacter = MiyamotoIori;
 		bIsNowSaber = false;
 	}
-
+	bIsPendingAutoSwap = false;
 	FRotator CurrentControlRot = GetControlRotation();
 
 	AAIController* OldAI = Cast<AAIController>(NewCharacter->GetController());
@@ -623,6 +742,7 @@ void AMiyamotoIoriController::SwapWithServantInput(const FInputActionValue& valu
 		OldAI->Possess(OldCharacter);
 	}
 	//이전 캐릭터의 카메라 방향 유지
+	SetIgnoreLookInput(true);
 	SetControlRotation(CurrentControlRot);
 	SetViewTarget(OldCharacter);
 	//카메라 이동시간 0.5초
@@ -631,7 +751,7 @@ void AMiyamotoIoriController::SwapWithServantInput(const FInputActionValue& valu
 	float TimeDilation = 0.01f;
 	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), TimeDilation);
 	//느려진 시간에 맞춰 카메라 속도 조정
-	if(PlayerCameraManager)
+	if (PlayerCameraManager)
 	{
 		PlayerCameraManager->CustomTimeDilation = 1.0f / TimeDilation;
 	}
@@ -644,43 +764,24 @@ void AMiyamotoIoriController::SwapWithServantInput(const FInputActionValue& valu
 		false
 	);
 	UResonanceComponent* ResonanceComp = nullptr;
-	if(AFatePlayerState* PS = GetPlayerState<AFatePlayerState>())
+	if (AFatePlayerState* PS = GetPlayerState<AFatePlayerState>())
 	{
 		ResonanceComp = PS->ResonanceComponent;
-		if(ResonanceComp)
+		if (ResonanceComp)
 		{
-			ResonanceComp->SetSaberActive(bIsNowSaber);
+			if (CurPlayableCharacter != MiyamotoIori)
+			{
+				AServantBaseCharacter* CurServant = Cast<AServantBaseCharacter>(CurPlayableCharacter);
+				if (nullptr == CurServant)
+					return;
+				ResonanceComp->SetActiveServant(CurServant->GetServantName());
+			}
+			else
+			{
+				ResonanceComp->SetActiveServant(NAME_Name);
+			}
 		}
 	}
-
-	//if (CurPlayableCharacter == MiyamotoIori)
-	//{
-	//	AAIController* SaberAI = Cast<AAIController>(SaberCharacter->GetController());
-	//	Possess(SaberCharacter);
-	//	CurPlayableCharacter = SaberCharacter;
-	//	if(SaberAI)
-	//	{
-	//		SaberAI->Possess(MiyamotoIori);
-	//	}
-	//	if (ResonanceComp)
-	//	{
-	//		ResonanceComp->SetSaberActive(true);
-	//	}
-	//}
-	//else if (CurPlayableCharacter == SaberCharacter)
-	//{
-	//	AAIController* IoriAI = Cast<AAIController>(MiyamotoIori->GetController());
-	//	Possess(MiyamotoIori);
-	//	CurPlayableCharacter = MiyamotoIori;
-	//	if(IoriAI)
-	//	{
-	//		IoriAI->Possess(SaberCharacter);
-	//	}
-	//	if (ResonanceComp)
-	//	{
-	//		ResonanceComp->SetSaberActive(false);
-	//	}
-	//}
 	if (CurPlayableCharacter)
 	{
 		// GetComponentByClass를 쓰거나, 캐릭터에 만들어둔 Getter 함수를 사용해 컴포넌트를 가져옵니다.
@@ -708,4 +809,13 @@ void AMiyamotoIoriController::RestoreTime()
 	{
 		PlayerCameraManager->CustomTimeDilation = 1.0f;
 	}
+	isUIMode = false;
+	UIMode = UIMODE::NONE;
+	ActiveUIInterface = nullptr;
+	SetIgnoreLookInput(false);
+}
+
+void AMiyamotoIoriController::HandleGaugeDepleted()
+{
+	bIsPendingAutoSwap = true;
 }

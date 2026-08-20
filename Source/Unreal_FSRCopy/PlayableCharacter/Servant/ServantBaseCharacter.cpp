@@ -63,3 +63,21 @@ void AServantBaseCharacter::WeaponUnEquip()
 {
 	SetWeaponVisibility(true);
 }
+
+bool AServantBaseCharacter::CanForceSwap() const
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && AnimInstance->IsAnyMontagePlaying())
+	{
+		UAnimMontage* CurrentMontage = AnimInstance->GetCurrentActiveMontage();
+		//회피, 점프 몽타주일 경우 교체 가능
+		if (CurrentMontage == EvadeMontage || CurrentMontage == JumpMontage)
+		{
+			return true;
+		}
+
+		//공격, 스킬 몽타주일 경우 교체 불가
+		return false;
+	}
+	return true;
+}

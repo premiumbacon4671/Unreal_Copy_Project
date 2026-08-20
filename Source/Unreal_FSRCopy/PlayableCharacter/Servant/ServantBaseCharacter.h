@@ -19,6 +19,8 @@ protected:
 	bool bStartWithWeaponHidden = false;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	FName ServantRowName;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
+	TObjectPtr<class UTexture2D> ServantIcon;
 public:
 	// 단독 행동 중인지 여부
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Servant|State")
@@ -37,4 +39,10 @@ public:
 
 	virtual void WeaponEquip() override;
 	virtual void WeaponUnEquip() override;
+
+	class UTexture2D* GetServantIcon() const { return ServantIcon; }
+	FName GetServantName() const { return ServantRowName; }
+
+	//교체 할 때 교체가 가능한 상태인지 반환
+	bool CanForceSwap() const;
 };

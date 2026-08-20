@@ -35,6 +35,10 @@ private:
 	TObjectPtr<class UImage> LinkBall6;
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UEarthStanceShieldUI> EarthStanceShieldBar;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UServantChargeBarUI> ServantChargeBar1;
+
 	TArray<TObjectPtr<class UImage>> LinkBalls;
 
 	UPROPERTY()
@@ -50,6 +54,8 @@ public:
 	void SetHPBarPercent(float Percent);
 	void SetHikenBarPercent(float Percent);
 	void SetLinkBarPercent(float Percent);
+	void SetServantChargeBarPercent(int Index, float Percent);
+	void InitServantGaugeBar(class AServantBaseCharacter* Servant, int Index);
 
 	UFUNCTION()
 	void HandleUpdateHp(float Percent);
@@ -59,6 +65,8 @@ public:
 	void HandleUpdateLinkSkillGauge(float Percent);
 	UFUNCTION()
 	void HandleUpdateLinkSkillBall(int Count);
+	UFUNCTION()
+	void HandleUpdateServantChargeBar(int Index, float Percent);
 
 	void SwitchTargetStatusComponent(class UPlayableStateComponent* NewStatusComponent);
 };

@@ -7,8 +7,10 @@
 #include "UI/PlayableStatusUI.h"
 #include "UI/MiyamotoSkillUI.h"
 #include "UI/RecoverItemMenuUI.h"
+#include "UI/LinkSkillUI.h"
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
+#include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
 
 APlayerHUD::APlayerHUD()
 {
@@ -28,6 +30,10 @@ APlayerHUD::APlayerHUD()
 		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_RecoverItemMenuUI.BP_RecoverItemMenuUI_C"));
 	if (RecoverItemMenuWidgetClass.Succeeded())
 		RecoverItemMenuWidget = RecoverItemMenuWidgetClass.Class;
+	static ConstructorHelpers::FClassFinder<ULinkSkillUI> LinkSkillWidgetClass(
+		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_LinkSkillUI.BP_LinkSkillUI_C"));
+	if (LinkSkillWidgetClass.Succeeded())
+		LinkSkillWidget = LinkSkillWidgetClass.Class;
 }
 
 void APlayerHUD::BeginPlay()
@@ -65,6 +71,15 @@ void APlayerHUD::BeginPlay()
 		RecoverItemMenuUI = CreateWidget<URecoverItemMenuUI>(GetWorld(), RecoverItemMenuWidget);
 		RecoverItemMenuUI->AddToViewport();
 		RecoverItemMenuUI->SetVisibility(ESlateVisibility::Hidden);
+	}
+	if (LinkSkillWidget)
+	{
+		LinkSkillUI = CreateWidget<ULinkSkillUI>(GetWorld(), LinkSkillWidget);
+		if (LinkSkillUI)
+		{
+			LinkSkillUI->AddToViewport();
+			//LinkSkillUI->Init(Cast<AServantBaseCharacter>(GetOwningPlayerController()->GetPawn()));
+		}
 	}
 }
 
@@ -106,4 +121,20 @@ void APlayerHUD::StartedSkillUI()
 void APlayerHUD::EndedSkillUI()
 {
 	MiyamotoSkillUI->EndedSkillUI();
+}
+
+void APlayerHUD::InitializeLinkSkillUI(AServantBaseCharacter* Servant)
+{
+	LinkSkillUI->Init(Servant);
+}
+
+void APlayerHUD::SetLinkSkillUIVisibility(ESlateVisibility eVisibility)
+{
+	LinkSkillUI->SetVisibility(eVisibility);
+}
+
+void APlayerHUD::InitializeServantGaugeUI(AServantBaseCharacter* Servant)
+{
+	
+	//PlayableStatusUI->HandleUpdateServantChargeBar()
 }

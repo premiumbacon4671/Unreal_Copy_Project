@@ -8,7 +8,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCalculateLinkSkillGauge, float, Percent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCalculateLinkBall, int32, Count);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSaberGaugeChanged, float, CurrentPercent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FServantGaugeChanged, int, Index,float, CurrentPercent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServantGaugeDepleted);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class UNREAL_FSRCOPY_API UResonanceComponent : public UActorComponent
@@ -30,17 +31,35 @@ private:
 	float MaxSaberGauge = { 100.0f };
 	float CurrentSaberGauge = { 0.0f };
 	//세이버 조종 여부
-	bool bIsSaberActive{ false };
+	//bool bIsSaberActive{ false };
+	
+
 protected:
+	//보유하고 있는 서번트
+	UPROPERTY(VisibleAnywhere, Category = "Resonance | Gauge")
+	TMap<FName, float> ServantSwapGaugeMap;
+	//현재 사용할 서번트
+	UPROPERTY(VisibleAnywhere, Category = "Resonance | Party")
+	TArray<FName> ActivePartyServants;
+	UPROPERTY(VisibleAnywhere, Category = "Resonance | State")
+	FName CurrentActiveServantName{ NAME_None };
+	UPROPERTY(EditAnywhere, Category = "Resonance | Gauge")
+	float MaxServantSwapGauge = { 60.0f };
+	UPROPERTY(EditAnywhere, Category = "Resonance | Gauge")
+	float SwapSageDecreaseRate = { 6.0f };
+
 	UPROPERTY(EditAnywhere, Category = "GainMultiplier")
 	float LinkSkillGaugeGainMultiplier{ 10.0f };
+	UPROPERTY(EditAnywhere, Category = "GainMultiplier")
+	float ServantGaugeGainMultiplier{ 100.0f };
 
 public:	
 	// Sets default values for this component's properties
 	UResonanceComponent();
 	FOnCalculateLinkSkillGauge OnCalculateLinkSkillGauge;
 	FOnCalculateLinkBall OnCalculateLinkBall;
-	FSaberGaugeChanged OnSaberGaugeChanged;
+	FServantGaugeChanged OnServantGaugeChanged;
+	FOnServantGaugeDepleted OnServantGaugeDepleted;
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -63,10 +82,22 @@ public:
 	void SetServantActive(bool bActive) { bIsServantActive = bActive; }
 	bool GetServantActive() const { return bIsServantActive; }
 
-#pragma region Saber
+#pragma region ServantSwap
 	void AddSaberGauge(float Amount);
 	void ConsumeSaberGauge(float Amount);
 	float GetSaberGaugePercent() const { return MaxSaberGauge > 0 ? CurrentSaberGauge / MaxSaberGauge : 0.0f; }
-	bool GetSaberActive() const { return bIsSaberActive; }
-	void SetSaberActive(bool bActive) { bIsSaberActive = bActive; }
+	//bool GetSaberActive() const { return bIsSaberActive; }
+	//void SetSaberActive(bool bActive) { bIsSaberActive = bActive; }
+
+	void RegisterServantToParty(FName ServantName);
+	void SetSecondaryPartyServant(FName ServantName);
+	void CalculateServnatGauge(int AmountDamage, float TargetMaxHP);
+	void AddSwapGauge(float Amount);
+	void SetActiveServant(FName ServantName);
+	bool IsSwapAvailable(FName ServantName) const;
+	float GetSwapGaugePercent(FName ServantName) const;
+	int GetActivePartyServantIndex(FName ServantName) const;
+	const TArray<FName>& GetActivePartyServants() const { return ActivePartyServants; }
+	FName GetCurrentActiveServant() const { return CurrentActiveServantName; }
+#pragma endregion
 };

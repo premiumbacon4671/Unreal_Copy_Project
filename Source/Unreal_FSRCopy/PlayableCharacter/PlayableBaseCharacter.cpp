@@ -747,7 +747,15 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 					{
 						UResonanceComponent* RC = FatePlayerState->ResonanceComponent;
 						if(RC->GetServantActive() == true)
+						{
 							RC->CalculateLinkSkillGauge(ActualDamage, Monster->GetMonsterMaxHP());
+							//서번트로 변경된상태에서는 서번트 게이지 안 오름
+							if(RC->GetCurrentActiveServant() == NAME_None)
+							{
+								RC->CalculateServnatGauge(ActualDamage, Monster->GetMonsterMaxHP());
+							}
+						}
+
 					}
 					//비검, 스킬은 게이지 안 채움
 					if (AttackVariety != EAttackVariety::Special && AttackVariety != EAttackVariety::Skill)

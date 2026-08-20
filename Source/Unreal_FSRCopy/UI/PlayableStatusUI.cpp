@@ -8,8 +8,10 @@
 #include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
 #include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
 #include "UI/EarthStanceShieldUI.h"
+#include "UI/ServantChargeBarUI.h"
 #include "PlayerState/FatePlayerState.h"
-
+#include "PlayableCharacter/Servant/ServantBaseCharacter.h"
+#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
@@ -32,6 +34,27 @@ void UPlayableStatusUI::NativeConstruct()
 			PlayerStatus->OnInitializedStat.AddDynamic(this, &UPlayableStatusUI::Init);
 		}
 	}*/
+	AMiyamotoIoriController* IoriController = Cast<AMiyamotoIoriController>(GetOwningPlayer());
+	if (!IoriController)
+		return;
+	if (AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(GetOwningPlayerState()))
+	{
+		// 2. 컨트롤러에서 필요한 컴포넌트와 서번트 정보 가져오기
+		if (UResonanceComponent* ResonanceComp = FatePlayerState->ResonanceComponent)
+		{
+			AServantBaseCharacter* Saber = IoriController->GetSaberCharacter();
+			if (Saber)
+			{
+				FName SaberName = Saber->GetServantName();
+				float InitPercent = ResonanceComp->GetSwapGaugePercent(SaberName);
+				int Index = ResonanceComp->GetActivePartyServantIndex(SaberName);
+
+				// 3. UI 자체 초기화
+				InitServantGaugeBar(Saber, Index);
+				HandleUpdateServantChargeBar(Index, InitPercent);
+			}
+		}
+	}
 }
 
 void UPlayableStatusUI::SetLinkBallVisibility(int Index, ESlateVisibility InVisibility)
@@ -73,6 +96,10 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 		ResonanceComp->OnCalculateLinkSkillGauge.AddDynamic(this, &UPlayableStatusUI::HandleUpdateLinkSkillGauge);
 
 		ResonanceComp->OnCalculateLinkBall.AddDynamic(this, &UPlayableStatusUI::HandleUpdateLinkSkillBall);
+
+		
+		ResonanceComp->OnServantGaugeChanged.RemoveAll(this);
+		ResonanceComp->OnServantGaugeChanged.AddDynamic(this, &UPlayableStatusUI::HandleUpdateServantChargeBar);
 	}
 	AMiyamoto_Iori* Miyamoto = Cast<AMiyamoto_Iori>(Character);
 	if (Miyamoto)
@@ -101,6 +128,31 @@ void UPlayableStatusUI::SetLinkBarPercent(float Percent)
 		LinkProgressBar->SetPercent(Percent);
 }
 
+void UPlayableStatusUI::SetServantChargeBarPercent(int Index, float Percent)
+{
+	if (ServantChargeBar1 && Index == 0)
+	{
+		ServantChargeBar1->UpdateServantChargeBar(Percent);
+	}
+}
+
+void UPlayableStatusUI::InitServantGaugeBar(AServantBaseCharacter* Servant, int Index)
+{
+	if (ServantChargeBar1 && Index == 0)
+	{
+		APlayerController* PC = GetWorld()->GetFirstPlayerController();
+		if (PC)
+		{
+			AFatePlayerState* PS = PC->GetPlayerState<AFatePlayerState>();
+			if (PS && PS->ResonanceComponent)
+			{
+				UResonanceComponent* RC = PS->ResonanceComponent;
+				ServantChargeBar1->Init(Servant->GetServantIcon(), RC->GetSwapGaugePercent(Servant->GetServantName()));
+			}
+		}
+	}
+}
+
 void UPlayableStatusUI::HandleUpdateHp(float Percent)
 {
 	SetHPBarPercent(Percent);
@@ -122,6 +174,11 @@ void UPlayableStatusUI::HandleUpdateLinkSkillBall(int Count)
 	{
 		SetLinkBallVisibility(i, i < Count ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 	}
+}
+
+void UPlayableStatusUI::HandleUpdateServantChargeBar(int Index, float Percent)
+{
+	SetServantChargeBarPercent(Index, Percent);
 }
 
 void UPlayableStatusUI::SwitchTargetStatusComponent(UPlayableStateComponent* NewStatusComponent)

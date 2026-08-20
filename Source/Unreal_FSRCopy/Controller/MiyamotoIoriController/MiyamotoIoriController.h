@@ -9,6 +9,13 @@
 /**
  * 
  */
+enum class UIMODE : uint32
+{
+	NONE,
+	SWORDSTANCE,
+	SERVANT,
+};
+
 #define CAMERA_SPIN_SPEED 100
 struct FInputActionValue;
 UCLASS()
@@ -66,6 +73,8 @@ private:
 	TObjectPtr<class UInputAction> UICancelAction;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> ServantUIAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> ServantChangeAction;
 
 	//hp회복, 아이템 수급 등 임시로 사용할 키
 	UPROPERTY(VisibleAnywhere)
@@ -75,17 +84,25 @@ private:
 	TObjectPtr<class UInputMappingContext> MappingContext;
 #pragma endregion
 
+	UIMODE UIMode{ UIMODE::NONE };
 	bool isMoveInput{ false };
 	bool isCombat{ false };
 	bool isUIMode{ false };
 	bool bCanSwitchTarget{ true };
+
+protected:
+	bool bIsPendingAutoSwap{ false };
 public:
 	AMiyamotoIoriController();
 	void BeginPlay();
 	void Tick(float DeltaTime) override;
 	void SetupInputComponent() override;
+	//UResonanceComponent가 컨틀롤러 보다 늦게 생성되는 문제로 인해
+	//컨트롤러에서 필요한 초기화를 UResonanceComponent가 생성이 될 때 실행하는 함수
+	void SetupResonanceSystem(class UResonanceComponent* ReadyResonanceComp);
 
 	APlayableBaseCharacter* GetCurPlayableCharacter() { return CurPlayableCharacter; }
+	AServantBaseCharacter* GetSaberCharacter() { return SaberCharacter; }
 
 	void MoveInput(const FInputActionValue& value);
 	void MoveEndInput(const FInputActionValue& value);
@@ -120,7 +137,11 @@ public:
 
 	bool GetIsMoveInput() const { return isMoveInput; }
 	
+	void ServantUIStartedInput(const FInputActionValue& value);
+	void ServantUICompletedInput(const FInputActionValue& value);
+	//삭제 예정
 	void SwapWithServantInput(const FInputActionValue& value);
+	void SwapWithServant();
 	
 	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }
 	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }
@@ -129,4 +150,7 @@ public:
 protected:
 	UFUNCTION()
 	void RestoreTime();
+
+	UFUNCTION()
+	void HandleGaugeDepleted();
 };

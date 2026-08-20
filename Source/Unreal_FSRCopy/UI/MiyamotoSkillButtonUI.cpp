@@ -62,13 +62,10 @@ void UMiyamotoSkillButtonUI::SetSkillAvailableState(bool bIsAvailable)
 {
 	if (bIsAvailable)
 	{
-		// 사용 가능: 원래 색상 (흰색, 불투명도 100%)
 		SetColorAndOpacity(FLinearColor(1.f, 1.f, 1.f, 1.f));
 	}
 	else
 	{
-		// 사용 불가능: 어둡고 약간 투명하게 (회색빛, 불투명도 50%)
-		// RGB 값을 낮추면 어두워지고, A(Alpha) 값을 낮추면 투명해집니다.
 		SetColorAndOpacity(FLinearColor(0.3f, 0.3f, 0.3f, 1.0f));
 	}
 }
