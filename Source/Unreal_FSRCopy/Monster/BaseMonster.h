@@ -70,7 +70,7 @@ public:
 
 	float GetMonsterMaxHP() const;
 	UFUNCTION()
-	void UpdateHPBar(float Percent);
+	void UpdateHPBar(class UBaseStateComponent* SenderComponent, float Percent);
 
 	void SetCurrentCombatZone(ACombatZone* CombatZone) { CurrentCombatZone = CombatZone; }
 	ACombatZone* GetCurrentCombatZone() const { return CurrentCombatZone; }

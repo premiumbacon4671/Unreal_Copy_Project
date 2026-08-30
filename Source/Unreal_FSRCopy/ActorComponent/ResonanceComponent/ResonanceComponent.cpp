@@ -14,6 +14,7 @@ UResonanceComponent::UResonanceComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 	ActivePartyServants.Init(NAME_None, 2);
+	FocusedServantIndex = 0;
 	// ...
 }
 
@@ -222,4 +223,39 @@ int UResonanceComponent::GetActivePartyServantIndex(FName ServantName) const
 		return ActivePartyServants.IndexOfByKey(ServantName);
 	}
 	return -1;
+}
+
+FName UResonanceComponent::GetFocusedServantName() const
+{
+	if (ActivePartyServants.IsValidIndex(FocusedServantIndex))
+	{
+		return ActivePartyServants[FocusedServantIndex];
+	}
+	return NAME_None;
+}
+
+void UResonanceComponent::CycleFocusedServant(int32 Direction)
+{
+	int32 ValidCount = 0;
+	for (const FName& Name : ActivePartyServants)
+	{
+		if (!Name.IsNone())
+			ValidCount++;
+	}
+
+	if (ValidCount <= 1)
+		return;
+	do
+	{
+		FocusedServantIndex += Direction;
+
+		if (FocusedServantIndex >= ActivePartyServants.Num())
+		{
+			FocusedServantIndex = 0;
+		}
+		else if (FocusedServantIndex < 0)
+		{
+			FocusedServantIndex = ActivePartyServants.Num() - 1;
+		}
+	} while (ActivePartyServants[FocusedServantIndex].IsNone());
 }

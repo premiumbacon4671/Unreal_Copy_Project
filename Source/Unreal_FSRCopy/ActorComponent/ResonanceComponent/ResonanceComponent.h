@@ -41,12 +41,14 @@ protected:
 	//현재 사용할 서번트
 	UPROPERTY(VisibleAnywhere, Category = "Resonance | Party")
 	TArray<FName> ActivePartyServants;
+	UPROPERTY(VisibleAnywhere, Category = "Resonance | Party")
+	int32 FocusedServantIndex{ 0 };
 	UPROPERTY(VisibleAnywhere, Category = "Resonance | State")
 	FName CurrentActiveServantName{ NAME_None };
 	UPROPERTY(EditAnywhere, Category = "Resonance | Gauge")
 	float MaxServantSwapGauge = { 60.0f };
 	UPROPERTY(EditAnywhere, Category = "Resonance | Gauge")
-	float SwapSageDecreaseRate = { 6.0f };
+	float SwapSageDecreaseRate = { 1.0f };
 
 	UPROPERTY(EditAnywhere, Category = "GainMultiplier")
 	float LinkSkillGaugeGainMultiplier{ 10.0f };
@@ -99,5 +101,8 @@ public:
 	int GetActivePartyServantIndex(FName ServantName) const;
 	const TArray<FName>& GetActivePartyServants() const { return ActivePartyServants; }
 	FName GetCurrentActiveServant() const { return CurrentActiveServantName; }
+	FName GetFocusedServantName() const;
+	int32 GetFocusedServantIndex() { return FocusedServantIndex; }
+	void CycleFocusedServant(int32 Direction);
 #pragma endregion
 };

@@ -61,7 +61,7 @@ protected:
 	FPlayableStat PlayableStat;
 
 	UPROPERTY(EditAnywhere, Category = "GainMultiplier")
-	float HikenGainMultiplier{ 20.0f };
+	float HikenGainMultiplier{ 30.0f };
 public:
 	FOnInitializedStat OnInitializedStat;
 	FOnCalculateHikenGauge OnCalculateHikenGauge;
@@ -100,6 +100,7 @@ public:
 	int GetMat() const { return GetPlayableStat().Mat; }
 
 	void CalculateHikenGauge(float AmountDamage, float TargetMaxHP);
+	bool IsOwnerPlayerControlled() const;
 
 #pragma region Buff
 public:

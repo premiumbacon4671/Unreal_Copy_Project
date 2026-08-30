@@ -197,14 +197,20 @@ void APlayableBaseCharacter::SetMoveSpeed()
 
 void APlayableBaseCharacter::SetSprint()
 {
-	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	if (UBaseStateComponent* StatusComp = GetStatusComponent())
+	{
+		StatusComp->SetBaseWalkSpeed(SprintSpeed);
+	}
 	isSprint = true;
 
 }
 
 void APlayableBaseCharacter::SetWalk()
 {
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+	if (UBaseStateComponent* StatusComp = GetStatusComponent())
+	{
+		StatusComp->SetBaseWalkSpeed(WalkSpeed);
+	}
 	isSprint = false;
 }
 
@@ -741,6 +747,18 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 			{
 				//Monster->HitBy(FinalDamage);
 				float ActualDamage = UGameplayStatics::ApplyDamage(Monster, FinalDamage, GetController(), this, UDamageType::StaticClass());
+				UBaseStateComponent* AttackerState = GetStatusComponent();
+				UBaseStateComponent* VictimState = Monster->GetMonsterStateComponent();
+
+				if (AttackerState && VictimState)
+				{
+					for (const FDebuffData& OnHitDebuff : AttackerState->GetActiveOnHitDebuffs())
+					{
+						VictimState->ApplyDebuff(OnHitDebuff);
+					}
+				}
+				
+				//비검, 공명, 서번트 게이지 상승
 				if(ActualDamage > 0.0f)
 				{
 					if (AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(GetPlayerState()))

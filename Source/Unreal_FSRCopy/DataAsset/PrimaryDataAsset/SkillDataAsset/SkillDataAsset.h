@@ -35,6 +35,35 @@ enum class ESkillWeaponRequirement : uint8
 	RequireNoEquipment, //장비 불필요
 };
 
+UENUM(BlueprintType)
+enum class EDebuffType : uint8
+{
+	None,
+	Slow,
+	AttackDown,
+	DefenseDown,
+	Stun
+};
+
+USTRUCT(BlueprintType)
+struct FDebuffData
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debuff")
+	EDebuffType DebuffType{ EDebuffType::None };
+
+	//지속시간
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debuff")
+	float Duration{ 0.0f };
+	//디버프 수치
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debuff")
+	float Value{ 0.0f };
+	//디버프 확률
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debuff")
+	float ApplyChance{ 100.0f };
+};
+
 //스킬 사용시 몬스터 모으기 설정 구조체
 USTRUCT(BlueprintType)
 struct FSkillGatherSetting
@@ -97,6 +126,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "AttackData")
 	FAttackData AttackData;
 	
+	UPROPERTY(EditAnywhere, Category = "Debuff")
+	TArray<FDebuffData> OnHitDebuffs;
+
 	UPROPERTY(EditAnywhere, Category = "Camera")
 	FSkillCameraSetting CameraSetting;
 

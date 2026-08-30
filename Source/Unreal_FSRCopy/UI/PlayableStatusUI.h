@@ -38,6 +38,10 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UServantChargeBarUI> ServantChargeBar1;
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UServantChargeBarUI> ServantChargeBar2;
+
+	int32 CurrentFocusedServantIndex{ 0 };
 
 	TArray<TObjectPtr<class UImage>> LinkBalls;
 
@@ -57,8 +61,9 @@ public:
 	void SetServantChargeBarPercent(int Index, float Percent);
 	void InitServantGaugeBar(class AServantBaseCharacter* Servant, int Index);
 
+	void RefreshServantUI();
 	UFUNCTION()
-	void HandleUpdateHp(float Percent);
+	void HandleUpdateHp(class UBaseStateComponent* SenderComponent, float Percent);
 	UFUNCTION()
 	void HandleUpdateHiken(float Percent);
 	UFUNCTION()
@@ -68,5 +73,6 @@ public:
 	UFUNCTION()
 	void HandleUpdateServantChargeBar(int Index, float Percent);
 
+	
 	void SwitchTargetStatusComponent(class UPlayableStateComponent* NewStatusComponent);
 };

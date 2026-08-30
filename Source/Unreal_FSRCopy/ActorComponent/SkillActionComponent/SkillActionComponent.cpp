@@ -142,7 +142,7 @@ void USkillActionComponent::UpdateGathering()
 			Monster->GetActorLocation(),
 			FinalLocation,
 			0.016f,
-			12.0f
+			60.0f
 		);
 
 		Monster->SetActorLocation(SmoothLocation, false, nullptr, ETeleportType::TeleportPhysics);
@@ -435,9 +435,15 @@ void USkillActionComponent::FireBuffSkill(USkillDataAsset* TargetSkill)
 		}
 	}
 
-	if (OwnerCharacter->GetStatusComponent())
+	if (UPlayableStateComponent * StateComp = OwnerCharacter->GetStatusComponent())
 	{
-		OwnerCharacter->GetStatusComponent()->ApplyAttackBuff(BuffSkillData->BuffMultiplier, BuffSkillData->BuffDuration, SpawnedVFXs);
+		float ActualDuration = (BuffSkillData->BuffDuration > 0.0f) ? BuffSkillData->BuffDuration : 15.0f;
+		StateComp->ApplyAttackBuff(BuffSkillData->BuffMultiplier, BuffSkillData->BuffDuration, SpawnedVFXs);
+		for (const FDebuffData& Debuff : TargetSkill->OnHitDebuffs)
+		{
+			// 플레이어에게 타격 디버프 장전 (유지 시간은 버프 지속 시간과 동일하게 맞춤)
+			StateComp->AddOnHitDebuffBuff(Debuff, ActualDuration);
+		}
 	}
 }
 
@@ -567,8 +573,10 @@ void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 {
 	if(nullptr == TargetSkill)
 		return;
-	if(nullptr == OwnerCharacter)
+	if (OwnerCharacter && !OwnerCharacter->IsControlled())
+	{
 		return;
+	}
 	CurrentCinematicSkill = TargetSkill;
 
 	//시간 조작

@@ -43,8 +43,10 @@ protected:
 	TArray<TObjectPtr<class UImage>> LinkBalls;
 
 	UPROPERTY(EditAnywhere, meta = (BindWidget))
-	TObjectPtr<class UServantChargeBarUI> ServantChargeBar;
+	TObjectPtr<class UServantChargeBarUI> ServantChargeBar1;
 
+	UPROPERTY(EditAnywhere, meta = (BindWidget))
+	TObjectPtr<class UServantChargeBarUI> ServantChargeBar2;
 public:
 	void NativeConstruct() override;
 	void UpdateAllLinkSkillsAvailability(int32 CurrentLinkCount, float CurrentLinkProgress);
@@ -54,4 +56,6 @@ public:
 	virtual void OnInterfaceClose() override;
 	virtual void OnInterfaceConfirm() override;
 	virtual void OnInterfaceMove(FIntPoint MoveDirection) override;
+
+	void RefreshPartyUI(class AServantBaseCharacter* Seervant);
 };

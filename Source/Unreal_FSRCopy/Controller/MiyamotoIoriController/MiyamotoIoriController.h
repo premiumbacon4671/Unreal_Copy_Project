@@ -26,6 +26,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Servant | Setup")
 	TSubclassOf<class AServantBaseCharacter> SaberCharacterClass;
 	FTimerHandle SwitchTargetTimeRestoreHandle;
+	UPROPERTY(VisibleAnywhere, Category = "Servant")
+	TMap<FName, class AServantBaseCharacter*> PartyServantMap;
+
+	//TestDummy
+	UPROPERTY(EditDefaultsOnly, Category = "Servant | Setup")
+	TSubclassOf<class AServantBaseCharacter> DummyCharacterClass;
+	TObjectPtr<class AServantBaseCharacter> DummyCharacter;
 private:
 	TObjectPtr<class APlayableBaseCharacter> CurPlayableCharacter;
 	TObjectPtr<class APlayableBaseCharacter> MiyamotoIori;
@@ -91,6 +98,7 @@ private:
 	bool bCanSwitchTarget{ true };
 
 protected:
+	//서번트에서 이오리로 강제 교체할 때 교체가 가능한지 확인하는 플래그
 	bool bIsPendingAutoSwap{ false };
 public:
 	AMiyamotoIoriController();
@@ -100,9 +108,12 @@ public:
 	//UResonanceComponent가 컨틀롤러 보다 늦게 생성되는 문제로 인해
 	//컨트롤러에서 필요한 초기화를 UResonanceComponent가 생성이 될 때 실행하는 함수
 	void SetupResonanceSystem(class UResonanceComponent* ReadyResonanceComp);
+	AServantBaseCharacter* GetFocusedServantCharacter();
+	AServantBaseCharacter* GetPartyServantCharacterByName(FName Name);
 
 	APlayableBaseCharacter* GetCurPlayableCharacter() { return CurPlayableCharacter; }
 	AServantBaseCharacter* GetSaberCharacter() { return SaberCharacter; }
+	AServantBaseCharacter* GetServantCharacter(FName Name) { return PartyServantMap[Name]; }
 
 	void MoveInput(const FInputActionValue& value);
 	void MoveEndInput(const FInputActionValue& value);
@@ -141,7 +152,7 @@ public:
 	void ServantUICompletedInput(const FInputActionValue& value);
 	//삭제 예정
 	void SwapWithServantInput(const FInputActionValue& value);
-	void SwapWithServant();
+	void SwapWithServant(AServantBaseCharacter* TargetServant = nullptr);
 	
 	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }
 	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }

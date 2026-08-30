@@ -147,8 +147,8 @@ void ABaseMonster::InitStat(const FMonsterStat& Data)
 	if (HPBarWidget && StatusComponent)
 	{
 		HPBarWidget->SetHPBarPercent(StatusComponent->GetHPPercent());
-		StatusComponent->OnUpdateHp.RemoveAll(this);
-		StatusComponent->OnUpdateHp.AddDynamic(this, &ABaseMonster::UpdateHPBar);
+		StatusComponent->OnUpdateHpSignature.RemoveAll(this);
+		StatusComponent->OnUpdateHpSignature.AddDynamic(this, &ABaseMonster::UpdateHPBar);
 	}
 }
 
@@ -162,7 +162,7 @@ float ABaseMonster::GetMonsterMaxHP() const
 	return StatusComponent->GetMaxHP();
 }
 
-void ABaseMonster::UpdateHPBar(float Percent)
+void ABaseMonster::UpdateHPBar(UBaseStateComponent* SenderComponent, float Percent)
 {
 	if (HPBarWidgetComponent)
 	{

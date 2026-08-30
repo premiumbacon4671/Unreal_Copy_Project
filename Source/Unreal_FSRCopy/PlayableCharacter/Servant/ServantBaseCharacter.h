@@ -40,9 +40,13 @@ public:
 	virtual void WeaponEquip() override;
 	virtual void WeaponUnEquip() override;
 
-	class UTexture2D* GetServantIcon() const { return ServantIcon; }
+	UTexture2D* GetServantIcon() const { return ServantIcon; }
 	FName GetServantName() const { return ServantRowName; }
+	void SetServantName(FName Name) { ServantRowName = Name; }
+	void ResetIcon() { ServantIcon = nullptr; }
 
 	//교체 할 때 교체가 가능한 상태인지 반환
 	bool CanForceSwap() const;
+
+	virtual void TryInitializeUI() override;
 };

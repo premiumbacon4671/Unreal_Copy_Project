@@ -4,6 +4,8 @@
 #include "PlayableCharacter/Servant/ServantBaseCharacter.h"
 #include "ActorComponent/StateComponent/PlayableStateComponent.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
+#include "HUD/PlayerHUD.h"
+#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 
 AServantBaseCharacter::AServantBaseCharacter()
 {
@@ -80,4 +82,22 @@ bool AServantBaseCharacter::CanForceSwap() const
 		return false;
 	}
 	return true;
+}
+
+void AServantBaseCharacter::TryInitializeUI()
+{
+	Super::TryInitializeUI();
+	if (!HasActorBegunPlay())
+		return;
+	AMiyamotoIoriController* PC = Cast<AMiyamotoIoriController>(GetController());
+	if (!PC)
+	{
+		return;
+	}
+	APlayerHUD* PlayerHUD = Cast<APlayerHUD>(PC->GetHUD());
+	if (!PlayerHUD)
+	{
+		return;
+	}
+	PlayerHUD->InitializeLinkSkillUI(this);
 }

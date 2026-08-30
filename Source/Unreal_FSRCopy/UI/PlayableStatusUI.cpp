@@ -34,27 +34,7 @@ void UPlayableStatusUI::NativeConstruct()
 			PlayerStatus->OnInitializedStat.AddDynamic(this, &UPlayableStatusUI::Init);
 		}
 	}*/
-	AMiyamotoIoriController* IoriController = Cast<AMiyamotoIoriController>(GetOwningPlayer());
-	if (!IoriController)
-		return;
-	if (AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(GetOwningPlayerState()))
-	{
-		// 2. 컨트롤러에서 필요한 컴포넌트와 서번트 정보 가져오기
-		if (UResonanceComponent* ResonanceComp = FatePlayerState->ResonanceComponent)
-		{
-			AServantBaseCharacter* Saber = IoriController->GetSaberCharacter();
-			if (Saber)
-			{
-				FName SaberName = Saber->GetServantName();
-				float InitPercent = ResonanceComp->GetSwapGaugePercent(SaberName);
-				int Index = ResonanceComp->GetActivePartyServantIndex(SaberName);
-
-				// 3. UI 자체 초기화
-				InitServantGaugeBar(Saber, Index);
-				HandleUpdateServantChargeBar(Index, InitPercent);
-			}
-		}
-	}
+	RefreshServantUI();
 }
 
 void UPlayableStatusUI::SetLinkBallVisibility(int Index, ESlateVisibility InVisibility)
@@ -72,13 +52,13 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 	if (PlayerStatus == nullptr)
 		return;
 	CurrentStateComponent = PlayerStatus;
-	HandleUpdateHp(PlayerStatus->GetHPPercent());
+	HandleUpdateHp(PlayerStatus, PlayerStatus->GetHPPercent());
 	HandleUpdateHiken(PlayerStatus->GetHikenPercent());
 
-	PlayerStatus->OnUpdateHp.RemoveAll(this);
+	PlayerStatus->OnUpdateHpSignature.RemoveAll(this);
 	PlayerStatus->OnCalculateHikenGauge.RemoveAll(this);
 
-	PlayerStatus->OnUpdateHp.AddDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
+	PlayerStatus->OnUpdateHpSignature.AddDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
 
 	PlayerStatus->OnCalculateHikenGauge.AddDynamic(this, &UPlayableStatusUI::HandleUpdateHiken);
 
@@ -130,9 +110,20 @@ void UPlayableStatusUI::SetLinkBarPercent(float Percent)
 
 void UPlayableStatusUI::SetServantChargeBarPercent(int Index, float Percent)
 {
-	if (ServantChargeBar1 && Index == 0)
+	AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(GetOwningPlayerState());
+	if (!FatePlayerState || !FatePlayerState->ResonanceComponent) return;
+
+	int32 FocusedIndex = FatePlayerState->ResonanceComponent->GetFocusedServantIndex();
+
+	if (Index == FocusedIndex)
 	{
-		ServantChargeBar1->UpdateServantChargeBar(Percent);
+		if (ServantChargeBar1)
+			ServantChargeBar1->UpdateServantChargeBar(Percent);
+	}
+	else
+	{
+		if (ServantChargeBar2)
+			ServantChargeBar2->UpdateServantChargeBar(Percent);
 	}
 }
 
@@ -147,15 +138,72 @@ void UPlayableStatusUI::InitServantGaugeBar(AServantBaseCharacter* Servant, int 
 			if (PS && PS->ResonanceComponent)
 			{
 				UResonanceComponent* RC = PS->ResonanceComponent;
-				ServantChargeBar1->Init(Servant->GetServantIcon(), RC->GetSwapGaugePercent(Servant->GetServantName()));
+
+				if (Index == 0 && ServantChargeBar1)
+				{
+					ServantChargeBar1->Init(Servant->GetServantIcon(), RC->GetSwapGaugePercent(Servant->GetServantName()));
+				}
+				else if (Index == 1 && ServantChargeBar2)
+				{
+					ServantChargeBar2->Init(Servant->GetServantIcon(), RC->GetSwapGaugePercent(Servant->GetServantName()));
+				}
 			}
+
 		}
 	}
 }
 
-void UPlayableStatusUI::HandleUpdateHp(float Percent)
+void UPlayableStatusUI::RefreshServantUI()
 {
-	SetHPBarPercent(Percent);
+	AMiyamotoIoriController* IoriController = Cast<AMiyamotoIoriController>(GetOwningPlayer());
+	if (!IoriController) return;
+
+	AFatePlayerState* FatePlayerState = Cast<AFatePlayerState>(GetOwningPlayerState());
+	if (!FatePlayerState || !FatePlayerState->ResonanceComponent) return;
+
+	UResonanceComponent* ResonanceComp = FatePlayerState->ResonanceComponent;
+	const TArray<FName>& ActiveParty = ResonanceComp->GetActivePartyServants();
+
+	int32 FocusedIndex = ResonanceComp->GetFocusedServantIndex();
+	int32 OtherIndex = (FocusedIndex == 0) ? 1 : 0;
+	
+	if (ServantChargeBar1 && ActiveParty.IsValidIndex(FocusedIndex) && !ActiveParty[FocusedIndex].IsNone())
+	{
+		FName FocusedName = ActiveParty[FocusedIndex];
+		AServantBaseCharacter* FocusedServant = IoriController->GetPartyServantCharacterByName(FocusedName);
+		if (FocusedServant)
+		{
+			ServantChargeBar1->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			ServantChargeBar1->Init(FocusedServant->GetServantIcon(), ResonanceComp->GetSwapGaugePercent(FocusedName));
+		}
+	}
+	else if (ServantChargeBar1)
+	{
+		ServantChargeBar1->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+	if (ServantChargeBar2 && ActiveParty.IsValidIndex(OtherIndex) && !ActiveParty[OtherIndex].IsNone())
+	{
+		FName OtherName = ActiveParty[OtherIndex];
+		AServantBaseCharacter* OtherServant = IoriController->GetPartyServantCharacterByName(OtherName);
+		if (OtherServant)
+		{
+			ServantChargeBar2->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			ServantChargeBar2->Init(OtherServant->GetServantIcon(), ResonanceComp->GetSwapGaugePercent(OtherName));
+		}
+	}
+	else if (ServantChargeBar2)
+	{
+		ServantChargeBar2->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
+
+void UPlayableStatusUI::HandleUpdateHp(UBaseStateComponent* SenderComponent, float Percent)
+{
+	if (SenderComponent == CurrentStateComponent)
+	{
+		SetHPBarPercent(Percent);
+	}
 }
 
 void UPlayableStatusUI::HandleUpdateHiken(float Percent)
@@ -185,16 +233,16 @@ void UPlayableStatusUI::SwitchTargetStatusComponent(UPlayableStateComponent* New
 {
 	if(CurrentStateComponent)
 	{
-		CurrentStateComponent->OnUpdateHp.RemoveDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
+		CurrentStateComponent->OnUpdateHpSignature.RemoveDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
 		CurrentStateComponent->OnCalculateHikenGauge.RemoveDynamic(this, &UPlayableStatusUI::HandleUpdateHiken);
 	}
 
 	CurrentStateComponent = NewStatusComponent;
 	if (CurrentStateComponent)
 	{
-		CurrentStateComponent->OnUpdateHp.AddUniqueDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
+		CurrentStateComponent->OnUpdateHpSignature.AddUniqueDynamic(this, &UPlayableStatusUI::HandleUpdateHp);
 		CurrentStateComponent->OnCalculateHikenGauge.AddUniqueDynamic(this, &UPlayableStatusUI::HandleUpdateHiken);
-		HandleUpdateHp(CurrentStateComponent->GetHPPercent());
+		HandleUpdateHp(CurrentStateComponent, CurrentStateComponent->GetHPPercent());
 		HandleUpdateHiken(CurrentStateComponent->GetHikenPercent());
 	}
 }

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "DataAsset/PrimaryDataAsset/SkillDataAsset/SkillDataAsset.h"
 #include "Engine/DataTable.h"
 #include "BaseStateComponent.generated.h"
 
@@ -12,11 +13,13 @@ struct FBaseStat : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
-	FBaseStat() : 
+	FBaseStat() :
 		MaxHP(0.0f),
 		CurHP(0.0f),
 		AttackPower(0),
 		DefencePower(0),
+		CurrentBaseSpeed(0.0f),
+		MoveSpeedMultiplier(1.0f),
 		Mesh(nullptr) {
 
 	}
@@ -29,9 +32,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	int DefencePower;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	float CurrentBaseSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
+	float MoveSpeedMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stat")
 	TObjectPtr<class USkeletalMesh> Mesh;
 };
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdateHp, float, Percent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnUpdateHpSignature, UBaseStateComponent*, SenderComponent, float, NewHPPercent);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UNREAL_FSRCOPY_API UBaseStateComponent : public UActorComponent
@@ -42,6 +50,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Stat")
 	FBaseStat BaseStat;
 
+	//받은 디버프
+	TMap<EDebuffType, FTimerHandle> DebuffTimerHandles;
+
+private:
+	//플레이어가 현재 가지고 있는 타격 시 받을 디버프 목록
+	UPROPERTY()
+	TArray<FDebuffData> ActiveOnHitDebuffs;
+	//사용하는 디버프 타이머 관리용 맵
+	TMap<EDebuffType, FTimerHandle> OnHitBuffTimerHandles;
+
 public:
 	// Sets default values for this component's properties
 	UBaseStateComponent();
@@ -49,9 +67,11 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
+	//캐릭터 이동속도 적용
+	void RefreshMovementSpeed();
 public:
 	FOnUpdateHp OnUpdateHp;
+	FOnUpdateHpSignature OnUpdateHpSignature;
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -71,4 +91,10 @@ public:
 	bool IsDead() const { return GetStat().CurHP <= 0; }
 	int GetDefencePower() const { return GetStat().DefencePower; }
 	virtual void InitState(const FBaseStat& InBaseStat);
+
+	void SetBaseWalkSpeed(float NewBaseSpeed);
+	void ApplyDebuff(const FDebuffData& Debuff);
+
+	void AddOnHitDebuffBuff(const FDebuffData& DebuffToApply, float BuffDuration);
+	const TArray<FDebuffData>& GetActiveOnHitDebuffs() const { return ActiveOnHitDebuffs; }
 };
