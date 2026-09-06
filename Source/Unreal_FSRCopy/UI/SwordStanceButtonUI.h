@@ -32,6 +32,7 @@ public:
 	void SetSwordStanceVisibility(ESlateVisibility eVisibility);
 	void SetHighlightVisibility(ESlateVisibility eVisibility);
 	void SetSwordStanceType(ESWORDSTANCE eSwordStance);
+	void SetIcon(UTexture2D* image);
 	ESWORDSTANCE GetSwordStanceType() const { return SwordStanceType; }
 	ESlateVisibility GetHVisiblility();
 };

@@ -99,7 +99,6 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 		{
 
 			//다음 공격 선입력
-			//if (IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
 			if (bIsAttackQueued == false && NormalAttackSectionIndex > 0)
 			{
 				//IsPossibleNextAttack = true;
@@ -117,8 +116,6 @@ void UBaseSwordStanceActorComponent::PlayNormalAttackMontage()
 	}
 	//행동 잠금
 	OwnerCharacter->SetIsActionLock(true);
-
-	//GEngine->AddOnScreenDebugMessage(2, 3.0f, FColor::Blue, FString::Printf(TEXT("Play Normal Attack Montage AttackSpeed %f"), AmountAttackSpeed));
 
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, FString::Printf(TEXT("AmountAttackSpeed %d"), AmountAttackSpeed));
 	OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, GetAddCurNormalAttackSectionName(), AmountAttackSpeed);
@@ -138,7 +135,6 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 		return;
 	
 	//강공격을 통한 응격은 없음
-	//현재 TestCode로 인해 사용 중 수정 예정
 	if (OwnerCharacter->GetIsWaitingForCounterInput())
 		return;
 
@@ -158,11 +154,9 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 			if (HeavyAttackData[NormalAttackSectionIndex].AttackCount >= HeavyAttackData[NormalAttackSectionIndex].AttackMaxCount)
 				return;
 
-			//if(IsPossibleNextAttack == false && NormalAttackSectionIndex > 0)
 			if (bIsAttackQueued == false && bCanReceiveInput == true && NormalAttackSectionIndex > 0)
 			{
 				//다음 공격 선입력
-				//IsPossibleNextAttack = true;
 				bIsAttackQueued = true;
 				bCanReceiveInput = false;
 				NextAttackMontage = HeavyAttackMontage;
@@ -179,7 +173,6 @@ void UBaseSwordStanceActorComponent::PlayHeavyAttackMontage()
 	if (OwnerCharacter->PlayMontageFullBody(HeavyAttackMontage, GetCurHeavyAttackSectionName(), AmountAttackSpeed) == true)
 	{
 		HeavyAttackData[NormalAttackSectionIndex].AttackCount++;
-		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("TTTTTPlay Heavy Attack Montage"));
 	}
 	else
 	{
@@ -199,13 +192,11 @@ void UBaseSwordStanceActorComponent::PlayTriggeredHeavyAttackMontage()
 
 	if(AnimInstance->Montage_IsPlaying(HeavyAttackMontage) == false)
 		return;
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("SSSSSPlay Heavy Attack Montage"));
 	
 	if(IsCharging == false)
 	{
 		IsCharging = true;
 		ChargeStartTime = GetWorld()->GetTimeSeconds();
-		//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, TEXT("Charging Started..."));
 	}
 }
 
@@ -374,5 +365,33 @@ FAttackData UBaseSwordStanceActorComponent::GetAttackData(EAttackVariety AttackV
 			break;
 	}
 	return FAttackData();
+}
+
+float UBaseSwordStanceActorComponent::ExcuteAINormalAttack(int AttackIndex)
+{
+	APlayableBaseCharacter* OwnerCharacter = Cast<APlayableBaseCharacter>(GetOwner());
+	if (!IsValid(OwnerCharacter) || !IsValid(NormalAttackMontage))
+		return 0.0f;
+	if (OwnerCharacter->GetMovementComponent()->IsFalling() == true ||
+		OwnerCharacter->IsEvading() == true || OwnerCharacter->GetIsCombatMode() == false)
+		return 0.0f;
+
+	UAnimInstance* AnimInstance = OwnerCharacter->GetBodyComponent()->GetAnimInstance();
+
+	if (!IsValid(AnimInstance))
+		return 0.0f;
+	FName SectionName = NormalAttackData[AttackIndex].MontageSectionName;
+	bool bPlayed = OwnerCharacter->PlayMontageFullBody(NormalAttackMontage, SectionName, AmountAttackSpeed);
+	if(!bPlayed)
+		return 0.0f;
+
+	int32 SectionIndex = NormalAttackMontage->GetSectionIndex(SectionName);
+	if (SectionIndex != INDEX_NONE)
+	{
+		float SectionLength = NormalAttackMontage->GetSectionLength(SectionIndex);
+		float PlayDuration = SectionLength / FMath::Max(0.001f, AmountAttackSpeed);
+		return PlayDuration;
+	}
+	return 0.0f;
 }
 

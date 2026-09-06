@@ -32,7 +32,6 @@ void AServantBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Yellow, FString::Printf(TEXT("Saber ActionLock : %s"), GetIsActionLock() ? TEXT("true") : TEXT("false")));
 }
 
 void AServantBaseCharacter::InitializeStatus()
@@ -59,11 +58,13 @@ void AServantBaseCharacter::SetWeaponVisibility(bool bVisible)
 void AServantBaseCharacter::WeaponEquip()
 {
 	SetWeaponVisibility(false);
+	SetIsWeaponEquip(true);
 }
 
 void AServantBaseCharacter::WeaponUnEquip()
 {
 	SetWeaponVisibility(true);
+	SetIsWeaponEquip(false);
 }
 
 bool AServantBaseCharacter::CanForceSwap() const

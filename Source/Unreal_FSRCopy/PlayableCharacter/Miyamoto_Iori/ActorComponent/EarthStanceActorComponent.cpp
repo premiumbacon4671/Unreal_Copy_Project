@@ -203,3 +203,8 @@ int UEarthStanceActorComponent::SwordStanceUpdateAttack()
 	int SuperValue = Super::SwordStanceUpdateAttack();
 	return SuperValue;
 }
+
+void UEarthStanceActorComponent::SetStanceActive(bool isActive)
+{
+	OnStanceStateChanged.Broadcast(isActive);
+}

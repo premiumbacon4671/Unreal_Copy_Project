@@ -8,12 +8,13 @@
 #include "UI/SwordStanceButtonUI.h"
 #include "PlayableCharacter/Miyamoto_Iori/ActorComponent/BaseSwordStanceActorComponent.h"
 
+
 void USwordStanceUI::Init(AMiyamoto_Iori* Miyamoto)
 {
-	EarthStance->SetColor(TEXT("#AD8C00FF"));
+	//EarthStance->SetColor(TEXT("#AD8C00FF"));
 	WaterStance->SetColor(TEXT("#00B9E3FF"));
 	VoidStance->SetColor(TEXT("#84349CFF"));
-	FireStance->SetColor(TEXT("#CA0000FF"));
+	//FireStance->SetColor(TEXT("#CA0000FF"));
 	WindStance->SetColor(TEXT("#008A00FF"));
 
 	if (Miyamoto == nullptr)
@@ -73,6 +74,8 @@ void USwordStanceUI::NativeConstruct()
 		//EarthStance = CreateWidget<USwordStanceButtonUI>(GetWorld(), SwordButtonClass);
 		Buttons[2][1] = EarthStance;
 		EarthStance->SetSwordStanceType(ESWORDSTANCE::EST_EARTH);
+		if (EarthIcon)
+			EarthStance->SetIcon(EarthIcon);
 		//WaterStance = CreateWidget<USwordStanceButtonUI>(GetWorld(), SwordButtonClass);
 		Buttons[1][2] = WaterStance;
 		WaterStance->SetSwordStanceType(ESWORDSTANCE::EST_WATER);
@@ -82,6 +85,8 @@ void USwordStanceUI::NativeConstruct()
 		//FireStance = CreateWidget<USwordStanceButtonUI>(GetWorld(), SwordButtonClass);
 		Buttons[1][0] = FireStance;
 		FireStance->SetSwordStanceType(ESWORDSTANCE::EST_FIRE);
+		if (FireIcon)
+			FireStance->SetIcon(FireIcon);
 		//WindStance = CreateWidget<USwordStanceButtonUI>(GetWorld(), SwordButtonClass);
 		Buttons[0][1] = WindStance; 
 		WindStance->SetSwordStanceType(ESWORDSTANCE::EST_WIND);

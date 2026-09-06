@@ -111,6 +111,7 @@ public:
 
 	void SetIsUnlockSwordStance(bool isUnlock) { IsUnlockSwordStance = isUnlock; }
 	bool GetIsUnlockSwordStance() const { return IsUnlockSwordStance; }
+	bool GetIsCharging() const { return IsCharging; }
 
 	FName GetAddCurNormalAttackSectionName();
 	FName GetCurHeavyAttackSectionName();
@@ -145,4 +146,8 @@ public:
 	FAttackData GetAttackData(EAttackVariety AttackVariety);
 
 	EWeaponVFXTarget GetWeaponVFXTaraget() const { return WeaponVFXTarget; }
+
+	float ExcuteAINormalAttack(int AttackIndex);
+
+	virtual void SetStanceActive(bool isActive) {};
 };

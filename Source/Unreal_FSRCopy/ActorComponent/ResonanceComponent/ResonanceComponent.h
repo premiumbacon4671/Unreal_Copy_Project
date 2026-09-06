@@ -48,7 +48,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Resonance | Gauge")
 	float MaxServantSwapGauge = { 60.0f };
 	UPROPERTY(EditAnywhere, Category = "Resonance | Gauge")
-	float SwapSageDecreaseRate = { 1.0f };
+	float SwapSageDecreaseRate = { 3.0f };
 
 	UPROPERTY(EditAnywhere, Category = "GainMultiplier")
 	float LinkSkillGaugeGainMultiplier{ 10.0f };
@@ -88,8 +88,6 @@ public:
 	void AddSaberGauge(float Amount);
 	void ConsumeSaberGauge(float Amount);
 	float GetSaberGaugePercent() const { return MaxSaberGauge > 0 ? CurrentSaberGauge / MaxSaberGauge : 0.0f; }
-	//bool GetSaberActive() const { return bIsSaberActive; }
-	//void SetSaberActive(bool bActive) { bIsSaberActive = bActive; }
 
 	void RegisterServantToParty(FName ServantName);
 	void SetSecondaryPartyServant(FName ServantName);

@@ -11,14 +11,16 @@ APlayableGameModeBase::APlayableGameModeBase()
 {
 	//수정 예정
 	static ConstructorHelpers::FClassFinder<ACharacter> PlayerCharacterClass(
-		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/BP_MiyamotoIori.BP_MiyamotoIori_C"));
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/BP_MiyamotoIori"));
+		//TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/BP_MiyamotoIori.BP_MiyamotoIori_C"));
 	if (PlayerCharacterClass.Succeeded())
 		DefaultPawnClass = PlayerCharacterClass.Class;
 	PlayerControllerClass = AMiyamotoIoriController::StaticClass();
 	HUDClass = APlayerHUD::StaticClass();
 
 	static ConstructorHelpers::FClassFinder<APlayerState> FatePlayerStateClass(
-		TEXT("/Game/Blueprint/PlayerState/BP_FatePlayerState.BP_FatePlayerState_C"));
+		TEXT("/Game/Blueprint/PlayerState/BP_FatePlayerState"));
+		//TEXT("/Game/Blueprint/PlayerState/BP_FatePlayerState.BP_FatePlayerState_C"));
 	if(FatePlayerStateClass.Succeeded())
 		PlayerStateClass = FatePlayerStateClass.Class;
 }

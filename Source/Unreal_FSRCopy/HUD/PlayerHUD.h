@@ -26,6 +26,8 @@ private:
 	TObjectPtr<class URecoverItemMenuUI> RecoverItemMenuUI;
 	TSubclassOf<class ULinkSkillUI> LinkSkillWidget;
 	TObjectPtr<class ULinkSkillUI> LinkSkillUI;
+	TSubclassOf<class UGameMenuUserWidget> GameMenuWidget;
+	TObjectPtr<class UGameMenuUserWidget>  GameMenuUI;
 public:
 	APlayerHUD();
 	void BeginPlay() override;
@@ -41,12 +43,11 @@ public:
 	void InitializeLinkSkillUI(class AServantBaseCharacter* Servant);
 	void SetLinkSkillUIVisibility(ESlateVisibility eVisibility);
 
-	void InitializeServantGaugeUI(class AServantBaseCharacter* Servant);
-
 
 	USwordStanceUI* GetSwordStanceUI() { return SwordStanceUI; }
 	UPlayableStatusUI* GetPlayableStatusUI() { return PlayableStatusUI; }
 	UMiyamotoSkillUI* GetMiyamotoSkillUI() { return MiyamotoSkillUI; }
 	URecoverItemMenuUI* GetRecoverItemMenuUI() { return RecoverItemMenuUI; }
 	ULinkSkillUI* GetLinkSkillUI() { return LinkSkillUI; }
+	UGameMenuUserWidget* GetGameMenuUI() { return GameMenuUI; }
 };

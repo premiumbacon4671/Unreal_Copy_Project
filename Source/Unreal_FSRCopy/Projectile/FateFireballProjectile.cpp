@@ -39,13 +39,6 @@ void AFateFireballProjectile::Tick(float DeltaTime)
 	{
 		FVector PushVelocity = GetActorForwardVector() * ProjectileMovementComponent->InitialSpeed;
 		float CheckRadius = 150.0f;
-		/*for (ACharacter* Enemy : PushedEnemies)
-		{
-			if (IsValid(Enemy))
-			{
-				Enemy->LaunchCharacter(PushVelocity, true, true);
-			}
-		}*/
 		for (int32 i = PushedEnemies.Num() - 1; i >= 0; --i)
 		{
 			ACharacter* Enemy = PushedEnemies[i];

@@ -40,6 +40,11 @@ private:
 
 	TObjectPtr<class AMiyamoto_Iori> CurPlayableCharacter;
 
+	UPROPERTY(EditAnywhere, Category = "Icon")
+	TObjectPtr<class UTexture2D> FireIcon;
+	UPROPERTY(EditAnywhere, Category = "Icon")
+	TObjectPtr<class UTexture2D> EarthIcon;
+
 	//X = row Y = Column
 	FIntPoint CurStanceIndex;
 	FIntPoint ChangeStanceIndex;

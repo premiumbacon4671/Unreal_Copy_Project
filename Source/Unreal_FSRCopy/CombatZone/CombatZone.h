@@ -39,6 +39,24 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn", meta = (AllowPrivateAccess = "true"))
 	TArray<class ABaseMonster*> LiveMonsters;
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "ComatZone")
+	bool bIsCleared = false;
+
+
+	UPROPERTY()
+	TObjectPtr<class APlayableBaseCharacter> ActivePlayer{ nullptr };
+
+	UPROPERTY()
+	TObjectPtr<class AServantBaseCharacter> ActiveServant{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "ComatZone | Wave")
+	int32 CurrentWaveIndex{ 0 };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ComatZone | Wave")
+	int32 MaxWaves{ 2 };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ComatZone | Wave")
+	int32 MonstersPerWave{ 5 };
 public:
 	// Sets default values for this actor's properties
 	ACombatZone();
@@ -59,4 +77,5 @@ public:
 	//전투존에 존재하는 몬스터들을 반환하는 함수
 	const TArray<class ABaseMonster*>& GetLiveMonsters() const { return LiveMonsters; }
 	void OnMonsterDestroyed(class ABaseMonster* DestroyedActor);
+
 };

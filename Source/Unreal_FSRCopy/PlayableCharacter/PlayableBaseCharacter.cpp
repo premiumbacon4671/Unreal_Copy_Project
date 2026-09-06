@@ -17,6 +17,10 @@
 #include "Engine/DamageEvents.h"
 #include "Algo/Sort.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "AIController.h"
+#include "BrainComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
 
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "UI/CounterAttackUI.h"
@@ -64,29 +68,6 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	SkillActionComponent = CreateDefaultSubobject<USkillActionComponent>(TEXT("SkillActionComponent"));
 #pragma endregion
 
-#pragma region Montage
-	/*static ConstructorHelpers::FObjectFinder<UAnimMontage> JumpMontageFinder(
-		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_Jump.AM_Jump'"));
-	if (JumpMontageFinder.Succeeded())
-		JumpMontage = JumpMontageFinder.Object;
-
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> EquipMontageFinder(
-		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_Equip.AM_Equip'"));
-	if (EquipMontageFinder.Succeeded())
-		EquipMontage = EquipMontageFinder.Object;
-
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> UnEquipMontageFinder(
-		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/MiyamotoIori/Animation/AM_UnEquip.AM_UnEquip'"));
-	if (UnEquipMontageFinder.Succeeded())
-		UnEquipMontage = UnEquipMontageFinder.Object;
-
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> EvadeMontageFinder(
-		TEXT("/Script/Engine.AnimMontage'/Game/Blueprint/PlayableCharacter/Animation/AM_Evade.AM_Evade'"));
-	if (EvadeMontageFinder.Succeeded())
-		EvadeMontage = EvadeMontageFinder.Object;*/
-
-#pragma endregion
-
 	SpringArm->bUsePawnControlRotation = true;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -96,7 +77,8 @@ APlayableBaseCharacter::APlayableBaseCharacter()
 	CounterAttackWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("CounterAttackWidget"));
 	CounterAttackWidgetComponent->SetupAttachment(GetRootComponent());
 	static ConstructorHelpers::FClassFinder<UUserWidget> CounterAttackWidgetClassFinder(
-		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_CounterAttack.BP_CounterAttack_C"));
+		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_CounterAttack"));
+		//TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_CounterAttack.BP_CounterAttack_C"));
 	if (CounterAttackWidgetClassFinder.Succeeded())
 	{
 		CounterAttackWidgetComponent->SetWidgetClass(CounterAttackWidgetClassFinder.Class);
@@ -122,36 +104,61 @@ void APlayableBaseCharacter::Tick(float DeltaTime)
 	{
 		SetWalk();
 	}
-	if (CurrentTarget && !CurrentTarget->IsDead())
+	AController* CurrentController = GetController();
+	if(APlayerController* PC = Cast<APlayerController>(CurrentController))
 	{
-		APlayerController* PC = Cast<APlayerController>(GetController());
-		if (PC && PC->PlayerCameraManager)
+		if (CurrentTarget && !CurrentTarget->IsDead())
 		{
-			FVector CameraLocation = PC->PlayerCameraManager->GetCameraLocation();
-			FVector TargetLocation = CurrentTarget->GetActorLocation() + FVector(0.f, 0.f, 80.0f);
-			FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(CameraLocation, TargetLocation);
-			
-			FRotator CurrentControlRotation = PC->GetControlRotation();
-			FRotator NewControlRotation = UKismetMathLibrary::RInterpTo(
-				CurrentControlRotation,
-				TargetRotation,
-				DeltaTime,
-				CameraTargetingInterpSpeed
-			);
-			NewControlRotation.Roll = 0.f;
-			PC->SetControlRotation(NewControlRotation);
+			if (PC && PC->PlayerCameraManager)
+			{
+				FVector CameraLocation = PC->PlayerCameraManager->GetCameraLocation();
+				FVector TargetLocation = CurrentTarget->GetActorLocation() + FVector(0.f, 0.f, 80.0f);
+				FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(CameraLocation, TargetLocation);
+
+				FRotator CurrentControlRotation = PC->GetControlRotation();
+				FRotator NewControlRotation = UKismetMathLibrary::RInterpTo(
+					CurrentControlRotation,
+					TargetRotation,
+					DeltaTime,
+					CameraTargetingInterpSpeed
+				);
+				NewControlRotation.Roll = 0.f;
+				PC->SetControlRotation(NewControlRotation);
+			}
+		}
+		else if (CurrentTarget && CurrentTarget->IsDead())
+		{
+			LockOnBestTarget();
 		}
 	}
-	else if (CurrentTarget && CurrentTarget->IsDead())
+	else if (AAIController* AICon = Cast<AAIController>(CurrentController))
 	{
-		LockOnBestTarget();
+		if (isCombatMode && CurrentTarget && !CurrentTarget->IsDead())
+		{
+			FVector AILocation = GetActorLocation();
+			FVector TargetLocation = CurrentTarget->GetActorLocation();
+
+			FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(AILocation, TargetLocation);
+
+			TargetRotation.Pitch = 0.0f;
+			TargetRotation.Roll = 0.0f;
+			float AIRotationInterpSpeed = 10.0f;
+			FRotator NewActorRotation = UKismetMathLibrary::RInterpTo(
+				GetActorRotation(),
+				TargetRotation,
+				DeltaTime,
+				AIRotationInterpSpeed
+			);
+
+			SetActorRotation(NewActorRotation);
+		}
 	}
 }
 
 void APlayableBaseCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	//CounterAttackUI->SetVisibility(ESlateVisibility::Hidden);
+	InitializeIconUI();
 }
 
 void APlayableBaseCharacter::OnConstruction(const FTransform& Transform)
@@ -180,10 +187,43 @@ void APlayableBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerIn
 
 void APlayableBaseCharacter::SetIsActionLock(bool Lock)
 {
+	if (bIsActionLock == Lock)
+		return;
 	bIsActionLock = Lock;
-	if(GetController())
+	AController* CurrentController = GetController();
+	if (!CurrentController)
+		return;
+
+	if (APlayerController* PC = Cast<APlayerController>(CurrentController))
 	{
-		GetController()->SetIgnoreMoveInput(Lock);
+		PC->SetIgnoreMoveInput(Lock);
+		UE_LOG(LogTemp, Warning,
+			TEXT("SetIsActionLock : %s / SetIgnoreMoveInput : %s"),
+			Lock ? TEXT("true") : TEXT("false"),
+			GetController()->IsMoveInputIgnored()
+			? TEXT("true")
+			: TEXT("false"));
+	}
+	else if (AAIController* AICon = Cast<AAIController>(CurrentController))
+	{
+		UBrainComponent* BrainComp = AICon->GetBrainComponent();
+
+		if (Lock)
+		{
+			AICon->StopMovement();
+
+			if (BrainComp)
+			{
+				BrainComp->PauseLogic(TEXT("ActionLock"));
+			}
+		}
+		else
+		{
+			if (BrainComp)
+			{
+				BrainComp->ResumeLogic(TEXT("ActionLock"));
+			}
+		}
 	}
 }
 
@@ -288,13 +328,51 @@ bool APlayableBaseCharacter::PlayMontageFullBody(TObjectPtr<UAnimMontage> Montag
 void APlayableBaseCharacter::SetCombatMode()
 {
 	//Test Code
-	//isCombatMode = true;
 	isCombatMode = !isCombatMode;
-	//PlayEquipWeaponMontage();
-	PlayEquipWeaponStateMontage_New(isCombatMode);
+	if (!isCombatMode)
+	{
+		StopMontage(nullptr, 0.1f);
+		SetIsActionLock(true);
+		RequestUnblockContinuousInput();
+		UE_LOG(LogTemp, Warning, TEXT("BBBBB"));
+		GetCurSwordStanceComponent()->ResetAttackInfo();
+		GetCurSwordStanceComponent()->ResetNextAttack();
+		//전투 종료 후 검을 쥐고 있을 때만 검을 넣음
+		if (IsWeaponEquip)
+		{
+			PlayEquipWeaponStateMontage_New(isCombatMode);
+		}
+		else
+		{
+			SetIsActionLock(false);
+		}
+	}
+	else
+	{
+		PlayEquipWeaponStateMontage_New(isCombatMode);
+	}
+	SetWalk();
 	FString ModeText = isCombatMode ? TEXT("true") : TEXT("false");
 	GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("CombatMode : ") + ModeText);
 	InitializeSwordStance();
+	AController* CurrentController = GetController();
+	if (AAIController* AICon = Cast<AAIController>(CurrentController))
+	{
+		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+		{
+			if (isCombatMode)
+			{
+				// 만약 이오리가 타겟으로 박혀있다면 즉시 클리어하여 이오리에게 달려가는 오동작 방지
+				AActor* CurrentTargetActor = Cast<AActor>(BB->GetValueAsObject(FName("TargetActor")));
+				APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+
+				if (CurrentTargetActor == PlayerPawn)
+				{
+					BB->ClearValue(FName("TargetActor"));
+				}
+			}
+		}
+	}
 }
 
 void APlayableBaseCharacter::ResetCameraPosition()
@@ -329,28 +407,23 @@ void APlayableBaseCharacter::PlayEquipWeaponMontage()
 	}
 
 	SetIsActionLock(true);
-	//GetController()->SetIgnoreMoveInput(true);
 	PlayMontageFullBody(Montage);
 }
 
 void APlayableBaseCharacter::WeaponEquip()
 {
-	/*FirstWeaponComponent->AttachToComponent(BodyComponent,
-		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
-		FName(TEXT("FirstWeaponHand")));*/
 	FirstWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		FName(TEXT("FirstWeaponHand")));
+	SetIsWeaponEquip(true);
 }
 
 void APlayableBaseCharacter::WeaponUnEquip()
 {
-	/*FirstWeaponComponent->AttachToComponent(BodyComponent,
-		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
-		FName(TEXT("FirstWeapon")));*/
 	FirstWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		FName(TEXT("FirstWeapon")));
+	SetIsWeaponEquip(false);
 }
 
 void APlayableBaseCharacter::PlayEquipWeaponStateMontage_New(bool bIsEquip)
@@ -367,7 +440,6 @@ void APlayableBaseCharacter::PlayEquipWeaponStateMontage_New(bool bIsEquip)
 	if (TargetMontage != nullptr)
 	{
 		SetIsActionLock(true);
-		//GetController()->SetIgnoreMoveInput(true);
 		PlayMontageFullBody(TargetMontage);
 	}
 }
@@ -395,16 +467,14 @@ void APlayableBaseCharacter::ExecuteHeal(float RecoverAmount)
 	GetStatusComponent()->RecoverHP(RecoverAmount);
 }
 
-void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage)
+void APlayableBaseCharacter::StopMontage(TObjectPtr<UAnimMontage> Montage, float blend)
 {
-	/*if(Montage == nullptr)
-		return;*/
-	BodyComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
-	HeadComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
-	HairComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
-	ArmComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
-	LegComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
-	FootComponent->GetAnimInstance()->Montage_Stop(0.0f, Montage);
+	BodyComponent->GetAnimInstance()->Montage_Stop(blend, Montage);
+	HeadComponent->GetAnimInstance()->Montage_Stop(blend, Montage);
+	HairComponent->GetAnimInstance()->Montage_Stop(blend, Montage);
+	ArmComponent->GetAnimInstance()->Montage_Stop(blend, Montage);
+	LegComponent->GetAnimInstance()->Montage_Stop(blend, Montage);
+	FootComponent->GetAnimInstance()->Montage_Stop(blend, Montage);
 }
 
 void APlayableBaseCharacter::PostInitializeComponents()
@@ -418,15 +488,14 @@ void APlayableBaseCharacter::PostInitializeComponents()
 	LegComponent->SetMasterPoseComponent(GetMesh());
 	FootComponent->SetMasterPoseComponent(GetMesh());
 
-	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &APlayableBaseCharacter::AttackMontageStarted);
 	if (USkeletalMeshComponent* CharacterMesh = GetMesh())
 	{
 		if (UAnimInstance* AnimInstance = CharacterMesh->GetAnimInstance())
 		{
-			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
-			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::OnMontageEndedGeneral);
-			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
-			GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddUniqueDynamic(this, &APlayableBaseCharacter::AttackMontageEnded);
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddUniqueDynamic(this, &APlayableBaseCharacter::OnMontageEndedGeneral);
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddUniqueDynamic(this, &APlayableBaseCharacter::EquipMontageEnded);
+			GetMesh()->GetAnimInstance()->OnMontageEnded.AddUniqueDynamic(this, &APlayableBaseCharacter::UnEquipMontageEnded);
 		}
 	}
 	
@@ -464,6 +533,28 @@ void APlayableBaseCharacter::AttackMontageEnded(UAnimMontage* Montage, bool bInt
 	else
 	{
 		CurSwordStanceComponent->ResetAttackInfo();
+	}
+}
+
+void APlayableBaseCharacter::StopAttackMontage()
+{
+	UAnimInstance* AnimInstance = BodyComponent->GetAnimInstance();
+	if (!AnimInstance)
+		return;
+	UAnimMontage* NormalAttackMontage =
+		CurSwordStanceComponent->GetNormalAttackMontage();
+
+	UAnimMontage* HeavyAttackMontage =
+		CurSwordStanceComponent->GetHeavyAttackMontage();
+
+	if (AnimInstance->Montage_IsPlaying(NormalAttackMontage))
+	{
+		AnimInstance->Montage_Stop(0.1f, NormalAttackMontage);
+	}
+
+	if (AnimInstance->Montage_IsPlaying(HeavyAttackMontage))
+	{
+		AnimInstance->Montage_Stop(0.1f, HeavyAttackMontage);
 	}
 }
 
@@ -622,39 +713,60 @@ EWeaponVFXTarget APlayableBaseCharacter::GetCurrentWeaponVFXTarget() const
 	return CurSwordStanceComponent->GetWeaponVFXTaraget();
 }
 
-USkeletalMeshComponent* APlayableBaseCharacter::GetFirstWeaponMesh() const
-{
-	return FirstWeaponComponent;
-}
-
-USkeletalMeshComponent* APlayableBaseCharacter::GetSecondWeaponMesh() const
-{
-	return SecondWeaponComponent;
-}
-
 float APlayableBaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	float DefencePower = StatusComponent->GetTotalDefencePower();
-	//최소데미지 1로 설정
-	DamageAmount = FMath::Max(DamageAmount - DefencePower, 1.0f);
-	//공격 형에 따른 조정
-	//땅의 형 쉴드
-	//불의 형 데미지 계산 이후 공격력, 공격 속도 증가
-	DamageAmount = CurSwordStanceComponent->SwordStanceBeforeUpdateHp(DamageAmount);
-	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	CurSwordStanceComponent->SwordStanceAfterUpdateHp(ActualDamage);
-	StatusComponent->TakeDamage(ActualDamage);
+	AController* CurrentController = GetController();
+	bool bIsControlledByAI = false;
+	if (CurrentController != nullptr)
+	{
+		AAIController* AIController = Cast<AAIController>(CurrentController);
 
-	//저스트 가드 판정
-	IsCanGuardConuterAttack = true;
-	//1.5초 후 저스트 가드 판정 초기화
-	GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHandle);
-	GetWorld()->GetTimerManager().SetTimer(
-		GuardCounterAttackTimerHandle,
-		this,
-		&APlayableBaseCharacter::DisableCounterAttack,
-		1.5f,
-		false);
+		if (AIController != nullptr)
+		{
+			bIsControlledByAI = true;
+		}
+	}
+	float ActualDamage = 0.0f;
+	//AI가 컨트롤 중일 때는 데미지를 받지 않음
+	if(!bIsControlledByAI)
+	{
+		float DefencePower = StatusComponent->GetTotalDefencePower();
+		//최소데미지 1로 설정
+		DamageAmount = FMath::Max(DamageAmount - DefencePower, 1.0f);
+		//공격 형에 따른 조정
+		//땅의 형 쉴드
+		//불의 형 데미지 계산 이후 공격력, 공격 속도 증가
+		DamageAmount = CurSwordStanceComponent->SwordStanceBeforeUpdateHp(DamageAmount);
+		ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+		CurSwordStanceComponent->SwordStanceAfterUpdateHp(ActualDamage);
+		StatusComponent->TakeDamage(ActualDamage);
+	}
+
+
+	if(CurSwordStanceComponent->GetIsCharging())
+	{
+		//저스트 가드 판정
+		IsCanGuardConuterAttack = true;
+		//1.5초 후 저스트 가드 판정 초기화
+		GetWorld()->GetTimerManager().ClearTimer(GuardCounterAttackTimerHandle);
+		GetWorld()->GetTimerManager().SetTimer(
+			GuardCounterAttackTimerHandle,
+			this,
+			&APlayableBaseCharacter::DisableCounterAttack,
+			1.5f,
+			false);
+	}
+	else
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			//StopMontage(HitMontage);
+				PlayMontageFullBody(HitMontage);
+				
+				SetIsActionLock(true);
+		}
+	}
 
 	return ActualDamage;
 }
@@ -788,13 +900,6 @@ void APlayableBaseCharacter::AttackTrace(EAttackVariety AttackVariety)
 
 void APlayableBaseCharacter::OnMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted)
 {
-	
-	//if (bInterrupted)
-	//{
-	//	//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Montage Interrupted222"));
-	//	return;
-	//}
-
 	//EquipMontageEnded, UnEquipMontageEnded에서 처리하므로 패스
 	if (Montage == UnEquipMontage || Montage == EquipMontage)
 		return;
@@ -803,6 +908,30 @@ void APlayableBaseCharacter::OnMontageEndedGeneral(UAnimMontage* Montage, bool b
 		return;*/
 
 	ProcessMontageEndedGeneral(Montage, bInterrupted);
+}
+void APlayableBaseCharacter::SetStrafeMovementMode(bool bIsStrafing)
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->bOrientRotationToMovement = !bIsStrafing;
+		MoveComp->bUseControllerDesiredRotation = bIsStrafing;
+
+		if (bIsStrafing)
+		{
+			MoveComp->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+		}
+	}
+}
+void APlayableBaseCharacter::ClearLockOnTargetAI()
+{
+	SetTargetingMode(false);
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+		{
+			BB->ClearValue(FName("TargetActor"));
+		}
+	}
 }
 void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, bool bInterrupted)
 {
@@ -822,17 +951,6 @@ void APlayableBaseCharacter::ProcessMontageEndedGeneral(UAnimMontage* Montage, b
 	{
 		SetIsActionLock(false);
 	}
-
-	
-
-	//Test Code
-	//if(Montage == EvadeMontage)
-	//{
-	//	OnPerfectDodgeSuccess(nullptr);
-	//	//CounterAttackWidget->SetVisibility(ESlateVisibility::Visible);
-	//	CounterAttackWidgetComponent->SetVisibility(true);
-	//}
-	//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Blue, TEXT("ProcessMontageEndedGeneral"));
 }
 
 FKey APlayableBaseCharacter::GetCounterAttackInputKey() const
@@ -866,26 +984,6 @@ FKey APlayableBaseCharacter::GetCounterAttackInputKey() const
 	}
 
 	return EKeys::Invalid;
-
-	//if (APlayerController* PC = Cast<APlayerController>(GetController()))
-	//{
-	//	// 1. 인풋 서브시스템 가져오기
-	//	if (auto* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
-	//	{
-	//		AMiyamotoIoriController* IoriController = Cast<AMiyamotoIoriController>(PC);
-	//		UInputAction* Test = IoriController->GetNormalAttackAction();
-	//		// 2. IA_CounterAttack 액션에 매핑된 모든 키 리스트 가져오기
-	//		TArray<FKey> MappedKeys = Subsystem->QueryKeysMappedToAction(Test);
-
-	//		// 3. 매핑된 키가 있다면 첫 번째 키를 반환 (보통 0번이 주 입력키)
-	//		if (MappedKeys.Num() > 0)
-	//		{
-	//			return MappedKeys[0];
-	//		}
-	//	}
-	//}
-
-	//return EKeys::Invalid;
 }
 
 void APlayableBaseCharacter::InitializeIconUI()
@@ -899,28 +997,6 @@ void APlayableBaseCharacter::InitializeIconUI()
 		}
 		CounterAttackWidget->UpdateKeyIcon(Key);
 	}
-	//0.1초 딜레이 코드
-	/*if (CounterAttackWidget)
-	{
-		CounterAttackUI = CreateWidget<UCounterAttackUI>(GetWorld(), CounterAttackWidget);
-		if (CounterAttackUI)
-		{
-			CounterAttackUI->AddToViewport();
-			CounterAttackUI->SetVisibility(ESlateVisibility::Visible);
-
-			// NextTick 대신 명시적으로 0.1초의 시간을 줍니다.
-			FTimerHandle TempHandle;
-			GetWorldTimerManager().SetTimer(TempHandle, [this]()
-				{
-					if (CounterAttackUI)
-					{
-						FKey Key = GetCounterAttackInputKey();
-						// ... (이하 동일)
-						CounterAttackUI->UpdateKeyIcon(Key);
-					}
-				}, 0.1f, false); // 0.1초 뒤에 실행
-		}
-	}*/
 }
 
 void APlayableBaseCharacter::EquipMontageEnded(UAnimMontage* Montage, bool bInterrupted)

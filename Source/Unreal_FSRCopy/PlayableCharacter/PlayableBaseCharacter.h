@@ -62,6 +62,8 @@ protected:
 	TObjectPtr<UAnimMontage> JumpMontage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAnimMontage> EvadeMontage;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character | Animation", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> HitMontage;
 #pragma endregion
 
 #pragma region protected Component
@@ -82,6 +84,7 @@ protected:
 
 #pragma region CombatMode
 	bool isCombatMode{ false };
+	bool IsWeaponEquip{ false };
 
 	UPROPERTY(VisibleAnywhere, Category = "Sword Stance")
 	TObjectPtr<class UBaseSwordStanceActorComponent> CurSwordStanceComponent;
@@ -93,6 +96,7 @@ protected:
 
 	//저스트 가드
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat|Guard")
+	//저스트 가드 어택 추가 보너스 가능
 	bool IsCanGuardConuterAttack{ false };
 	FTimerHandle GuardCounterAttackTimerHandle;
 
@@ -169,7 +173,7 @@ public:
 	//FORCEINLINE 강제로 인라인 함수로 만듬
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
 	
-	void StopMontage(TObjectPtr<UAnimMontage> Montage);
+	void StopMontage(TObjectPtr<UAnimMontage> Montage, float blend = 0.0f);
 
 	void PostInitializeComponents() override;
 	
@@ -183,8 +187,8 @@ public:
 
 	bool IsPlayingAttackMontage() const;
 	EWeaponVFXTarget GetCurrentWeaponVFXTarget() const;
-	FORCEINLINE class USkeletalMeshComponent* GetFirstWeaponMesh() const;
-	FORCEINLINE class USkeletalMeshComponent* GetSecondWeaponMesh() const;
+	FORCEINLINE class USkeletalMeshComponent* GetFirstWeaponMesh() const { return FirstWeaponComponent; }
+	FORCEINLINE class USkeletalMeshComponent* GetSecondWeaponMesh() const { return SecondWeaponComponent; }
 
 	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
@@ -203,6 +207,7 @@ public:
 	virtual void PlayEquipWeaponMontage();
 	virtual void WeaponEquip();
 	virtual void WeaponUnEquip();
+	void SetIsWeaponEquip(bool WeaponEquip) { IsWeaponEquip = WeaponEquip; }
 
 	//New Version
 private:
@@ -261,6 +266,7 @@ public:
 	void AttackMontageStarted(UAnimMontage* Montage);
 	UFUNCTION()
 	void AttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
+	void StopAttackMontage();
 #pragma endregion
 
 #pragma region Targeting
@@ -270,7 +276,15 @@ public:
 	void SwitchTarget(bool bSwitchRight);
 	void SnapToTargetEnemy();
 	bool IsCurrentTarget() { return CurrentTarget != nullptr; }
+	void ClearCurrentTarget() { CurrentTarget = nullptr; }
+	void SetCurrentTarget(ABaseMonster* NewTarget) { CurrentTarget = NewTarget; }
 #pragma endregion
+
+#pragma region AI
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void SetStrafeMovementMode(bool bIsStrafing);
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void ClearLockOnTargetAI();
 
 protected:
 	// 검사가 통과되면 실행될 "실제 로직" 함수 (가상함수)

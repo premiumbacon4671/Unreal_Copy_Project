@@ -24,6 +24,9 @@
 #include "LevelSequence.h"
 #include "LevelSequencePlayer.h"
 #include "LevelSequenceActor.h"
+#include "CineCameraActor.h"
+#include "CineCameraComponent.h"
+#include "EngineUtils.h"
 
 
 // Sets default values for this component's properties
@@ -254,7 +257,7 @@ bool USkillActionComponent::TryExecuteSkill(USkillDataAsset* TargetSkill)
 
 bool USkillActionComponent::HasEnoughResource(USkillDataAsset* TargetSkill) const
 {
-	AFatePlayerState* PlayerState = Cast<AFatePlayerState>(OwnerCharacter->GetPlayerState());
+	AFatePlayerState* PlayerState = Cast<AFatePlayerState>(UGameplayStatics::GetPlayerState(GetWorld(), 0));
 	int32 CurrentCost = 0;
 	switch (TargetSkill->CostType)
 	{
@@ -283,6 +286,7 @@ bool USkillActionComponent::HasEnoughResource(USkillDataAsset* TargetSkill) cons
 			}
 		}
 	}
+	break;
 	case ESkillCostType::Hiken:
 	{
 		UPlayableStateComponent* OwnerStat = OwnerCharacter->GetStatusComponent();
@@ -302,7 +306,7 @@ void USkillActionComponent::ConsumeResource(USkillDataAsset* TargetSkill)
 {
 	if(TargetSkill->CostType == ESkillCostType::None)
 		return;
-	AFatePlayerState* PlayerState = Cast<AFatePlayerState>(OwnerCharacter->GetPlayerState());
+	AFatePlayerState* PlayerState = Cast<AFatePlayerState>(UGameplayStatics::GetPlayerState(GetWorld(), 0));
 	switch (TargetSkill->CostType)
 	{
 	case ESkillCostType::Gem:
@@ -534,6 +538,11 @@ void USkillActionComponent::OnSkillMontageEnded(UAnimMontage* Montage, bool bInt
 		return;
 	if (OwnerCharacter != nullptr)
 	{
+		if (!OwnerCharacter->GetIsCombatMode() || bInterrupted)
+		{
+			OwnerCharacter->RequestUnblockContinuousInput();
+			return;
+		}
 		APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
 		if (PC != nullptr)
 		{
@@ -547,7 +556,11 @@ void USkillActionComponent::OnSkillMontageEnded(UAnimMontage* Montage, bool bInt
 				{
 					AMiyamotoIoriController* MiyamotoPC = Cast<AMiyamotoIoriController>(PC);
 					if(MiyamotoPC && MiyamotoPC->IsSkillHoldActionPressed())
+					{
 						OwnerCharacter->RequestBlockContinuousInput();
+						UE_LOG(LogTemp, Warning, TEXT("AAAAA"));
+					}
+
 				}
 				break;
 			default:
@@ -610,15 +623,43 @@ void USkillActionComponent::PlaySkillCinematic(USkillDataAsset* TargetSkill)
 			{
 				SequencePlayer->SetPlayRate(1.0f / TargetSkill->CustomTimeDilationValue);
 			}
+
+			AActor* TargetServant = GetOwner();
+			GetWorld()->GetTimerManager().SetTimerForNextTick([this, TargetServant]()
+				{
+					for (TActorIterator<ACineCameraActor> It(GetWorld()); It; ++It)
+					{
+						ACineCameraActor* CineCamera = *It;
+						if (CineCamera)
+						{
+
+							UCineCameraComponent* CameraComp = CineCamera->GetCineCameraComponent();
+							if (CameraComp && TargetServant)
+							{
+								CameraComp->FocusSettings.FocusMethod = ECameraFocusMethod::Tracking;
+
+								CameraComp->FocusSettings.TrackingFocusSettings.ActorToTrack = TargetServant;
+
+								CameraComp->FocusSettings.TrackingFocusSettings.RelativeOffset = FVector(0.0f, 0.0f, 90.0f);
+							}
+						}
+					}
+				});
+
+
 			APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
 			if (PC)
 			{
 				PC->SetIgnoreLookInput(true);
 			}
 			ActiveSequencePlayer = SequencePlayer;
+			ActiveSequencePlayer->OnPlay.AddUniqueDynamic(
+				this,
+				&USkillActionComponent::OnSkillCinematicStarted);
 			ActiveSequencePlayer->OnFinished.AddUniqueDynamic(
 				this,
 				&USkillActionComponent::OnSkillCinematicFinished);
+
 			SequencePlayer->Play();
 			return;
 		}
@@ -708,9 +749,22 @@ void USkillActionComponent::OnCameraTimelineFinished()
 	CurrentCinematicSkill = nullptr;
 }
 
+void USkillActionComponent::OnSkillCinematicStarted()
+{
+	if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("sg.PostProcessQuality")))
+	{
+		CachedPostProcessQuality = CVar->GetInt();
+		CVar->Set(4, ECVF_SetByCode);
+	}
+}
+
 void USkillActionComponent::OnSkillCinematicFinished()
 {
 	OwnerCharacter->SetIsActionLock(false);
+	if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("sg.PostProcessQuality")))
+	{
+		CVar->Set(CachedPostProcessQuality, ECVF_SetByCode);
+	}
 	APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
 	if (PC)
 	{

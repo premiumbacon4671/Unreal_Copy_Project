@@ -53,6 +53,8 @@ private:
 	TObjectPtr<class ULevelSequencePlayer> ActiveSequencePlayer;
 	TObjectPtr<class APlayableBaseCharacter> OwnerCharacter;
 
+	int32 CachedPostProcessQuality;
+
 #pragma endregion
 public:	
 	// Sets default values for this component's properties
@@ -93,6 +95,7 @@ public:
 
 	void PlayTriggerSkillMontage();
 	void PlayCompletedSkillMontage();
+	//차징과 같은 스킬의 경우를 위해 Ratio를 받아 사용, 현재는 미구현
 	void PlayEndSkillMontage(float ChargeRatio);
 	
 	void BindSkillMontageDelegate(UAnimInstance* AnimInstance);
@@ -113,6 +116,10 @@ public:
 	//카메라 타임라인이 끝나는 시점에 호출되는 함수로, 카메라를 원래 위치로 되돌리는 역할을 함
 	void OnCameraTimelineFinished();
 	UFUNCTION()
+	void OnSkillCinematicStarted();
+	UFUNCTION()
 	void OnSkillCinematicFinished();
+	
+	ULevelSequencePlayer* GetSequencePlayer() { return ActiveSequencePlayer; }
 #pragma endregion
 };

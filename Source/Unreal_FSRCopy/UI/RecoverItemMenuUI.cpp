@@ -14,7 +14,8 @@ URecoverItemMenuUI::URecoverItemMenuUI(const FObjectInitializer& ObjectInitializ
 	:Super(ObjectInitializer)
 {
 	static ConstructorHelpers::FClassFinder<URecoverItemButton> ButtonClassFinder(
-		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_RecoverItemButton.BP_RecoverItemButton_C"));
+		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_RecoverItemButton"));
+		//TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_RecoverItemButton.BP_RecoverItemButton_C"));
 	if (ButtonClassFinder.Succeeded())
 		ItemButtonClass = ButtonClassFinder.Class;
 }

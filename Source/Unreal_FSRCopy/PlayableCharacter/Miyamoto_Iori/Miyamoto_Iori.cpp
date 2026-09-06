@@ -12,6 +12,7 @@
 #include "ActorComponent/StateComponent/Miyamoto_IoriStateComponent.h"
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "HUD/PlayerHUD.h"
+#include "GameInstanceSubSystem/FateGameInstanceSubsystem.h"
 
 AMiyamoto_Iori::AMiyamoto_Iori()
 {
@@ -19,8 +20,6 @@ AMiyamoto_Iori::AMiyamoto_Iori()
 	eCurSwordStance = ESWORDSTANCE::EST_FIRE;
 
 #pragma region CreateComponent
-	//SwordStanceComponents[static_cast<int32>(CurSwordStance)] = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStance"));
-
 	SwordStanceComponents.SetNum(static_cast<int>(ESWORDSTANCE::EST_MAX));
 	UEarthStanceActorComponent* EarthStance = CreateDefaultSubobject<UEarthStanceActorComponent>(TEXT("EarthStanceComponent"));
 	EarthStance->SetIsUnlockSwordStance(true);
@@ -52,36 +51,48 @@ void AMiyamoto_Iori::BeginPlay()
 	InitializeSwordStance();
 	eNextSwordStance = eCurSwordStance;
 
-	USkillDataAsset* SkillData = Cast<USkillDataAsset>(StaticLoadObject(
+	/*USkillDataAsset* SkillData = Cast<USkillDataAsset>(StaticLoadObject(
 		USkillDataAsset::StaticClass(),
 		nullptr,
-		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_Flamethrower.DA_Flamethrower")
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_Flamethrower")
+		//TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_Flamethrower.DA_Flamethrower")
 	));
 
 	USkillDataAsset* SkillData2 = Cast<USkillDataAsset>(StaticLoadObject(
 		USkillDataAsset::StaticClass(),
 		nullptr,
-		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_FireBall.DA_FireBall")
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_FireBall")
+		//TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_FireBall.DA_FireBall")
 	));
 
 	USkillDataAsset* SkillData3 = Cast<USkillDataAsset>(StaticLoadObject(
 		USkillDataAsset::StaticClass(),
 		nullptr,
-		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_AttackPowerBuff.DA_AttackPowerBuff")
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_AttackPowerBuff")
+		//TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_AttackPowerBuff.DA_AttackPowerBuff")
 	));
 
 	USkillDataAsset* SkillData4 = Cast<USkillDataAsset>(StaticLoadObject(
 		USkillDataAsset::StaticClass(),
 		nullptr,
-		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_RecoverHp.DA_RecoverHp")
-	));
+		TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_RecoverHp")
+		//TEXT("/Game/Blueprint/PlayableCharacter/MiyamotoIori/DataAsset/DA_RecoverHp.DA_RecoverHp")
+	));*/
 	
-	if (SkillData)
+	UGameInstance* GI = GetGameInstance();
+	if (!GI)
+		return;
+
+	UFateGameInstanceSubsystem* SkillManager = GI->GetSubsystem<UFateGameInstanceSubsystem>();
+	if (!SkillManager)
+		return;
+
+	if (SkillManager)
 	{
-		SkillActionComponent->SetNormalSkill(0, SkillData);
-		SkillActionComponent->SetNormalSkill(1, SkillData2);
-		SkillActionComponent->SetNormalSkill(2, SkillData3);
-		SkillActionComponent->SetNormalSkill(3, SkillData4);
+		SkillActionComponent->SetNormalSkill(0, SkillManager->FindIoriSkill(TEXT("Flamethrower")));
+		SkillActionComponent->SetNormalSkill(1, SkillManager->FindIoriSkill(TEXT("Fireball")));
+		SkillActionComponent->SetNormalSkill(2, SkillManager->FindIoriSkill(TEXT("AttackPowerBuff")));
+		SkillActionComponent->SetNormalSkill(3, SkillManager->FindIoriSkill(TEXT("RecoverHp")));
 	}
 
 	//stat 초기화 예정
@@ -92,22 +103,12 @@ void AMiyamoto_Iori::BeginPlay()
 void AMiyamoto_Iori::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	//NextMontage 실험 코드
-	/*if (isCombatMode == true && NextMontage != nullptr)
-	{
-		if (GetMesh()->GetAnimInstance()->GetCurrentActiveMontage() == nullptr &&
-			GetMovementComponent()->IsFalling() == false)
-		{
-			PlayMontageFullBody(NextMontage);
-			NextMontage = nullptr;
-		}
-	}*/
+	GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Yellow, FString::Printf(TEXT("IoriActionLock : %s"), GetIsActionLock() ? TEXT("true") : TEXT("false")));
 }
 
 void AMiyamoto_Iori::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	TryInitializeUI();
 }
 
 
@@ -170,7 +171,6 @@ void AMiyamoto_Iori::PlayEquipWeaponMontage()
 		//칼 넣는 애니 여기서 작동 안함
 		//칼을 넣을 때 이동 함
 		SetIsActionLock(true);
-		//GetController()->SetIgnoreMoveInput(true);
 		PlayMontageFullBody(montage);
 	}
 }
@@ -202,7 +202,6 @@ void AMiyamoto_Iori::PlayUnEquipWeaponMontage()
 		//칼 넣는 애니 여기서 작동 안함
 		//칼을 넣을 때 이동 함
 		SetIsActionLock(true);
-		//GetController()->SetIgnoreMoveInput(true);
 		PlayMontageFullBody(montage);
 	}
 }
@@ -244,9 +243,6 @@ void AMiyamoto_Iori::WeaponEquip()
 	case ESWORDSTANCE::EST_EARTH:
 		break;
 	case ESWORDSTANCE::EST_FIRE:
-		/*SecondWeaponComponent->AttachToComponent(BodyComponent,
-		FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
-		FName(TEXT("SecondWeaponHand")));*/
 		SecondWeaponComponent->AttachToComponent(BodyComponent,
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 		FName(TEXT("SecondWeaponHand")));
@@ -264,9 +260,6 @@ void AMiyamoto_Iori::WeaponUnEquip()
 	case ESWORDSTANCE::EST_EARTH:
 		break;
 	case ESWORDSTANCE::EST_FIRE:
-		/*SecondWeaponComponent->AttachToComponent(BodyComponent,
-			FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
-			FName(TEXT("SecondWeapon")));*/
 		SecondWeaponComponent->AttachToComponent(BodyComponent,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
 			FName(TEXT("SecondWeapon")));
@@ -319,18 +312,12 @@ void AMiyamoto_Iori::ChangeSwordStance(ESWORDSTANCE SwordStance)
 void AMiyamoto_Iori::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
-	//GetMesh()->GetAnimInstance()->OnMontageStarted.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageStarted);
-	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
-	//GetMesh()->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &AMiyamoto_Iori::UnEquipMontageEnded);
-	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::OnMontageEndedGeneral);
-	//GetMesh()->GetAnimInstance()->OnMontageEnded.AddDynamic(this, &AMiyamoto_Iori::EquipMontageEnded);
 }
 
 void AMiyamoto_Iori::UnEquipMontageStarted(UAnimMontage* Montage)
 {
 	if (Montage == nullptr || Montage != EquipMontage)
 		return;
-	//NextMontageSectionName = GetMesh()->GetAnimInstance()->Montage_GetCurrentSection()
 }
 
 
@@ -350,8 +337,6 @@ void AMiyamoto_Iori::UnEquipMontageEnded(UAnimMontage* Montage, bool bInterrupte
 		eCurSwordStance = eNextSwordStance;
 		CurSwordStanceComponent = SwordStanceComponents[static_cast<int>(eCurSwordStance)];
 		InitializeSwordStance();
-		//PlayEquipWeaponMontage();
-		//TestCode
 		PlayEquipWeaponMontage_New();
 	}
 }

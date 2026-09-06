@@ -103,6 +103,8 @@ void UResonanceComponent::CalculateLinkSkillGauge(int AmountDamage, float Target
 bool UResonanceComponent::ConsumeLinkBall(int32 Count)
 {
 	LinkBall -= Count;
+	if (OnCalculateLinkBall.IsBound())
+		OnCalculateLinkBall.Broadcast(LinkBall);
 	return false;
 }
 

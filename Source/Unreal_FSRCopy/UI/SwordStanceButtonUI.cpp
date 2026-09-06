@@ -39,6 +39,11 @@ void USwordStanceButtonUI::SetSwordStanceType(ESWORDSTANCE eSwordStance)
 	SwordStanceType = eSwordStance;
 }
 
+void USwordStanceButtonUI::SetIcon(UTexture2D* image)
+{
+	SwordStance->SetBrushFromTexture(image);
+}
+
 ESlateVisibility USwordStanceButtonUI::GetHVisiblility()
 {
 	return Highlight->GetVisibility();

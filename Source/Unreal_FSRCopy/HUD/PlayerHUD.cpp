@@ -8,6 +8,7 @@
 #include "UI/MiyamotoSkillUI.h"
 #include "UI/RecoverItemMenuUI.h"
 #include "UI/LinkSkillUI.h"
+#include "UI/GameMenuUserWidget.h"
 #include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 #include "PlayableCharacter/Miyamoto_Iori/Miyamoto_Iori.h"
 #include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
@@ -34,6 +35,11 @@ APlayerHUD::APlayerHUD()
 		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_LinkSkillUI.BP_LinkSkillUI_C"));
 	if (LinkSkillWidgetClass.Succeeded())
 		LinkSkillWidget = LinkSkillWidgetClass.Class;
+
+	static ConstructorHelpers::FClassFinder<UGameMenuUserWidget> GameMenuWidgetClass(
+		TEXT("/Game/Blueprint/PlayableCharacter/UI/BP_GameMenu.BP_GameMenu_C"));
+	if (GameMenuWidgetClass.Succeeded())
+		GameMenuWidget = GameMenuWidgetClass.Class;
 }
 
 void APlayerHUD::BeginPlay()
@@ -45,7 +51,6 @@ void APlayerHUD::BeginPlay()
 		if (SwordStanceUI)
 		{
 			SwordStanceUI->AddToViewport();
-			//SwordStanceUI->Init(Cast<AMiyamoto_Iori>(GetOwningPlayerController()->GetPawn()));
 		}
 	}
 	if (PlayableStatusWidget)
@@ -54,7 +59,6 @@ void APlayerHUD::BeginPlay()
 		if (PlayableStatusUI)
 		{
 			PlayableStatusUI->AddToViewport();
-			//PlayableStatusUI->Init(Cast<APlayableBaseCharacter>(GetOwningPlayerController()->GetPawn()));
 		}
 	}
 	if(MiyamotoSkillWidget)
@@ -63,7 +67,6 @@ void APlayerHUD::BeginPlay()
 		if (MiyamotoSkillUI)
 		{
 			MiyamotoSkillUI->AddToViewport();
-			//MiyamotoSkillUI->Init(Cast<AMiyamoto_Iori>(GetOwningPlayerController()->GetPawn()));
 		}
 	}
 	if (RecoverItemMenuWidget)
@@ -78,7 +81,14 @@ void APlayerHUD::BeginPlay()
 		if (LinkSkillUI)
 		{
 			LinkSkillUI->AddToViewport();
-			//LinkSkillUI->Init(Cast<AServantBaseCharacter>(GetOwningPlayerController()->GetPawn()));
+		}
+	}
+	if (GameMenuWidget)
+	{
+		GameMenuUI = CreateWidget<UGameMenuUserWidget>(GetWorld(), GameMenuWidget);
+		if (GameMenuUI)
+		{
+			GameMenuUI->AddToViewport();
 		}
 	}
 }
@@ -131,10 +141,4 @@ void APlayerHUD::InitializeLinkSkillUI(AServantBaseCharacter* Servant)
 void APlayerHUD::SetLinkSkillUIVisibility(ESlateVisibility eVisibility)
 {
 	LinkSkillUI->SetVisibility(eVisibility);
-}
-
-void APlayerHUD::InitializeServantGaugeUI(AServantBaseCharacter* Servant)
-{
-	
-	//PlayableStatusUI->HandleUpdateServantChargeBar()
 }

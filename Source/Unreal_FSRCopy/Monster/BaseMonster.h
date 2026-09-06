@@ -38,10 +38,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Montage");
 	TObjectPtr<UAnimMontage> NormalAttackMontage;
 
-	UPROPERTY(EditAnywhere, Category = "AttackData")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AttackData")
 	FAttackData MonsterAttackData;
 
 	TObjectPtr<ACombatZone> CurrentCombatZone;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly);
+	TObjectPtr<class APlayableBaseCharacter> CurrentTarget;
 public:
 	// Sets default values for this character's properties
 	ABaseMonster();
@@ -54,7 +56,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	void HitBy(int DamageAmount);
 	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	bool IsDead();
 	void MonsterNormalAttack(class APlayableBaseCharacter* Target);
@@ -78,4 +79,15 @@ public:
 	UMonsterStateComponent* GetMonsterStateComponent() { return StatusComponent; }
 
 	void SetLockOnMarkerVisibility(bool bShow);
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	const FAttackData& GetMonsterAttackDataBP() const { return MonsterAttackData; }
+	FAttackData GetMonsterAttackData() const { return MonsterAttackData; }
+
+#pragma region AI
+	void SetCurrentTarget(class APlayableBaseCharacter* Target) { CurrentTarget = Target; }
+	APlayableBaseCharacter* GetCurrentTarget() const { return CurrentTarget; }
+	void ClearCurrentTarget() { CurrentTarget = nullptr; }
+	void SetStrafeMovementMode(bool bIsStrafing);
+	void ClearLockOnTargetAI();
+#pragma endregion
 };

@@ -20,7 +20,7 @@ EBTNodeResult::Type UTask_Attack::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 	if(nullptr == Owner)
 		return EBTNodeResult::Failed;
 
-	APlayableBaseCharacter* Target = Cast<APlayableBaseCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(FName(TEXT("ObjectTarget"))));
+	APlayableBaseCharacter* Target = Cast<APlayableBaseCharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(FName(TEXT("TargetActor"))));
 	if(nullptr == Target)
 		return EBTNodeResult::Failed;
 

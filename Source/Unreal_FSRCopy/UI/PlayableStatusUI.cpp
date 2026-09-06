@@ -34,7 +34,7 @@ void UPlayableStatusUI::NativeConstruct()
 			PlayerStatus->OnInitializedStat.AddDynamic(this, &UPlayableStatusUI::Init);
 		}
 	}*/
-	RefreshServantUI();
+	//RefreshServantUI();
 }
 
 void UPlayableStatusUI::SetLinkBallVisibility(int Index, ESlateVisibility InVisibility)
@@ -51,6 +51,16 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 	UPlayableStateComponent* PlayerStatus = Character->GetStatusComponent();
 	if (PlayerStatus == nullptr)
 		return;
+	if (CurrentStateComponent)
+	{
+		CurrentStateComponent->OnUpdateHpSignature.RemoveDynamic(
+			this,
+			&UPlayableStatusUI::HandleUpdateHp);
+
+		CurrentStateComponent->OnCalculateHikenGauge.RemoveDynamic(
+			this,
+			&UPlayableStatusUI::HandleUpdateHiken);
+	}
 	CurrentStateComponent = PlayerStatus;
 	HandleUpdateHp(PlayerStatus, PlayerStatus->GetHPPercent());
 	HandleUpdateHiken(PlayerStatus->GetHikenPercent());
@@ -88,6 +98,7 @@ void UPlayableStatusUI::Init(APlayableBaseCharacter* Character)
 		if (EarthStanceComp)
 			EarthStanceShieldBar->InitShieldUI(EarthStanceComp);
 	}
+	RefreshServantUI();
 }
 
 void UPlayableStatusUI::SetHPBarPercent(float Percent)
@@ -107,6 +118,7 @@ void UPlayableStatusUI::SetLinkBarPercent(float Percent)
 	if (LinkProgressBar)
 		LinkProgressBar->SetPercent(Percent);
 }
+
 
 void UPlayableStatusUI::SetServantChargeBarPercent(int Index, float Percent)
 {
@@ -244,5 +256,6 @@ void UPlayableStatusUI::SwitchTargetStatusComponent(UPlayableStateComponent* New
 		CurrentStateComponent->OnCalculateHikenGauge.AddUniqueDynamic(this, &UPlayableStatusUI::HandleUpdateHiken);
 		HandleUpdateHp(CurrentStateComponent, CurrentStateComponent->GetHPPercent());
 		HandleUpdateHiken(CurrentStateComponent->GetHikenPercent());
+		
 	}
 }

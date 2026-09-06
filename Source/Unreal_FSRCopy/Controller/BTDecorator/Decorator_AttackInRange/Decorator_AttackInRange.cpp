@@ -2,24 +2,32 @@
 
 
 #include "Controller/BTDecorator/Decorator_AttackInRange/Decorator_AttackInRange.h"
+#include "Monster/BaseMonster.h"
+#include "PublicUse/AttackCombatStruct/AttackCombatStruct.h"
+
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 
 UDecorator_AttackInRange::UDecorator_AttackInRange()
 {
 	NodeName = TEXT("Attack In Range");
+	bNotifyTick = true;
 }
 
 bool UDecorator_AttackInRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
-	APawn* OwnerPawn = OwnerComp.GetAIOwner()->GetPawn();
-	if (nullptr == OwnerPawn)
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	AAIController* AICon = OwnerComp.GetAIOwner();
+	if(!BB || !AICon)
 		return false;
-	APawn* TargetPawn = Cast<APawn>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(TEXT("ObjectTarget")));
-	if (nullptr == TargetPawn)
+	ABaseMonster* MonsterPawn = Cast<ABaseMonster>(AICon->GetPawn());
+	AActor* TargetActor = Cast<AActor>(BB->GetValueAsObject(FName("TargetActor")));
+
+	if(!MonsterPawn || !TargetActor)
 		return false;
-	float Distance = OwnerPawn->GetDistanceTo(TargetPawn);
-	if (Distance <= 300.0f)
-		return true;
-    return false;
+	FAttackData AttackData = MonsterPawn->GetMonsterAttackData();
+
+	float AttackRange = AttackData.AttackTraceData.ForwardDistance * 2;
+	float Distance = FVector::Dist(MonsterPawn->GetActorLocation(), TargetActor->GetActorLocation());
+	return Distance <= AttackRange;
 }

@@ -3,6 +3,12 @@
 
 #include "Monster/BaseMonster.h"
 #include "Components/WidgetComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "AIController.h"
+#include "BrainComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+
 
 #include "Controller/MonsterAI/BaseMonsterAIController.h"
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
@@ -23,7 +29,8 @@ ABaseMonster::ABaseMonster()
 		TEXT("HPBarWidgetComponent"));
 	HPBarWidgetComponent->SetupAttachment(GetRootComponent());
 	static ConstructorHelpers::FClassFinder<UUserWidget> HPBarWidgetClass(
-		TEXT("/Game/Blueprint/Monster/UI/BP_MonsterHPBar.BP_MonsterHPBar_C"));
+		TEXT("/Game/Blueprint/Monster/UI/BP_MonsterHPBar"));
+		//TEXT("/Game/Blueprint/Monster/UI/BP_MonsterHPBar.BP_MonsterHPBar_C"));
 	if (HPBarWidgetClass.Succeeded())
 		HPBarWidgetComponent->SetWidgetClass(HPBarWidgetClass.Class);
 	HPBarWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
@@ -32,7 +39,8 @@ ABaseMonster::ABaseMonster()
 		TEXT("LockOnMarkerWidgetComponent"));
 	LockOnMarkerWidgetComponent->SetupAttachment(GetRootComponent());
 	static ConstructorHelpers::FClassFinder<UUserWidget> LockOnMarkerWidgetClass(
-		TEXT("/Game/Blueprint/Monster/UI/BP_LockOnMarker.BP_LockOnMarker_C"));
+		TEXT("/Game/Blueprint/Monster/UI/BP_LockOnMarker"));
+		//TEXT("/Game/Blueprint/Monster/UI/BP_LockOnMarker.BP_LockOnMarker_C"));
 	if (LockOnMarkerWidgetClass.Succeeded())
 		LockOnMarkerWidgetComponent->SetWidgetClass(LockOnMarkerWidgetClass.Class);
 	LockOnMarkerWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
@@ -56,25 +64,6 @@ void ABaseMonster::Tick(float DeltaTime)
 
 }
 
-void ABaseMonster::HitBy(int DamageAmount)
-{
-	if(HitByMontage == nullptr)
-		return;
-
-	StatusComponent->TakeDamage(DamageAmount);
-	if(StatusComponent->IsDead())
-	{
-		PlayAnimMontage(DeathMontage);
-		CurrentCombatZone->OnMonsterDestroyed(this);
-		GetWorld()->GetTimerManager().SetTimer(DeathTimerHandle, [this]()
-			{
-				Destroy();
-			}, 5.0f, false);
-	}
-	else
-		PlayAnimMontage(HitByMontage);
-}
-
 float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (HitByMontage == nullptr)
@@ -89,11 +78,30 @@ float ABaseMonster::TakeDamage(float DamageAmount, FDamageEvent const& DamageEve
 	if (StatusComponent->IsDead())
 	{
 		PlayAnimMontage(DeathMontage);
+		CurrentCombatZone->OnMonsterDestroyed(this);
 
+		if (AAIController* AICon = Cast<AAIController>(GetController()))
+		{
+			if (UBrainComponent* BrainComp = AICon->GetBrainComponent())
+			{
+				BrainComp->StopLogic(TEXT("Monster is dead"));
+			}
+			AICon->ClearFocus(EAIFocusPriority::Gameplay);
+		}
+		if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+		{
+			//관성 정지 및 이동 비활성화
+			MoveComp->StopMovementImmediately();
+			MoveComp->DisableMovement();
+		}
+		if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+		{
+			Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
 		GetWorld()->GetTimerManager().SetTimer(DeathTimerHandle, [this]()
 			{
 				Destroy();
-			}, 5.0f, false);
+			}, 3.0f, false);
 	}
 	else
 		PlayAnimMontage(HitByMontage);
@@ -176,4 +184,29 @@ void ABaseMonster::UpdateHPBar(UBaseStateComponent* SenderComponent, float Perce
 void ABaseMonster::SetLockOnMarkerVisibility(bool bShow)
 {
 	LockOnMarkerWidgetComponent->SetVisibility(bShow);
+}
+
+void ABaseMonster::SetStrafeMovementMode(bool bIsStrafing)
+{
+	if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+	{
+		MoveComp->bOrientRotationToMovement = !bIsStrafing;
+		MoveComp->bUseControllerDesiredRotation = bIsStrafing;
+
+		if (bIsStrafing)
+		{
+			MoveComp->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
+		}
+	}
+}
+void ABaseMonster::ClearLockOnTargetAI()
+{
+	CurrentTarget = nullptr;
+	if (AAIController* AICon = Cast<AAIController>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+		{
+			BB->ClearValue(FName("TargetActor"));
+		}
+	}
 }

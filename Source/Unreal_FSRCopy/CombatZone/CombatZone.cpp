@@ -5,11 +5,18 @@
 #include "Components/BoxComponent.h"
 #include "Engine/DataTable.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "LevelSequencePlayer.h"
 
 #include "PlayableCharacter/PlayableBaseCharacter.h"
+#include "PlayableCharacter/Servant/ServantBaseCharacter.h"
+#include "ActorComponent/SkillActionComponent/SkillActionComponent.h"
 #include "Monster/BaseMonster.h"
 #include "ActorComponent/StateComponent/BaseStateComponent.h"
 #include "ActorComponent/StateComponent/MonsterStateComponent.h"
+#include "ActorComponent/ResonanceComponent/ResonanceComponent.h"
+#include "Controller/MiyamotoIoriController/MiyamotoIoriController.h"
 
 // Sets default values
 ACombatZone::ACombatZone()
@@ -33,7 +40,6 @@ void ACombatZone::BeginPlay()
 void ACombatZone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void ACombatZone::CreateCombatZoneEntranceComponents()
@@ -48,7 +54,7 @@ void ACombatZone::CreateCombatZoneEntranceComponents()
 			EntranceComponent->SetWorldRotation(Entrance.EntranceRotation);
 			EntranceComponent->SetBoxExtent(Entrance.EntranceSize);
 			EntranceComponent->RegisterComponent();
-			EntranceComponent->SetHiddenInGame(false);
+			EntranceComponent->SetHiddenInGame(true);
 			EntranceComponent->SetCollisionProfileName(TEXT("CombatZoneEntrances"));
 			EntranceComponent->OnComponentEndOverlap.AddDynamic(this, &ACombatZone::CombatZoneEntranceOnEndOverlap);
 			CombatZoneEntranceComponents.Add(EntranceComponent);
@@ -64,32 +70,130 @@ void ACombatZone::CombatZoneEntranceOnEndOverlap(UPrimitiveComponent* Overlapped
 	{
 		PC->SetCombatMode();
 		PC->SetCurrentCombatZone(this);
-		//TestCode
-		//이오리가 출입시 세이버도 자동으로 전투모드 전환
+		ActivePlayer = PC;
+		AMiyamotoIoriController* PlayerController = Cast<AMiyamotoIoriController>(PC->GetController());
+		if (PlayerController)
+		{
+			AServantBaseCharacter* ServantChar = PlayerController->GetServantCharacter("Saber");
 
-		SpawnMonsters();
+			if (ServantChar != nullptr && ServantChar != PC)
+			{
+				ServantChar->SetCombatMode();
+				FVector RightOffset = PC->GetActorRightVector() * 150.0f;
+				FVector BackOffset = PC->GetActorForwardVector() * 50.0f;
+				FVector TargetLocation = PC->GetActorLocation() + RightOffset + BackOffset;
+
+				FRotator TargetRotation = PC->GetActorRotation();
+
+				ServantChar->SetActorLocationAndRotation(TargetLocation, TargetRotation, false, nullptr, ETeleportType::TeleportPhysics);
+
+				ServantChar->SetCurrentCombatZone(this);
+				ActiveServant = ServantChar;
+			}
+			for (UBoxComponent* Entrance : CombatZoneEntranceComponents)
+			{
+				Entrance->OnComponentEndOverlap.RemoveDynamic(this, &ACombatZone::CombatZoneEntranceOnEndOverlap);
+
+				Entrance->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
+				ActivePlayer->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
+				if(ActiveServant)
+					ActiveServant->GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Block);
+			}
+			SpawnMonsters();
+		}
 	}
 }
 
 void ACombatZone::SpawnMonsters()
 {
-	//몬스터 이름 찾는 코드 수정 예정
+	CurrentWaveIndex++;
+
 	FName MonsterName = StatDataNames[0];
 	FMonsterStat* MonsterStat = MonsterDataTable->FindRow<FMonsterStat>(MonsterName, TEXT("MonsterDataTable"));
 	if(nullptr != MonsterStat)
 	{
-		ABaseMonster* Monster = GetWorld()->SpawnActor<ABaseMonster>(SpawnMonsterClass, GetActorLocation(), GetActorRotation(), FActorSpawnParameters());
+		for(int32 i = 0; i < MonstersPerWave; ++i)
+		{
+			FVector RandomOffset(FMath::RandRange(-550.0f, 550.0f), FMath::RandRange(-550.0f, 550.0f), 0.0f);
+			FVector SpawnLocation = GetActorLocation() + RandomOffset;
+			FRotator SpawnRotation = GetActorRotation();
+			if(ActivePlayer)
+			{
+				FVector DirectionToPlayer = ActivePlayer->GetActorLocation() - SpawnLocation;
+				DirectionToPlayer.Z = 0.0f;
+				SpawnRotation = DirectionToPlayer.Rotation();
+			}
+			ABaseMonster* Monster = GetWorld()->SpawnActor<ABaseMonster>(SpawnMonsterClass, SpawnLocation, SpawnRotation, FActorSpawnParameters());
 
-		if(nullptr == Monster)
-			return;
-		Monster->InitStat(*MonsterStat);
-		Monster->SetCurrentCombatZone(this);
-		LiveMonsters.Add(Monster);
+			if (nullptr == Monster)
+				return;
+			Monster->InitStat(*MonsterStat);
+			Monster->SetCurrentCombatZone(this);
+			LiveMonsters.Add(Monster);
+		}
 	}
 }
 
 void ACombatZone::OnMonsterDestroyed(ABaseMonster* DestroyedActor)
 {
 	LiveMonsters.Remove(DestroyedActor);
+
+	if (LiveMonsters.Num() == 0 && !bIsCleared)
+	{
+		if (CurrentWaveIndex < MaxWaves)
+		{
+			FTimerHandle WaveSpawnTimerHandle;
+			GetWorldTimerManager().SetTimer(WaveSpawnTimerHandle,
+				this,
+				&ACombatZone::SpawnMonsters, 1.0f, false);;
+		}
+		else
+		{
+			bIsCleared = true;
+			for (UBoxComponent* Entrance : CombatZoneEntranceComponents)
+			{
+				if (Entrance)
+				{
+					Entrance->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				}
+			}
+			
+			FTimerHandle ClearCombatModeTimerHandle;
+			GetWorldTimerManager().SetTimer(ClearCombatModeTimerHandle, [this]()
+				{
+					/*UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+					if (ActivePlayer)
+						ActivePlayer->CustomTimeDilation = 1.0f;
+					if (ActiveServant)
+						ActiveServant->CustomTimeDilation = 1.0f;*/
+					
+					APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+					if (PC)
+					{
+						if (PC->GetPawn() != ActivePlayer)
+						{
+							AMiyamotoIoriController* PlayerController = Cast<AMiyamotoIoriController>(PC);
+							if (PlayerController)
+							{
+								//PlayerController->SwapWithServant();
+								PlayerController->HandleGaugeDepleted();
+							}
+						}
+					}
+					if (ActivePlayer)
+					{
+						ActivePlayer->SetCombatMode(); // 납도 몽타주 실행
+						ActivePlayer->SetCurrentCombatZone(nullptr);
+					}
+
+					if (ActiveServant)
+					{
+						ActiveServant->SetCombatMode(); // 납도 몽타주 실행
+						ActiveServant->SetCurrentCombatZone(nullptr);
+					}
+				}, 1.0f, false);
+			
+		}
+	}
 }
 

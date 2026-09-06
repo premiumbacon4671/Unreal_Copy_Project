@@ -56,4 +56,6 @@ public:
 	int SwordStanceUpdateAttack() override;
 
 	float GetShieldPercent() const { return EarthStanceShield / MaxEarthStanceShield; }
+
+	virtual void SetStanceActive(bool isActive) override;
 };

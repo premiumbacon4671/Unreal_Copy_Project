@@ -29,8 +29,10 @@
 #include "UI/PlayableStatusUI.h"
 #include "UI/LinkSkillUI.h"
 #include "UI/LinkSkillButtonUI.h"
+#include "UI/GameMenuUserWidget.h"
 #include "HUD/PlayerHUD.h"
 #include "PlayerState/FatePlayerState.h"
+#include "GameInstanceSubSystem/FateGameInstanceSubsystem.h"
 
 AMiyamotoIoriController::AMiyamotoIoriController()
 {
@@ -129,16 +131,16 @@ AMiyamotoIoriController::AMiyamotoIoriController()
 	if (ServantChangeActionFinder.Succeeded())
 		ServantChangeAction = ServantChangeActionFinder.Object;
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> GameMenuActionFinder(
+		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_GameMenu.IA_GameMenu'"));
+	if (GameMenuActionFinder.Succeeded())
+		GameMenuAction = GameMenuActionFinder.Object;
+
 	//테스트용 키
 	static ConstructorHelpers::FObjectFinder<UInputAction> ZTestKeyFinder(
 		TEXT("/Script/EnhancedInput.InputAction'/Game/Blueprint/PlayableCharacter/Input/IA_ZTestKey.IA_ZTestKey'"));
 	if (ZTestKeyFinder.Succeeded())
 		ZTestKey = ZTestKeyFinder.Object;
-
-	/*static ConstructorHelpers::FClassFinder<AServantBaseCharacter> SaberClassFinder(
-		TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber"));
-	if (SaberClassFinder.Succeeded())
-		SaberCharacterClass = SaberClassFinder.Class;*/
 }
 
 void AMiyamotoIoriController::BeginPlay()
@@ -152,15 +154,26 @@ void AMiyamotoIoriController::BeginPlay()
 	//CurPlayableCharacter->InitializeIconUI();
 	PlayerHUD = Cast<APlayerHUD>(GetHUD());
 
-	SaberCharacterClass =
+	/*SaberCharacterClass =
 		LoadClass<AServantBaseCharacter>(
 			nullptr,
-			TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber.BP_Saber_C"));
+			TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber"));
+			//TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Saber.BP_Saber_C"));
 
 	DummyCharacterClass =
 		LoadClass<AServantBaseCharacter>(
 			nullptr,
-			TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Dummy.BP_Dummy_C"));
+			TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Dummy"));
+			//TEXT("/Game/Blueprint/PlayableCharacter/Saber/BP_Dummy.BP_Dummy_C"));*/
+	UGameInstance* GI = GetGameInstance();
+	if (!GI) 
+		return;
+
+	UFateGameInstanceSubsystem* ServantManager = GI->GetSubsystem<UFateGameInstanceSubsystem>();
+	if (!ServantManager) 
+		return;
+
+	SaberCharacterClass = ServantManager->SaberCharacterClass;
 
 	if (MiyamotoIori && SaberCharacterClass)
 	{
@@ -180,7 +193,8 @@ void AMiyamotoIoriController::BeginPlay()
 		//PlayerHUD->InitializeLinkSkillUI(SaberCharacter);
 	}
 
-	if (MiyamotoIori && DummyCharacterClass)
+	//두번째 더미 서번트
+	/*if (MiyamotoIori && DummyCharacterClass)
 	{
 		FVector ForwardVector = MiyamotoIori->GetActorForwardVector();
 		ForwardVector.Z = 0.0f;
@@ -195,7 +209,7 @@ void AMiyamotoIoriController::BeginPlay()
 		{
 			DummyCharacter->SpawnDefaultController();
 		}
-	}
+	}*/
 }
 
 void AMiyamotoIoriController::Tick(float DeltaTime)
@@ -244,10 +258,10 @@ void AMiyamotoIoriController::SetupInputComponent()
 		input->BindAction(RotationAction, ETriggerEvent::Triggered, this, &AMiyamotoIoriController::SwitchTargetInput);
 		input->BindAction(RotationAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ResetSwitchTargetInput);
 		input->BindAction(OpenRecoverItemMenuAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::OpenRecoverItemMenuInput);
-		//input->BindAction(ServantUIAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SwapWithServantInput);
 		input->BindAction(ServantUIAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::ServantUIStartedInput);
 		input->BindAction(ServantUIAction, ETriggerEvent::Completed, this, &AMiyamotoIoriController::ServantUICompletedInput);
 		input->BindAction(ServantChangeAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::SwapWithServantInput);
+		input->BindAction(GameMenuAction, ETriggerEvent::Started, this, &AMiyamotoIoriController::MainMenuInput);
 
 		input->BindAction(ZTestKey, ETriggerEvent::Started, this, &AMiyamotoIoriController::ZTestKeyInput);
 	}
@@ -263,11 +277,13 @@ void AMiyamotoIoriController::SetupResonanceSystem(UResonanceComponent* ReadyRes
 		PartyServantMap.Add(SaberName, SaberCharacter);
 		ReadyResonanceComp->RegisterServantToParty(SaberName);
 		ReadyResonanceComp->SetSecondaryPartyServant(SaberName);
-
-		FName DummyName = DummyCharacter->GetServantName();
-		PartyServantMap.Add(DummyName, DummyCharacter);
-		ReadyResonanceComp->RegisterServantToParty(DummyName);
-		ReadyResonanceComp->SetSecondaryPartyServant(DummyName);
+		if(DummyCharacter != nullptr)
+		{
+			FName DummyName = DummyCharacter->GetServantName();
+			PartyServantMap.Add(DummyName, DummyCharacter);
+			ReadyResonanceComp->RegisterServantToParty(DummyName);
+			ReadyResonanceComp->SetSecondaryPartyServant(DummyName);
+		}
 
 		ReadyResonanceComp->OnServantGaugeDepleted.AddDynamic(this, &AMiyamotoIoriController::HandleGaugeDepleted);
 	}
@@ -299,20 +315,6 @@ void AMiyamotoIoriController::MoveInput(const FInputActionValue& value)
 
 	if (CurPlayableCharacter->CanProcessContinuousInput() == false)
 		return;
-
-	//FVector2D MoveValue = value.Get<FVector2D>();
-	//FVector Forward = GetTransformComponent()->GetForwardVector();
-	//Forward.Z = 0.0f;
-	//Forward.Normalize();
-	////Gamepad Deadzone
-	//if (FMath::Abs(MoveValue.X) <= 0.2f)
-	//	MoveValue.X = 0.0f;
-	//if (FMath::Abs(MoveValue.Y) <= 0.2f)
-	//	MoveValue.Y = 0.0f; 
-	//isMoveInput = true;
-	//GEngine->AddOnScreenDebugMessage(0, 3.0f, FColor::Green, FString::Printf(TEXT("MoveValue: %s"), *MoveValue.ToString()));
-	//CurPlayableCharacter->AddMovementInput(Forward, MoveValue.X);
-	//CurPlayableCharacter->AddMovementInput(GetTransformComponent()->GetRightVector(), MoveValue.Y);
 
 	FVector2D MoveValue = value.Get<FVector2D>();
 
@@ -487,13 +489,6 @@ void AMiyamotoIoriController::UIMoveInput(const FInputActionValue& value)
 	FVector2D MoveValue = value.Get<FVector2D>();
 	FIntPoint iMoveValue(MoveValue.X, MoveValue.Y);
 	GEngine->AddOnScreenDebugMessage(3, 3.0f, FColor::Yellow, FString::Printf(TEXT("UI MoveValue: %s"), *iMoveValue.ToString()));
-	//if (CurPlayableCharacter == MiyamotoIori)
-	//{
-	//	//공격 중에는 형 변경 불가
-	//	if(CurPlayableCharacter->IsPlayingAttackMontage())
-	//		return;
-	//	PlayerHUD->SelectSwordStance(iMoveValue);
-	//}
 	ActiveUIInterface->OnInterfaceMove(iMoveValue);
 }
 
@@ -806,11 +801,30 @@ void AMiyamotoIoriController::SwapWithServant(AServantBaseCharacter* TargetServa
 	bIsPendingAutoSwap = false;
 	FRotator CurrentControlRot = GetControlRotation();
 
-	AAIController* OldAI = Cast<AAIController>(NewCharacter->GetController());
+	
+	if (OldCharacter)
+	{
+		OldCharacter->ClearLockOnTargetAI();
+		OldCharacter->SetStrafeMovementMode(false);
+		if (OldCharacter->GetCurSwordStanceComponent())
+		{
+			OldCharacter->GetCurSwordStanceComponent()->SetStanceActive(false);
+		}
+	}
 
+	if (NewCharacter)
+	{
+		NewCharacter->ClearLockOnTargetAI();
+		NewCharacter->SetStrafeMovementMode(false);
+		if (NewCharacter == MiyamotoIori && MiyamotoIori->GetCurSwordStanceComponent())
+		{
+			MiyamotoIori->GetCurSwordStanceComponent()->SetStanceActive(true);
+		}
+	}
+
+	AAIController* OldAI = Cast<AAIController>(NewCharacter->GetController());
 	Possess(NewCharacter);
 	CurPlayableCharacter = NewCharacter;
-
 	if (OldAI)
 	{
 		OldAI->Possess(OldCharacter);
@@ -867,6 +881,16 @@ void AMiyamotoIoriController::SwapWithServant(AServantBaseCharacter* TargetServa
 		{
 			StatusUI->SwitchTargetStatusComponent(NewStateComp);
 		}
+	}
+}
+
+void AMiyamotoIoriController::MainMenuInput(const FInputActionValue& value)
+{
+	if (PlayerHUD)
+	{
+		ActiveUIInterface = PlayerHUD->GetGameMenuUI();
+		ActiveUIInterface->OnInterfaceOpen();
+		isUIMode = true;
 	}
 }
 

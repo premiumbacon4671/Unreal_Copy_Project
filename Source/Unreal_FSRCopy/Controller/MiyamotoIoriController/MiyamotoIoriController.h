@@ -82,6 +82,8 @@ private:
 	TObjectPtr<class UInputAction> ServantUIAction;
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UInputAction> ServantChangeAction;
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UInputAction> GameMenuAction;
 
 	//hp회복, 아이템 수급 등 임시로 사용할 키
 	UPROPERTY(VisibleAnywhere)
@@ -150,10 +152,11 @@ public:
 	
 	void ServantUIStartedInput(const FInputActionValue& value);
 	void ServantUICompletedInput(const FInputActionValue& value);
-	//삭제 예정
 	void SwapWithServantInput(const FInputActionValue& value);
 	void SwapWithServant(AServantBaseCharacter* TargetServant = nullptr);
 	
+	void MainMenuInput(const FInputActionValue& value);
+
 	UInputAction* GetNormalAttackAction() const { return NormalAttackAction; }
 	UInputMappingContext* GetDefaultMappingContext() const { return MappingContext; }
 
@@ -161,7 +164,8 @@ public:
 protected:
 	UFUNCTION()
 	void RestoreTime();
-
+	
+public:
 	UFUNCTION()
 	void HandleGaugeDepleted();
 };

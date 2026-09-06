@@ -220,10 +220,18 @@ void ULinkSkillUI::RefreshPartyUI(AServantBaseCharacter* Seervant)
 				if (Data == nullptr)
 					return;
 				TopLinkSkillButton->UpdateLinkSkillInfo(Data->Icon, Data->SkillName.ToString(), Data->CostAmount);
-
-				LeftLinkSkillButton->UpdateLinkSkillInfo(nullptr, TEXT("Left Link Skill1"), 2);
-				RightLinkSkillButton->UpdateLinkSkillInfo(nullptr, TEXT("Right Link Skill1"), 1);
-				BottomLinkSkillButton->UpdateLinkSkillInfo(nullptr, TEXT("Battom Link Skill1"), 3);
+				USkillDataAsset* Data1 = Seervant->GetSkillActionComponent()->GetNormalSkill(1);
+				if (Data1 == nullptr)
+					return;
+				LeftLinkSkillButton->UpdateLinkSkillInfo(Data1->Icon, Data1->SkillName.ToString(), Data1->CostAmount);
+				USkillDataAsset* Data2 = Seervant->GetSkillActionComponent()->GetNormalSkill(2);
+				if (Data2 == nullptr)
+					return;
+				RightLinkSkillButton->UpdateLinkSkillInfo(Data2->Icon, Data2->SkillName.ToString(), Data2->CostAmount);
+				USkillDataAsset* Data3 = Seervant->GetSkillActionComponent()->GetNormalSkill(3);
+				if (Data3 == nullptr)
+					return;
+				BottomLinkSkillButton->UpdateLinkSkillInfo(Data3->Icon, Data3->SkillName.ToString(), Data3->CostAmount);
 			}
 			else
 			{
